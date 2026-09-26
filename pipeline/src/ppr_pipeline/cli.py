@@ -1,10 +1,16 @@
 """`ppr` command-line entry point. Steps are implemented from Phase 2 onwards."""
 
+import os
+from pathlib import Path
 from typing import Annotated
 
 import typer
 
+from ppr_pipeline.db import get_engine
+from ppr_pipeline.ppr import ingest as ppr_ingest
 from ppr_pipeline.sources import load_sources
+
+DATA_DIR = Path(os.environ.get("DATA_DIR", "data"))
 
 app = typer.Typer(no_args_is_help=True, help="PPR Map data pipeline.")
 
@@ -32,6 +38,10 @@ def _todo() -> None:
 @app.command()
 def ingest(
     kind: Annotated[str, typer.Argument(help="Source key from config/sources.yaml")],
+    file: Annotated[
+        Path | None, typer.Option(help="Load this local file instead of downloading.")
+    ] = None,
+    force: Annotated[bool, typer.Option(help="Reload even if the file is unchanged.")] = False,
 ) -> None:
     """Download and load one source (idempotent)."""
     src = load_sources().get(kind)
@@ -40,7 +50,23 @@ def ingest(
     if not src.use:
         typer.echo(f"Refusing to ingest '{kind}': {src.reason}", err=True)
         raise typer.Exit(code=1)
-    _todo()
+    if kind != "ppr":
+        _todo()
+
+    url = ppr_ingest.source_url()
+    if file is not None:
+        payload, url = file.read_bytes(), file.resolve().as_uri()
+    else:
+        typer.echo(f"Downloading {url}")
+        payload = ppr_ingest.download(url, DATA_DIR / "raw" / "ppr" / "PPR-ALL.zip")
+    summary = ppr_ingest.ingest_ppr(get_engine(), payload, url, force=force)
+    typer.echo(
+        f"run {summary.run_id}: {summary.status.value}; read {summary.rows_read}, "
+        f"inserted {summary.rows_inserted}, withdrawn {summary.rows_withdrawn}, "
+        f"failed {summary.rows_failed}"
+    )
+    for name, value in summary.stats.items():
+        typer.echo(f"  {name}: {value}")
 
 
 @app.command()

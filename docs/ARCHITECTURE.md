@@ -94,8 +94,9 @@ The scheduler runs this on the 1st and on demand from admin. Each step is idempo
    - Extract the Dublin postal district and the Eircode routing key.
    - Validate the Eircode format.
 5. **Deduplicate into Property:**
-   - First by exact `(county, address_key)`, where `address_key` is the normalised address minus punctuation.
-   - Then by validated Eircode.
+   - First by exact `(county, address_key, unit)`, where `address_key` is the normalised address minus the unit, the trailing county and punctuation.
+   - Addresses with no house number and no unit (townlands, estate names) are **not** merged across sales (D-030).
+   - Then by validated Eircode (not automatic yet: PPR Eircodes are sometimes wrong, R-04).
    - Then by a fuzzy candidate match: trigram similarity ≥ 0.9, same number and unit, same county.
    - Uncertain merges are **not** made automatically. They go to an admin review queue.
 6. **Geocode** new or changed Properties with the D-003 cascade and store every attempt in `geocode_attempt`.

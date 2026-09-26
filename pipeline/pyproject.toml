@@ -26,6 +26,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["db: needs a running PostGIS database (TEST_DATABASE_URL)"]
 
 [tool.ruff]
 line-length = 100
@@ -38,3 +39,10 @@ ignore = ["S101"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
+# The backend is an editable install, which mypy cannot follow; point it at the source.
+mypy_path = "../backend"
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["geoalchemy2.*"]
+ignore_missing_imports = true

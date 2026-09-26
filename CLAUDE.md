@@ -4,7 +4,7 @@ This app makes Ireland's Property Price Register (PPR) explorable on a map. Read
 
 ## Working rules (from the project owner)
 
-- Work in phases and **stop at each STOP checkpoint** for review. Current phase: **1 (scaffold)**. Phase 0 was reviewed on 2026-09-26: Q-09 = no licensed listing data, Q-10 = yes to the index-based estimate. Other open questions use their documented defaults.
+- Work in phases and **stop at each STOP checkpoint** for review. Current phase: **2 (data pipeline)**. Phase 1 was reviewed on 2026-09-26. Phase 0 was reviewed on 2026-09-26: Q-09 = no licensed listing data, Q-10 = yes to the index-based estimate. Other open questions use their documented defaults.
 - **Ask before adding any paid service or signing up for any API.** Also ask before contacting any third party on the project's behalf.
 - Secrets live only in `.env`. Commit `.env.example` with every variable, documented, and no values.
 - Write tests with each feature, not afterwards.
@@ -55,9 +55,10 @@ Run `make help` for the full list.
 | `make up` / `make down` | local stack on http://localhost:8080 (Mailpit on :8025) |
 | `make migrate` | `alembic upgrade head` + `sync-permissions` inside the api container |
 | `make lint`, `make typecheck`, `make test` | what CI runs (no database needed) |
-| `make test-db` | backend tests including live PostGIS checks (`alembic check`, audit trigger) |
+| `make test-db` | backend and pipeline tests including live PostGIS checks (`alembic check`, audit trigger, PPR ingest) |
 | `make e2e` | Playwright smoke test over every route |
 | `.venv/bin/ppr sources --all` | list data sources, licences and blocked sources |
+| `make ingest-ppr` | download the PPR and load it (skips an unchanged file; `ppr ingest ppr --file X --force` to reload) |
 
 New migrations: `cd backend && ../.venv/bin/alembic revision --autogenerate -m "..."` against the running database, then review the file.
 

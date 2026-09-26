@@ -220,3 +220,12 @@ Everything below is **Proposed** until the Phase 0 review.
 - **Options:** (a) pin `platform: linux/amd64` and run the official image under Rosetta; (b) switch to a community multi-arch build (for example `imresamu/postgis`).
 - **Choice:** (a). Local development uses the same image as CI, and no third-party image is added. Emulation is slower, which matters most for bulk loads in Phase 2.
 - **Status:** Accepted. If Phase 2 ingest proves too slow locally, revisit (b).
+
+## D-030 Addresses without a house number or unit are not merged across sales
+
+- **Context:** The first full load (2026-09-26) merged on the exact address key. Keys with no house number and no unit (townlands and estate names such as `KNOCKROE, CASTLEREA, CO ROSCOMMON`) collected up to 28 sales. Of 120,217 such keys, 6,362 had 4 or more sales and 8,853 had two sales less than a year apart; the Knockroe pair sold six weeks apart at €145,400 and €56,000. Numbered keys looked plausible: 544 of 549,439 had 4 or more sales.
+- **Options:** (a) merge them anyway; (b) merge them only when the sales "look like" one house (few sales, far apart); (c) never auto-merge them, and send candidates to the review queue.
+- **Choice:** (c). Each such sale gets its own Property. Repeat filings of the same sale (same date, address and price) still share one. The address key keeps the plain key before a `~` suffix, so review-queue matching can find the candidates.
+- **Why:** A wrong merge invents a sale history, which would also feed the price estimate (D-020). Splitting loses some genuine repeat sales of named houses, but that is recoverable by review, while a silent false merge is not visible to anyone.
+- **Result:** 728,509 properties from 807,724 sales; 70,440 with more than one sale; at most 6 sales for one property.
+- **Status:** Accepted (implementation detail; revisit if the review queue shows many genuine repeats).

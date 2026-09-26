@@ -29,7 +29,7 @@
 | R-08 | **Apartments** share one building point, so hovering is impossible when points stack. | Certain / Medium | At z ≥ 16, stacked points expand into a list popover ("12 sales at this building"). |
 | R-09 | **Cost of the geocoder and tile cache under traffic spikes** (e.g. media coverage). | Low / Medium | Tiles cached at the CDN keyed by data version; hover payloads precomputed; Nominatim runs only in batch. |
 | R-10 | **Calculators give wrong advice** if stamp duty or Central Bank rules change. | Medium / High | Rates in one versioned config with source URLs and `verified_on` dates; values verified at Phase 5; "not financial advice" notice; no personalised recommendations. |
-| R-11 | **Deduplication mistakes** could merge two different houses and create fake repeat-sale histories. | Medium / Medium | Auto-merge only exact keys and validated Eircodes; fuzzy candidates go to admin review; merge and split tools are audited. |
+| R-11 | **Deduplication mistakes** could merge two different houses and create fake repeat-sale histories. | Medium / Medium | Auto-merge only exact keys; never merge addresses without a house number or unit (D-030); Eircode and fuzzy candidates go to admin review; merge and split tools are audited. |
 | R-12 | **Enrichment staleness** (e.g. a school closed, a GTFS stop moved). | Medium / Low | `asOf` shown on every enriched value; refresh schedules per source. |
 
 | R-13 | **Upstream URL churn:** GeoHive hubs are being retired or migrated from Sept 2026. | High / Medium | D-022: pinned URLs, schema hashes, loud failures. |

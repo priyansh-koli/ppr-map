@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate test test-db lint format typecheck e2e ci
+.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr test test-db lint format typecheck e2e ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -66,13 +66,17 @@ typecheck: ## mypy (strict) + tsc
 	cd pipeline && ../.venv/bin/mypy src
 	cd frontend && npm run typecheck
 
+ingest-ppr: ## Download the Property Price Register and load it (needs `make up` + `make migrate`)
+	.venv/bin/ppr ingest ppr
+
 test: ## Unit tests (no database needed)
 	cd backend && ../.venv/bin/pytest -q
 	cd pipeline && ../.venv/bin/pytest -q
 	cd frontend && npm test
 
-test-db: ## Backend tests including live PostGIS checks (needs `make up`)
+test-db: ## Backend and pipeline tests including live PostGIS checks (needs `make up`)
 	set -a; source .env; set +a; cd backend && ../.venv/bin/pytest -q
+	set -a; source .env; set +a; cd pipeline && ../.venv/bin/pytest -q
 
 e2e: ## Playwright smoke tests over every route
 	cd frontend && npm run test:e2e

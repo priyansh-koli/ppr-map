@@ -63,7 +63,7 @@ erDiagram
 | public_id | text unique | short slug for URLs |
 | address_display | text | best cleaned form for display |
 | address_normalised | text | lowercase, expanded abbreviations |
-| address_key | text | normalised minus punctuation and spaces; dedupe key |
+| address_key | text | normalised minus unit, trailing county and punctuation; dedupe key. Addresses with no house number and no unit get a `~<sale id>` suffix so they never merge (D-030) |
 | unit | text null | `apt 5`, `unit 3`, … |
 | house_number | text null | |
 | county | enum of 26 counties | from PPR, majority vote across sales |
