@@ -1,0 +1,66 @@
+"""Management commands: `python -m app.cli --help`."""
+
+import sqlalchemy as sa
+import typer
+from sqlalchemy.dialects.postgresql import insert
+
+from app.auth.permissions import ROLE_PERMISSIONS, Perm, Role
+from app.config import get_settings
+from app.models.users import Permission, RolePermission
+from app.models.users import Role as RoleRow
+
+cli = typer.Typer(no_args_is_help=True)
+
+
+@cli.callback()
+def main() -> None:
+    """PPR Map backend management commands."""
+
+
+@cli.command("sync-permissions")
+def sync_permissions() -> None:
+    """Upsert roles, permissions and the role-permission matrix from app/auth/permissions.py."""
+    # The anonymous role is implicit (never assigned to a user) and is not stored.
+    stored_roles = [r for r in Role if r is not Role.ANONYMOUS]
+    engine = sa.create_engine(get_settings().database_url)
+    with engine.begin() as conn:
+        conn.execute(
+            insert(RoleRow)
+            .values([{"name": r.value} for r in stored_roles])
+            .on_conflict_do_nothing()
+        )
+        conn.execute(
+            insert(Permission).values([{"code": p.value} for p in Perm]).on_conflict_do_nothing()
+        )
+        role_ids = {name: id_ for name, id_ in conn.execute(sa.select(RoleRow.name, RoleRow.id))}
+        perm_ids = {
+            code: id_ for code, id_ in conn.execute(sa.select(Permission.code, Permission.id))
+        }
+        wanted = {
+            (role_ids[r.value], perm_ids[p.value])
+            for r in stored_roles
+            for p in ROLE_PERMISSIONS[r]
+        }
+        existing = {
+            (role_id, perm_id)
+            for role_id, perm_id in conn.execute(
+                sa.select(RolePermission.role_id, RolePermission.permission_id)
+            )
+        }
+        for role_id, perm_id in existing - wanted:
+            conn.execute(
+                sa.delete(RolePermission).where(
+                    RolePermission.role_id == role_id, RolePermission.permission_id == perm_id
+                )
+            )
+        if missing := wanted - existing:
+            conn.execute(
+                insert(RolePermission).values(
+                    [{"role_id": r, "permission_id": p} for r, p in sorted(missing)]
+                )
+            )
+    typer.echo(f"Synced {len(stored_roles)} roles, {len(Perm)} permissions, {len(wanted)} grants.")
+
+
+if __name__ == "__main__":
+    cli()

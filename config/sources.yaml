@@ -1,0 +1,190 @@
+# Every external dataset the pipeline may touch (D-016, D-022).
+# `use: false` sources are documented here so nobody adds them by accident.
+# `verified` = licence and access checked at the source on `checked_on`.
+# Licence details and env vars: docs/external-services.md.
+
+sources:
+  ppr:
+    name: PSRA Residential Property Price Register
+    url: "https://www.propertypriceregister.ie/website/npsra/ppr/npsra-ppr.nsf/Downloads/PPR-ALL.zip/$FILE/PPR-ALL.zip"
+    format: zip/csv (cp1252)
+    licence: PSRA re-use terms (PSI regulations); acknowledge PSRA; not for the principal purpose of advertising
+    attribution: "Contains Residential Property Price Register data © Property Services Regulatory Authority."
+    cadence: weekly check, monthly full run
+    use: true
+    verified: true
+    checked_on: 2026-09-26
+
+  gtfs:
+    name: NTA GTFS (Transport for Ireland), all operators
+    url: "https://www.transportforireland.ie/transitData/Data/GTFS_All.zip"
+    format: GTFS zip
+    licence: CC BY 4.0
+    attribution: "Contains National Transport Authority data (CC BY 4.0)."
+    cadence: weekly
+    use: true
+    verified: true
+    checked_on: 2026-09-26
+
+  osm_extract:
+    name: OpenStreetMap Ireland and Northern Ireland extract (Geofabrik)
+    url: "https://download.geofabrik.de/europe/ireland-and-northern-ireland-latest.osm.pbf"
+    format: osm.pbf
+    licence: ODbL 1.0
+    attribution: "© OpenStreetMap contributors (ODbL)."
+    cadence: monthly
+    use: true
+    verified: false  # URL pattern is standard; confirm in Phase 2
+    checked_on: null
+
+  planning:
+    name: National Planning Applications (DHLGH / MyPlan)
+    url: "https://services.arcgis.com/NzlPQPKn5QF9v2US/arcgis/rest/services/IrishPlanningApplications/FeatureServer/0"
+    format: ArcGIS FeatureServer (2,000 rows/page)
+    licence: CC BY 4.0
+    attribution: "Contains National Planning Application data, Department of Housing, Local Government and Heritage (CC BY 4.0)."
+    cadence: weekly
+    use: true
+    verified: true
+    checked_on: 2026-09-26
+    # D-017: request ONLY these fields. Applicant name/address fields must never be fetched.
+    out_fields:
+      - PlanningAuthority
+      - ApplicationNumber
+      - DevelopmentDescription
+      - DevelopmentAddress
+      - DevelopmentPostcode
+      - ITMEasting
+      - ITMNorthing
+      - ApplicationStatus
+      - ApplicationType
+      - Decision
+      - LandUseCode
+      - AreaofSite
+      - NumResidentialUnits
+      - OneOffHouse
+      - FloorArea
+      - ReceivedDate
+      - WithdrawnDate
+      - DecisionDate
+      - GrantDate
+      - ExpiryDate
+      - AppealRefNumber
+      - AppealStatus
+      - AppealDecision
+      - AppealDecisionDate
+      - LinkAppDetails
+      - ETL_DATE
+    forbidden_fields: [ApplicantForename, ApplicantSurname, ApplicantAddress]
+
+  gzt_zoning:
+    name: Generalised Zoning Types (Development Plans and Local Area Plans)
+    url: "https://data-housinggovie.opendata.arcgis.com/"
+    format: ArcGIS hub (GeoJSON / REST)
+    licence: CC BY 4.0
+    attribution: "Contains zoning data, Department of Housing, Local Government and Heritage (CC BY 4.0). Not statutory zoning."
+    cadence: quarterly check
+    use: true
+    verified: true
+    checked_on: 2026-09-26
+
+  cso_pxstat:
+    name: CSO PxStat API (Census SAPS, CJA07 crime, RPPI, routing-key medians, RIQ02 rents)
+    url: "https://ws.cso.ie/public/api.restful/PxStat.Data.Cube_API.ReadDataset/{table}/CSV/1.0/en"
+    format: CSV via REST
+    licence: CC BY 4.0
+    attribution: "Source: Central Statistics Office (CC BY 4.0)."
+    cadence: per table release
+    use: true
+    verified: true  # CJA07 fetched; other table IDs confirmed in Phase 2
+    checked_on: 2026-09-26
+
+  pobal_hp_2022:
+    name: Pobal HP Deprivation Index 2022, Electoral Division level
+    url: "https://data.gov.ie/dataset/pobal-hp-deprivation-index-scores-2022"
+    format: CSV / XLS
+    licence: CC BY 4.0
+    attribution: "Pobal HP Deprivation Index (Haase and Pratschke), 2022 (CC BY 4.0)."
+    cadence: per census
+    use: true
+    verified: true
+    checked_on: 2026-09-26
+
+  tailte_boundaries:
+    name: Tailte Éireann statutory boundaries (counties, EDs, Small Areas 2022, townlands 2026)
+    url: "https://data-osi.opendata.arcgis.com/"
+    format: GeoJSON / GeoPackage
+    licence: Tailte Éireann open data (Creative Commons, attribution)
+    attribution: "Contains Tailte Éireann data."
+    cadence: per release
+    use: true
+    verified: true
+    checked_on: 2026-09-26
+
+  epa_radon:
+    name: EPA Radon Risk Map of Ireland
+    url: "https://data.gov.ie/dataset/radon-risk-map-of-ireland"
+    format: WMS / JSON
+    licence: CC BY 4.0
+    attribution: "Contains EPA radon data (CC BY 4.0)."
+    cadence: rare
+    use: true
+    verified: false  # download format to confirm in Phase 2
+    checked_on: null
+
+  epa_noise_round4:
+    name: EPA strategic noise maps, Round 4 (2021)
+    url: "https://www.epa.ie/our-services/monitoring--assessment/noise/noise-mapping-and-action-plans/how-to-access-data/"
+    format: polygons
+    licence: to confirm
+    attribution: "Contains EPA noise mapping data."
+    cadence: every 5 years
+    use: true
+    verified: false
+    checked_on: null
+
+  schools:
+    name: Department of Education school lists
+    url: "https://www.gov.ie/en/department-of-education/services/data-on-individual-schools/"
+    format: spreadsheets
+    licence: expected CC BY 4.0
+    attribution: "Contains Department of Education data."
+    cadence: annual
+    use: true
+    verified: false  # gov.ie blocked automated fetch; confirm coordinates manually
+    checked_on: null
+
+  opw_flood:
+    name: OPW flood maps (NIFM / CFRAM)
+    url: "https://www.floodinfo.ie/open-spatial-data-portal/"
+    licence: CC BY-NC-ND 4.0
+    use: false
+    reason: "Non-commercial, no-derivatives licence (D-010). Deep-link to floodinfo.ie instead."
+
+  daft:
+    name: daft.ie
+    url: "https://www.daft.ie"
+    licence: proprietary; terms forbid scraping and building databases
+    use: false
+    reason: "D-016 / D-023."
+
+  landdirect:
+    name: landdirect.ie (Land Registry)
+    url: "https://www.landdirect.ie"
+    licence: terms forbid automated access and reuse; folios name owners
+    use: false
+    reason: "D-016; owner names are off-limits."
+
+  propertymap_ie:
+    name: propertymap.ie
+    url: "https://propertymap.ie"
+    licence: listing content is agents'/portals' copyright
+    use: false
+    reason: "D-016."
+
+  opw_state_property:
+    name: OPW Property Mapping Register Viewer
+    url: "https://maps.opw.ie/property/"
+    licence: restricted to public-service bodies
+    use: false
+    reason: "Not public; not residential."

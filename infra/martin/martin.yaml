@@ -1,0 +1,6 @@
+# Martin tile server (D-004). The sales_tiles() function source arrives in Phase 3.
+listen_addresses: "0.0.0.0:3000"
+postgres:
+  connection_string: ${DATABASE_URL}
+  # Only publish sources we configure explicitly; never auto-publish every table.
+  auto_publish: false

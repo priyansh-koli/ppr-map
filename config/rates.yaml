@@ -1,0 +1,31 @@
+# Stamp duty, VAT and Central Bank mortgage measures for the calculators and the
+# VAT-inclusive estimate (D-015, R-10).
+#
+# DELIBERATELY EMPTY UNTIL PHASE 5. Every value must be verified against its official source
+# on the day it is entered, with `source_url` and `verified_on` filled in. The calculators refuse
+# to run while any value they need is null.
+
+vat_new_dwellings:
+  # Dated table: rates can change by date and dwelling type.
+  - applies_from: null
+    applies_to: null
+    dwelling_type: null  # e.g. house | apartment | any
+    rate: null
+    source_url: null
+    verified_on: null
+
+stamp_duty_residential:
+  bands: []  # [{up_to: <eur or null>, rate: <fraction>}]
+  source_url: null
+  verified_on: null
+
+central_bank_mortgage_measures:
+  loan_to_income:
+    first_time_buyer: null
+    second_and_subsequent: null
+  loan_to_value:
+    first_time_buyer: null
+    second_and_subsequent: null
+    buy_to_let: null
+  source_url: null
+  verified_on: null
