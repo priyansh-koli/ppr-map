@@ -47,10 +47,13 @@ jobs:
         run: |
           (cd backend && mypy app)
           (cd pipeline && mypy src)
-      - name: Test (including live PostGIS migration checks)
-        run: |
-          (cd backend && pytest -q)
-          (cd pipeline && pytest -q)
+      - name: Test backend (including live PostGIS migration checks)
+        working-directory: backend
+        run: pytest -q
+      - name: Test pipeline (including live PPR ingest and boundary loads)
+        if: ${{ !cancelled() }}
+        working-directory: pipeline
+        run: pytest -q
 
   frontend:
     name: Frontend

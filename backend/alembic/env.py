@@ -1,5 +1,5 @@
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, text
 
 from app.config import get_settings
 from app.models import Base
@@ -11,9 +11,26 @@ target_metadata = Base.metadata
 # PostGIS owns these; never let autogenerate try to drop them.
 POSTGIS_TABLES = {"spatial_ref_sys", "topology", "layer"}
 
+# Filled from the live database: tables created by extensions. The postgis/postgis image
+# installs postgis_tiger_geocoder into POSTGRES_DB (so in CI), adding ~30 tables we don't own.
+EXTENSION_TABLES: set[str] = set()
+
+EXTENSION_TABLES_SQL = text(
+    """
+    SELECT c.relname FROM pg_depend d
+    JOIN pg_class c ON c.oid = d.objid AND d.classid = 'pg_class'::regclass
+    WHERE d.deptype = 'e' AND c.relkind IN ('r', 'p', 'v', 'm')
+    """
+)
+
 
 def include_object(obj, name, type_, reflected, compare_to):  # type: ignore[no-untyped-def]
-    return not (type_ == "table" and name in POSTGIS_TABLES)
+    ignored = POSTGIS_TABLES | EXTENSION_TABLES
+    if type_ == "table":
+        return name not in ignored
+    if type_ == "index" and reflected and compare_to is None:
+        return obj.table.name not in ignored
+    return True
 
 
 def run_migrations_offline() -> None:
@@ -35,6 +52,7 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
+        EXTENSION_TABLES.update(connection.execute(EXTENSION_TABLES_SQL).scalars())
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
