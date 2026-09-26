@@ -15,6 +15,7 @@ import sqlalchemy as sa
 from app.models.data import IngestRowError, IngestRun
 from app.models.enums import IngestKind, IngestStatus
 
+from ppr_pipeline.ppr.bulk import flag_bulk_groups
 from ppr_pipeline.ppr.load import load
 from ppr_pipeline.ppr.parse import ParsedRow, RowError, parse, read_rows
 from ppr_pipeline.sources import load_sources
@@ -110,6 +111,7 @@ def ingest_ppr(engine: sa.Engine, payload: bytes, url: str, *, force: bool = Fal
     try:
         with engine.begin() as conn:
             result = load(conn, parsed_rows(), run_id)
+            bulk = flag_bulk_groups(conn)
             if errors:
                 conn.execute(
                     sa.insert(IngestRowError),
@@ -123,7 +125,7 @@ def ingest_ppr(engine: sa.Engine, payload: bytes, url: str, *, force: bool = Fal
                         for e in errors
                     ],
                 )
-            stats = {**asdict(result), "seconds": round(time.monotonic() - started, 1)}
+            stats = {**asdict(result), **bulk, "seconds": round(time.monotonic() - started, 1)}
             _finish(
                 conn,
                 run_id,

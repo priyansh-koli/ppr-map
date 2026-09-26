@@ -42,6 +42,8 @@ ABBREVIATIONS = {
     "cl": "close",
     "cotts": "cottages",
     "apt": "apartment",
+    "appartment": "apartment",
+    "app": "apartment",
     "apts": "apartments",
     "blk": "block",
 }
@@ -112,8 +114,12 @@ def _display(parts: list[str]) -> str:
     return ", ".join(_title_part(p) for p in parts)
 
 
+GLUED_UNIT = re.compile(r"\b(apt|flat|unit)(\d+[a-z]?)\b")
+
+
 def _expand_part(part: str) -> list[str]:
-    tokens = [t.rstrip(".") for t in part.lower().replace(".", ". ").split()]
+    text = GLUED_UNIT.sub(r"\1 \2", part.lower())  # "apt1" -> "apt 1"
+    tokens = [t.rstrip(".") for t in text.replace(".", ". ").split()]
     tokens = [t for t in tokens if t]
     out: list[str] = []
     for i, tok in enumerate(tokens):

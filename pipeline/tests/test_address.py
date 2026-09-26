@@ -123,3 +123,10 @@ def test_dublin_district_from_eircode() -> None:
     assert dublin_district_from_eircode("D6WCT92") == "D6W"
     assert dublin_district_from_eircode("D01AB12") == "D1"
     assert dublin_district_from_eircode("A94X2Y3") is None
+
+
+def test_misspelt_and_glued_unit_words() -> None:
+    a = normalise_address("Appartment 4, 24 Marlborough Road, Donnybrook", "dublin")
+    b = normalise_address("APT4, 24 MARLBOROUGH RD, DONNYBROOK", "dublin")
+    assert a.unit == b.unit == "apartment 4"
+    assert a.key == b.key == "24marlboroughroaddonnybrook"

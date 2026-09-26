@@ -9,6 +9,7 @@ from app.models.enums import IngestStatus
 
 from ppr_pipeline.ppr.ingest import csv_bytes, ingest_ppr
 from ppr_pipeline.ppr.load import TooFewRowsError
+from tests.conftest import FIXTURES
 
 pytestmark = pytest.mark.db
 URL = "file:///fixtures/ppr_sample.csv"
@@ -124,3 +125,31 @@ def test_zip_payloads_are_unpacked(sample_csv: bytes) -> None:
     assert next(csv.reader(io.StringIO(csv_bytes(sample_csv).decode("cp1252"))))[0].startswith(
         "Date of Sale"
     )
+
+
+def test_bulk_groups(engine: sa.Engine, sample_csv: bytes) -> None:
+    """The fixture's five EUR 180,000 sales on 11/01/2019 are in five different counties:
+    a coincidence, not a portfolio, so nothing is flagged."""
+    run = ingest_ppr(engine, sample_csv, URL)
+    assert (run.stats["bulk_sales"], run.stats["bulk_groups"]) == (0, 0)
+
+
+def test_bulk_rule(engine: sa.Engine) -> None:
+    """Three real Dublin groups (tests/fixtures/ppr_bulk_sample.csv): four flats at
+    59 Patrick St at a round price, three Mount Argus flats at an apportioned price, and
+    three unrelated homes (Swords, Dublin 8, Santry) at EUR 400,000 on the same day."""
+    run = ingest_ppr(engine, (FIXTURES / "ppr_bulk_sample.csv").read_bytes(), URL)
+    assert (run.stats["bulk_sales"], run.stats["bulk_groups"]) == (7, 2)
+    with engine.connect() as conn:
+        unflagged = (
+            conn.execute(
+                sa.text("SELECT raw_address FROM sale WHERE bulk_group_id IS NULL ORDER BY 1")
+            )
+            .scalars()
+            .all()
+        )
+    assert unflagged == [
+        "12 THORNLEIGH SQ, SWORDS, DUBLIN",
+        "30 CANNON COURT, BRIDE ST, DUBLIN 8",
+        "33 MAGENTA HALL, SANTRY, DUBLIN",
+    ]

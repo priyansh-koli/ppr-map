@@ -20,7 +20,7 @@
 | # | Risk | Likelihood / impact | Mitigation |
 |---|---|---|---|
 | R-01 | **Geocoding accuracy.** The sample gave 15% house-level via OSM. Rural addresses without numbers (21%) can't be better than townland level, and there are confident wrong matches. | High / High | Confidence on every point; county and feature-type checks; admin correction queue; hollow markers for low confidence; ECAD upgrade (Q-01). Phase 2 reports real per-county rates. |
-| R-02 | **Portfolio and bulk sales distort medians.** 71k rows sit in same date-and-price groups of 5 or more. | High / Medium | `bulk_group` heuristic, excluded by default, reviewed on Dublin in Phase 2. Thresholds recorded in DECISIONS. |
+| R-02 | **Portfolio and bulk sales distort medians.** 71k rows sit in same date-and-price groups of 5 or more. | High / Medium | `bulk_group` heuristic (D-031), excluded by default, reviewed on Dublin on 2026-09-26: 34,668 sales (4.3%) in 5,207 groups. |
 | R-03 | **Reporting lag** makes recent months look like a price or volume drop. | Certain / Medium | Mark the latest two months provisional. Compute the 12-month change on complete months only. |
 | R-04 | **PPR data errors:** wrong county (e.g. a Tuam address filed as Mayo), wrong Eircodes (1,153 shared across different addresses), typos. | Certain / Medium | Keep raw values; store both reported and geocoded county; treat the Eircode as a hint; user "report an error" link; PSRA disclaimer. |
 | R-05 | **Licences:** OPW flood (NC-ND), the PSRA advertising clause, the Tailte Éireann townlands licence unspecified, SEAI BER unverified. | Medium / High | Blocked or fallback per D-010 to D-014. `/sources` page. A licence check is a Phase 2 exit criterion for each source. |

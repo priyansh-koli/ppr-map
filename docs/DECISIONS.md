@@ -229,3 +229,13 @@ Everything below is **Proposed** until the Phase 0 review.
 - **Why:** A wrong merge invents a sale history, which would also feed the price estimate (D-020). Splitting loses some genuine repeat sales of named houses, but that is recoverable by review, while a silent false merge is not visible to anyone.
 - **Result:** 728,509 properties from 807,724 sales; 70,440 with more than one sale; at most 6 sales for one property.
 - **Status:** Accepted (implementation detail; revisit if the review queue shows many genuine repeats).
+
+## D-031 Bulk and portfolio sales: same date and price, with evidence it is not a coincidence
+
+- **Context:** The planned rule was "at least 3 rows with the same date, price and county, or the same date and a price above €5M". Checked on Dublin on 2026-09-26: groups of 3 at round prices were mostly coincidences, unrelated homes across the county on one busy day (for example three homes in Swords, Dublin 8 and Santry at €400,000 on 23 Aug 2024). Groups at odd prices were units in one scheme (three Mount Argus flats at €472,025 on 1 Apr 2020).
+- **Choice:** A group is sales on the same date at the same price. It is flagged when:
+  - the price is above €5M and at least 2 properties share it, in any county; or
+  - at least 3 properties in one county share it, **and** either the price is not a whole €1,000 (apportioned prices do not happen by chance) or at least 3 of them are in the same locality (the last address part, ignoring `Co X`).
+- **Result:** 34,668 sales (4.3%) in 5,207 groups; 4.5–5.6% per county.
+- **Trade-off:** A real portfolio at a round price spread across several localities is missed, and stays in medians. A coincidence of 3 same-price sales in one locality on one day is flagged. Both are rare, and users can switch the filter off (Q-08).
+- **Status:** Accepted (implementation detail). Group ids are a hash of (date, price, scope), so they are stable between runs.
