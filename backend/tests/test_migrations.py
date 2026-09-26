@@ -50,9 +50,13 @@ def test_downgrade_renders_every_drop_offline(monkeypatch: pytest.MonkeyPatch) -
 @pytest.fixture
 def migrated_db(database_url: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[sa.Engine]:
     cfg = _alembic_config(database_url, monkeypatch)
-    command.downgrade(cfg, "base")
-    command.upgrade(cfg, "head")
     engine = sa.create_engine(database_url)
+    # Check each step really committed: a migration that is silently rolled back (for
+    # example by a stray transaction in env.py) would otherwise pass on an old database.
+    command.downgrade(cfg, "base")
+    assert "sale" not in sa.inspect(engine).get_table_names()
+    command.upgrade(cfg, "head")
+    assert "sale" in sa.inspect(engine).get_table_names()
     yield engine
     engine.dispose()
 

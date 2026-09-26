@@ -53,6 +53,9 @@ def run_migrations_online() -> None:
     )
     with connectable.connect() as connection:
         EXTENSION_TABLES.update(connection.execute(EXTENSION_TABLES_SQL).scalars())
+        # End the transaction the query opened; otherwise Alembic treats it as the caller's
+        # and never commits the migration (it is rolled back when the connection closes).
+        connection.commit()
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
