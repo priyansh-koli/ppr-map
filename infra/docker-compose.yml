@@ -89,17 +89,21 @@ services:
       - "127.0.0.1:1025:1025"
 
   nominatim:
-    # Batch geocoder (D-003). Opt-in: `docker compose --profile geocoder up nominatim`.
-    # First start imports the Ireland extract (takes a while, needs ~8 GB RAM).
+    # Batch geocoder (D-003). Opt-in: `make geocoder` (needs Docker memory >= 12 GB).
+    # First start imports the Ireland extract from data/osm/ (`make osm-extract` downloads it);
+    # the import takes an hour or more. Containers here cannot reach Geofabrik over TLS, so the
+    # file is fetched on the host (D-032). No REPLICATION_URL for the same reason: refresh by
+    # re-importing a newer extract monthly.
     profiles: ["geocoder"]
     image: mediagis/nominatim:4.5
     environment:
-      PBF_URL: https://download.geofabrik.de/europe/ireland-and-northern-ireland-latest.osm.pbf
-      REPLICATION_URL: https://download.geofabrik.de/europe/ireland-and-northern-ireland-updates/
+      PBF_PATH: /osm/ireland-and-northern-ireland-latest.osm.pbf
       NOMINATIM_PASSWORD: ${NOMINATIM_PASSWORD:-nominatim}
+      THREADS: "6"
     shm_size: 1gb
     volumes:
       - nominatim-data:/var/lib/postgresql/16/main
+      - ../data/osm:/osm:ro
     ports:
       - "127.0.0.1:8088:8080"
 

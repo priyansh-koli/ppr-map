@@ -23,6 +23,7 @@ class Source(BaseModel):
     reason: str | None = None
     out_fields: list[str] | None = None
     forbidden_fields: list[str] | None = None
+    datasets: dict[str, str] | None = None  # pinned per-layer download URLs
 
     @model_validator(mode="after")
     def _consistent(self) -> Self:

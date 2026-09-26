@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr test test-db lint format typecheck e2e ci
+.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr osm-extract geocoder test test-db lint format typecheck e2e ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -68,6 +68,19 @@ typecheck: ## mypy (strict) + tsc
 
 ingest-ppr: ## Download the Property Price Register and load it (needs `make up` + `make migrate`)
 	.venv/bin/ppr ingest ppr
+
+OSM_PBF := data/osm/ireland-and-northern-ireland-latest.osm.pbf
+OSM_URL := https://download.geofabrik.de/europe/ireland-and-northern-ireland-latest.osm.pbf
+
+osm-extract: ## Download the Geofabrik Ireland OSM extract (~400 MB) and check its md5
+	mkdir -p data/osm
+	curl -sSL --fail -A "ppr-map/0.1" -o $(OSM_PBF) $(OSM_URL)
+	cd data/osm && curl -sSL --fail $(OSM_URL).md5 | md5sum -c - 2>/dev/null || \
+	  [ "$$(md5 -q $(notdir $(OSM_PBF)))" = "$$(curl -sSL --fail $(OSM_URL).md5 | cut -d' ' -f1)" ]
+
+geocoder: check-docker ## Start self-hosted Nominatim (first run imports Ireland: 1h+)
+	@test -f $(OSM_PBF) || $(MAKE) osm-extract
+	$(COMPOSE) --profile geocoder up -d nominatim
 
 test: ## Unit tests (no database needed)
 	cd backend && ../.venv/bin/pytest -q

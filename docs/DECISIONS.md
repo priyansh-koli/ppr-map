@@ -239,3 +239,29 @@ Everything below is **Proposed** until the Phase 0 review.
 - **Result:** 34,668 sales (4.3%) in 5,207 groups; 4.5–5.6% per county.
 - **Trade-off:** A real portfolio at a round price spread across several localities is missed, and stays in medians. A coincidence of 3 same-price sales in one locality on one day is flagged. Both are rare, and users can switch the filter off (Q-08).
 - **Status:** Accepted (implementation detail). Group ids are a hash of (date, price, scope), so they are stable between runs.
+
+## D-032 The OSM extract is downloaded on the host, then mounted into Nominatim
+
+- **Context:** On 2026-09-26, TLS connections from containers to `download.geofabrik.de` failed (`SSL_ERROR_SYSCALL`), while other HTTPS sites worked from containers and Geofabrik worked from the host.
+- **Choice:** `make osm-extract` downloads the Ireland extract to `data/osm/` on the host and checks Geofabrik's md5. Nominatim imports it through `PBF_PATH` from a read-only mount. `make geocoder` starts it.
+- **Why:** This sidesteps the container network issue. It also pins one extract file that the amenities step (enrichment) will reuse, so geocoding and amenities come from the same OSM snapshot.
+- **Status:** Accepted (implementation detail). The first extract used: `ireland-and-northern-ireland-260925.osm.pbf` (md5 `592c0cadcc5d5dd8b645646f745450d5`).
+
+## D-033 Boundary layers, and how areas nest
+
+- **Context:** Geocoding checks ("is the point inside the reported county?"), spatial joins and area stats all need official boundaries.
+- **Choice:** Five layers from the Tailte Éireann open-data hub, pinned in `config/sources.yaml` and downloaded as File Geodatabases (about 230 MB, against 1.5 GB as GeoJSON), read with `pyogrio` (which bundles GDAL):
+
+| `area.kind` | Layer | Features | Why this one |
+|---|---|---|---|
+| county | Counties, statutory, ungeneralised, 2026 | 26 (from 9,261 parts) | the 26 counties the PPR uses |
+| electoral_division | CSO Electoral Divisions 2022, ungeneralised | 3,420 | matches Census 2022 and the Pobal index (D-011) |
+| small_area | CSO Small Areas 2022, ungeneralised | 18,919 | matches Census 2022 SAPS |
+| townland | Townlands, statutory, ungeneralised, 2026 | 50,575 | the finest named place for rural addresses (D-003 `locality`) |
+| settlement | CSO Urban Areas 2022, ungeneralised | 867 | the 2022 successor to CSO settlements |
+
+- **Nesting:** Small Area → ED by the CSO's `ED_GUID`. ED, townland and settlement → county by the county containing a point on their surface; the CSO labels EDs with 34 local-authority "counties" (FINGAL, CORK CITY, …), so a spatial parent is simpler and exact. Five coastal CSO shapes (the Dún Laoghaire-Salthill, Clontarf West D, Pembroke East A and Dundalk No. 2 Urban EDs, and Dungarvan town) run over harbour and foreshore past the statutory county line, so that point lands 20–150 m offshore; they take the nearest county within 2 km.
+- **Geometry:** `geom_full` keeps the ungeneralised ITM shape for joins; `geom` is a simplified WGS84 copy for display (5–50 m tolerance by layer). A new `area_part` table (migration 0002) holds `ST_Subdivide` pieces of at most 256 vertices with a GIST index. Without it, assigning 50,575 townlands to counties ran for over 7 minutes and was cancelled; with it, the whole load takes about 4 minutes.
+- **Names:** names that are mostly capitals are title-cased (`CARLOW RURAL` → `Carlow Rural`, `DUNDALK No. 2 URBAN` → `Dundalk No. 2 Urban`); names the publisher already cased (`Dún na nGall`) are kept as published.
+- **Licence:** Tailte Éireann data-sharing policy (open, attribution); the townland metadata on data.gov.ie still says "No licence specified" (R-05).
+- **Status:** Accepted (implementation detail).

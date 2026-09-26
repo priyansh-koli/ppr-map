@@ -134,6 +134,11 @@ Raw responses are kept for 90 days, then dropped to save space.
 
 Indexes: `unique(kind, code)`, `GIST(geom)`, `GIST(geom_full)`, `GIN(name gin_trgm_ops)`.
 
+### `area_part`
+`id, area_id FK area (cascade), kind area_kind, geom geometry(MultiPolygon,2157)`: each `area.geom_full` cut by `ST_Subdivide` into pieces of at most 256 vertices. Rebuilt by the pipeline whenever a layer loads. It makes point-in-polygon joins (property → Small Area, ED, townland; area → county) fast even for counties with thousands of islands.
+
+Indexes: `GIST(geom)`, `(area_id)`, `(kind)`.
+
 Routing-key "areas" are **derived**: the convex hull or centroid of our geocoded points. They are labelled as approximate, because official routing-key boundaries are not open data.
 
 ### `area_stats`

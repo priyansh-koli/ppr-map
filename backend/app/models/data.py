@@ -112,6 +112,25 @@ class Area(Base, CreatedAtMixin):
     )
 
 
+class AreaPart(Base):
+    """`area.geom_full` cut into small pieces (ST_Subdivide) for fast point-in-polygon joins.
+
+    Rebuilt by the pipeline whenever an area layer is loaded; never edited by hand.
+    """
+
+    __tablename__ = "area_part"
+
+    id: Mapped[int] = mapped_column(sa.BigInteger, sa.Identity(), primary_key=True)
+    area_id: Mapped[int] = mapped_column(sa.ForeignKey("area.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[AreaKind] = mapped_column(pg_enum(AreaKind, "area_kind"))
+    geom: Mapped[Any] = mapped_column(multipolygon(2157))
+
+    __table_args__ = (
+        gist("area_part", "geom"),
+        sa.Index("ix_area_part_kind", "kind"),
+    )
+
+
 class Property(Base, TimestampMixin):
     __tablename__ = "property"
 

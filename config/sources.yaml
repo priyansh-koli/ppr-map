@@ -113,7 +113,14 @@ sources:
   tailte_boundaries:
     name: Tailte Éireann statutory boundaries (counties, EDs, Small Areas 2022, townlands 2026)
     url: "https://data-osi.opendata.arcgis.com/"
-    format: GeoJSON / GeoPackage
+    format: File Geodatabase (zip), ITM EPSG:2157
+    # Pinned hub items (D-022), found through the data.gov.ie catalogue on 2026-09-26.
+    datasets:
+      county: "https://data-osi.opendata.arcgis.com/api/download/v1/items/a2dd7924915e4c74ad6a417e33c394eb/filegdb?layers=1"  # Counties, statutory, ungeneralised, 2026
+      electoral_division: "https://data-osi.opendata.arcgis.com/api/download/v1/items/deba50580cc24e4eb9cf50eb3cfebf69/filegdb?layers=1"  # CSO EDs 2022, ungeneralised
+      small_area: "https://data-osi.opendata.arcgis.com/api/download/v1/items/70a33cbb8bd7406da0d571be28624721/filegdb?layers=0"  # CSO Small Areas 2022, ungeneralised
+      townland: "https://data-osi.opendata.arcgis.com/api/download/v1/items/035423cd7741478e9184b74044777adf/filegdb?layers=8"  # Townlands, statutory, ungeneralised, 2026
+      settlement: "https://data-osi.opendata.arcgis.com/api/download/v1/items/8e526e870da5496994fb3cf2f98a02c2/filegdb?layers=0"  # CSO Urban Areas 2022, ungeneralised
     licence: Tailte Éireann open data (Creative Commons, attribution)
     attribution: "Contains Tailte Éireann data."
     cadence: per release

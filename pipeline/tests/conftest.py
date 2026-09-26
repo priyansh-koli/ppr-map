@@ -33,9 +33,9 @@ def migrated_engine() -> Iterator[sa.Engine]:
 
 @pytest.fixture
 def engine(migrated_engine: sa.Engine) -> sa.Engine:
-    """A migrated database with no PPR data in it."""
+    """A migrated database with no PPR or area data in it."""
     with migrated_engine.begin() as conn:
-        conn.execute(sa.text("TRUNCATE property, sale, ingest_run RESTART IDENTITY CASCADE"))
+        conn.execute(sa.text("TRUNCATE property, sale, ingest_run, area RESTART IDENTITY CASCADE"))
     return migrated_engine
 
 

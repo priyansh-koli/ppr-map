@@ -6,6 +6,7 @@ from typing import Annotated
 
 import typer
 
+from ppr_pipeline import boundaries
 from ppr_pipeline.db import get_engine
 from ppr_pipeline.ppr import ingest as ppr_ingest
 from ppr_pipeline.sources import load_sources
@@ -39,7 +40,10 @@ def _todo() -> None:
 def ingest(
     kind: Annotated[str, typer.Argument(help="Source key from config/sources.yaml")],
     file: Annotated[
-        Path | None, typer.Option(help="Load this local file instead of downloading.")
+        Path | None,
+        typer.Option(
+            help="Load this local file (or folder, for boundaries) instead of downloading."
+        ),
     ] = None,
     force: Annotated[bool, typer.Option(help="Reload even if the file is unchanged.")] = False,
 ) -> None:
@@ -50,6 +54,15 @@ def ingest(
     if not src.use:
         typer.echo(f"Refusing to ingest '{kind}': {src.reason}", err=True)
         raise typer.Exit(code=1)
+    if kind == "tailte_boundaries":
+        directory = file or DATA_DIR / "raw" / "boundaries"
+        if file is None:
+            typer.echo(f"Downloading boundary layers to {directory}")
+            boundaries.download(src, directory, refresh=force)
+        counts = boundaries.ingest_boundaries(get_engine(), directory, src.url)
+        for name, n in counts.items():
+            typer.echo(f"  {name}: {n}")
+        return
     if kind != "ppr":
         _todo()
 

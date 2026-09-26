@@ -58,6 +58,8 @@ Run `make help` for the full list.
 | `make test-db` | backend and pipeline tests including live PostGIS checks (`alembic check`, audit trigger, PPR ingest) |
 | `make e2e` | Playwright smoke test over every route |
 | `.venv/bin/ppr sources --all` | list data sources, licences and blocked sources |
+| `.venv/bin/ppr ingest tailte_boundaries` | download and load counties, EDs, Small Areas, townlands, settlements (about 4 min) |
+| `make geocoder` | start self-hosted Nominatim (first run imports Ireland, about 20 min; Docker memory ≥ 12 GB) |
 | `make ingest-ppr` | download the PPR and load it (skips an unchanged file; `ppr ingest ppr --file X --force` to reload) |
 
 New migrations: `cd backend && ../.venv/bin/alembic revision --autogenerate -m "..."` against the running database, then review the file.
