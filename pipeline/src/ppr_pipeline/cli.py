@@ -94,6 +94,7 @@ def geocode(
     limit: Annotated[
         int | None, typer.Option(help="Send at most this many properties to Nominatim.")
     ] = None,
+    workers: Annotated[int, typer.Option(help="Parallel Nominatim requests.")] = 8,
 ) -> None:
     """Geocode new properties with the D-003 cascade (needs `make geocoder`)."""
     summary = geocode_properties(
@@ -101,6 +102,7 @@ def geocode(
         get_settings().nominatim_url,
         refresh=refresh,
         limit=limit,
+        workers=workers,
         progress=typer.echo,
     )
     for name, value in summary.items():

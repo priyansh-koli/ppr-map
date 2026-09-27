@@ -2,7 +2,7 @@
 
 The Property Price Register, made usable: every residential sale in Ireland since 2010 on a map, with honest geocoding, sale history and vicinity context.
 
-**Status:** Phase 1 (scaffold) is ready for review. Phase 0 research and plan are in `docs/`.
+**Status:** Phase 2 (data pipeline) is ready for review: every sale since 2010 is loaded, geocoded with a confidence level, enriched and aggregated (see `docs/DECISIONS.md` D-035 to D-037). Phase 0 research and plan are in `docs/`.
 
 **Live preview:** https://priyansh-koli.github.io/ppr-map/ is the frontend as a static site, rebuilt after CI passes on `main` (D-034). It has no API or database yet, so it shows the page scaffold only.
 

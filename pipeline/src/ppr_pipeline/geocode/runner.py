@@ -92,13 +92,14 @@ class Nominatim:
         url: str,
         county_boxes: dict[str, tuple[float, float, float, float]],
         client: httpx.Client | None = None,
+        max_connections: int = WORKERS * 2,
     ) -> None:
         self.url = url.rstrip("/")
         self.boxes = county_boxes
         self.client = client or httpx.Client(
             timeout=60,
             headers={"User-Agent": USER_AGENT},
-            limits=httpx.Limits(max_connections=WORKERS * 2),
+            limits=httpx.Limits(max_connections=max_connections),
         )
         self.queries = 0
 
@@ -301,10 +302,11 @@ def nominatim_pass(
     run_id: int,
     *,
     limit: int | None = None,
+    workers: int = WORKERS,
     progress: Progress = lambda _: None,
 ) -> int:
     done, after, started = 0, 0, time.monotonic()
-    with cf.ThreadPoolExecutor(WORKERS) as pool:
+    with cf.ThreadPoolExecutor(workers) as pool:
         while limit is None or done < limit:
             n = CHUNK if limit is None else min(CHUNK, limit - done)
             with engine.connect() as conn:
@@ -641,6 +643,7 @@ def geocode_properties(
     *,
     refresh: bool = False,
     limit: int | None = None,
+    workers: int = WORKERS,
     client: httpx.Client | None = None,
     progress: Progress = lambda _: None,
 ) -> dict[str, Any]:
@@ -661,9 +664,11 @@ def geocode_properties(
         boxes = county_boxes(conn)
     started = time.monotonic()
     try:
-        nominatim = Nominatim(nominatim_url, boxes, client)
+        nominatim = Nominatim(nominatim_url, boxes, client, max_connections=workers * 2)
         geocoder = Geocoder(nominatim)
-        tried = nominatim_pass(engine, geocoder, run_id, limit=limit, progress=progress)
+        tried = nominatim_pass(
+            engine, geocoder, run_id, limit=limit, workers=workers, progress=progress
+        )
         progress("  fallbacks: gazetteer, routing key, county")
         stats: dict[str, Any] = {
             "properties": tried,

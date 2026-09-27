@@ -4,7 +4,7 @@ This app makes Ireland's Property Price Register (PPR) explorable on a map. Read
 
 ## Working rules (from the project owner)
 
-- Work in phases and **stop at each STOP checkpoint** for review. Current phase: **2 (data pipeline)**. Phase 1 was reviewed on 2026-09-26. Phase 0 was reviewed on 2026-09-26: Q-09 = no licensed listing data, Q-10 = yes to the index-based estimate. Other open questions use their documented defaults.
+- Work in phases and **stop at each STOP checkpoint** for review. Current phase: **2 (data pipeline), complete and awaiting review** (2026-09-27; results in D-035 to D-037). Phase 1 was reviewed on 2026-09-26. Phase 0 was reviewed on 2026-09-26: Q-09 = no licensed listing data, Q-10 = yes to the index-based estimate. Other open questions use their documented defaults.
 - **Ask before adding any paid service or signing up for any API.** Also ask before contacting any third party on the project's behalf.
 - Secrets live only in `.env`. Commit `.env.example` with every variable, documented, and no values.
 - Write tests with each feature, not afterwards.

@@ -275,3 +275,38 @@ Everything below is **Proposed** until the Phase 0 review.
 - **Limits:** Anything that needs the API (map data, sign-in, search, admin) cannot work on Pages. When Phase 3 adds live data, the full stack needs a real host (option b), and this preview is either retired or kept as a docs site.
 - **Status:** Accepted (owner request, 2026-09-27).
 - **Update 2026-09-27:** Pages now deploys only after CI passes on `main` (`workflow_run`), and first runs the Playwright route smoke tests against the export served under the base path (`E2E_BASE_PATH`, `e2e/serve-export.mjs`). Before, a commit that failed lint or e2e was still published, and nothing tested the base path.
+
+## D-035 Geocoding cascade as built, and what it achieved
+
+- **Context:** D-003 set the plan: self-hosted Nominatim, our own gazetteers, a confidence level on every point. On a first sample, Nominatim's loose matching gave wrong answers with high scores: "Fenit, Tralee" returned Fenit *Road*, "Coosan" the *Coosan Heath* estate, "The Mall, Thurles" the Mall in Templemore, and "Athlone Rd, Longford" a road in County Cavan.
+- **Choice:**
+  - Each address is queried from its full form down to its town (`query_parts`, `ladder`), bounded to the county's box. A trailing bare county name ("…, Athenry, Galway") is tried with and without, because it is sometimes the town.
+  - A result is accepted only if its name matches the queried part word for word (abbreviations expanded; a townland division such as "Big" may be added), it is a plausible feature for the level (a house number on the right street for `exact`; a street or estate for `street`; a village, townland or suburb for `locality`; never a city or county), and it lies within 5 km of the address's town (15 km for cities, 20 km for localities). Without a town, two same-named matches more than 3 km apart are ambiguous and rejected.
+  - PostGIS rejects any point more than 2 km outside the reported county.
+  - Fallbacks, recomputed on every run: a unique official townland or CSO settlement name in the county (`locality`); the median of exact and street points sharing the Eircode routing key, or the Dublin postal district when there is no Eircode (`routing_key`); a last part naming the county taken as the town of that name (`locality`, method `gazetteer:county_town`); a point inside the county (`county`).
+  - A precise point more than 25 km from its routing key's median is logged as `routing_key_conflict` for review, not moved: PPR Eircodes are sometimes wrong (R-04).
+  - Small Area, ED and H3 r8 are joined for exact and street points only; a town-centre point says nothing about which Small Area a house is in.
+- **Result (first full run, 2026-09-27, 728,460 properties, 810k queries, 65 min):** exact 68,423 (9.4%), street 265,395 (36.4%), locality 324,320 (44.5%), routing key 28,864 (4.0%), county 41,458 (5.7%); 8,976 routing-key conflicts queued. Exact matches outside Dublin are 1–4%, as the Phase 0 sample predicted: OSM has few house numbers there. Only the Eircode lookup (D-003, a paid decision) would change that.
+- **Status:** Accepted (implementation detail).
+
+## D-036 Enrichment sources for the hover card
+
+- **Context:** The hover card needs the nearest stop, schools, shops nearby and deprivation, precomputed (goal 1 in ARCHITECTURE.md).
+- **Choice:**
+  - **Stops:** the NTA GTFS feed; a stop is typed by the routes that call there (bus, Luas, DART, rail). 14,089 served stops.
+  - **Amenities:** the same OSM extract Nominatim uses, read locally with GDAL's OSM driver (no Overpass). 51,700 points of interest.
+  - **Schools:** OSM `amenity=school`, because gov.ie still refuses automated downloads of the Department of Education lists (403). A school is typed primary, post-primary or special only when its tags or name say so (3,018, 803 and 65); others are left out, not guessed. Replace with the official lists when they can be downloaded.
+  - **Deprivation:** Pobal HP 2022 by ED, matched through the CSO ED id (Pobal drops leading zeros). All 3,417 EDs matched.
+  - Distances are straight lines in metres and are labelled as such; there is no routing engine.
+  - Vicinity values exist only for exact and street points (333,818). A distance from a town centre or a county point would be invented.
+- **Status:** Accepted (implementation detail).
+
+## D-037 Aggregates: what counts, and at which levels
+
+- **Choice:**
+  - Market sales only: not "not full market price", not in a bulk group (D-031), not a possible duplicate filing, not withdrawn.
+  - `area_stats`: counties, settlements and EDs get month, quarter, year and a rolling 12 months ending each month; Small Areas and townlands get quarter and year only, which keeps the table at 2.6 million rows. Groups with n < 5 keep the count and drop every price. Periods ending on or after the first day of the month before the latest sale's month are provisional.
+  - `price_hex`: H3 r8 cells from exact and street points, with their r7 and r6 parents recomputed from the sales (not averaged), over 12 and 36 months: 24,044 cells.
+  - `property_summary`: one JSON row per property. The area line uses the settlement if it has unsuppressed 12-month stats, else the county. Flood is always the OPW link with no value (D-010).
+  - `data_version` is the latest sale date and the PPR ingest run id (`2026-09-18.r1`).
+- **Status:** Accepted (implementation detail).
