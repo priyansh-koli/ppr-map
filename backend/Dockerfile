@@ -17,7 +17,13 @@ COPY pipeline/src pipeline/src
 COPY config config
 
 RUN pip install ./backend ./pipeline \
-    && useradd --system --uid 10001 app
+    && useradd --system --uid 10001 app \
+    && mkdir /srv/data && chown app /srv/data
+
+# The packages are installed into site-packages, so the pipeline cannot find config/ or a
+# writable data/ relative to its source as it does in the editable dev venv.
+ENV PPR_CONFIG_DIR=/srv/config \
+    DATA_DIR=/srv/data
 
 USER app
 WORKDIR /srv/backend

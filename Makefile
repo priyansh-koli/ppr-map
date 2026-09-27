@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr osm-extract geocoder test test-db lint format typecheck e2e ci
+.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr osm-extract geocoder test test-db lint format typecheck e2e e2e-pages ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -36,13 +36,13 @@ check-docker:
 	@docker info >/dev/null 2>&1 || { echo "Docker is installed but not running: open Docker Desktop or OrbStack"; exit 1; }
 
 install: check-dev venv ## venv + frontend node_modules + Playwright browser
-	cd frontend && npm install && npx playwright install chromium
+	cd frontend && npm ci && npx playwright install chromium
 
 up: check-docker env ## Start the local stack (http://localhost:8080)
 	$(COMPOSE) up -d --build
 
-down: ## Stop the local stack
-	$(COMPOSE) down
+down: ## Stop the local stack (including the geocoder, if running)
+	$(COMPOSE) --profile geocoder down
 
 logs: ## Follow logs
 	$(COMPOSE) logs -f
@@ -67,16 +67,18 @@ typecheck: ## mypy (strict) + tsc
 	cd frontend && npm run typecheck
 
 ingest-ppr: ## Download the Property Price Register and load it (needs `make up` + `make migrate`)
-	.venv/bin/ppr ingest ppr
+	set -a; source .env; set +a; .venv/bin/ppr ingest ppr
 
 OSM_PBF := data/osm/ireland-and-northern-ireland-latest.osm.pbf
 OSM_URL := https://download.geofabrik.de/europe/ireland-and-northern-ireland-latest.osm.pbf
 
 osm-extract: ## Download the Geofabrik Ireland OSM extract (~400 MB) and check its md5
 	mkdir -p data/osm
-	curl -sSL --fail -A "ppr-map/0.1" -o $(OSM_PBF) $(OSM_URL)
-	cd data/osm && curl -sSL --fail $(OSM_URL).md5 | md5sum -c - 2>/dev/null || \
-	  [ "$$(md5 -q $(notdir $(OSM_PBF)))" = "$$(curl -sSL --fail $(OSM_URL).md5 | cut -d' ' -f1)" ]
+	curl -sSL --fail -A "ppr-map/0.1" -o $(OSM_PBF).part $(OSM_URL)
+	@want=$$(curl -sSL --fail $(OSM_URL).md5 | cut -d' ' -f1); \
+	got=$$( (md5sum $(OSM_PBF).part 2>/dev/null || md5 -r $(OSM_PBF).part) | cut -d' ' -f1); \
+	[ -n "$$want" ] && [ "$$want" = "$$got" ] || { echo "md5 mismatch, keeping $(OSM_PBF).part"; exit 1; }
+	mv $(OSM_PBF).part $(OSM_PBF)
 
 geocoder: check-docker ## Start self-hosted Nominatim (first run imports Ireland: 1h+)
 	@test -f $(OSM_PBF) || $(MAKE) osm-extract
@@ -93,5 +95,8 @@ test-db: ## Backend and pipeline tests including live PostGIS checks (needs `mak
 
 e2e: ## Playwright smoke tests over every route
 	cd frontend && npm run test:e2e
+
+e2e-pages: ## The same tests against the GitHub Pages static export, under /ppr-map
+	cd frontend && STATIC_EXPORT=1 PAGES_BASE_PATH=/ppr-map npm run build && E2E_BASE_PATH=/ppr-map npm run test:e2e
 
 ci: lint typecheck test ## What CI runs (minus the database and e2e jobs)

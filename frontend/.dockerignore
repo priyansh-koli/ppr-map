@@ -2,3 +2,6 @@ node_modules
 .next
 playwright-report
 test-results
+out
+.env*
+*.tsbuildinfo
