@@ -5,6 +5,7 @@ import asyncio
 import logging
 import smtplib
 from dataclasses import dataclass
+from datetime import date
 from email.message import EmailMessage
 from typing import Protocol
 
@@ -71,6 +72,17 @@ def already_registered(to: str) -> Email:
         "Someone, probably you, tried to create a PPR Map account with this email address, "
         "but one already exists.\n\n"
         f"Sign in: {link('/login')}\nForgot your password? {link('/forgot-password')}\n\n"
+        "If this was not you, you can ignore this email.\n",
+    )
+
+
+def account_closed(to: str, purge_on: date) -> Email:
+    return Email(
+        to,
+        "Your PPR Map account is closed",
+        "Someone, probably you, tried to create a PPR Map account with this email address. "
+        "The account that used it was closed, and it is deleted for good on "
+        f"{purge_on.day} {purge_on:%B %Y}. You can register with this address again after that.\n\n"
         "If this was not you, you can ignore this email.\n",
     )
 

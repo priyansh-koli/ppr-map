@@ -36,12 +36,12 @@
 | Method | Path | Body / notes | Limit |
 |---|---|---|---|
 | POST | `/auth/register` | `{fullName, email, password, age18Plus: true, acceptTerms: true, termsVersion, privacyVersion, profile?: {userType?, counties?, budgetMin?, budgetMax?, propertyInterest?}, marketingOptIn?: false}`. Always answers 202 so it doesn't reveal whether an account exists. | 5/h/IP |
-| POST | `/auth/login` | `{email, password}` → sets the session cookie | 10/15 min per IP+email |
-| POST | `/auth/logout` | revokes the current session | |
+| POST | `/auth/login` | `{email, password}` → sets the session cookie | 10/15 min per IP+email (reset by a successful sign-in), 100/15 min per IP |
+| POST | `/auth/logout` | revokes the current session; 204 and clears the cookie even if the session had already ended | |
 | POST | `/auth/logout-all` | revokes all of the user's sessions | |
 | POST | `/auth/verify-email` | `{token}` | |
 | POST | `/auth/resend-verification` | | 3/h |
-| POST | `/auth/forgot-password` | `{email}` → always 202 | 3/h/IP |
+| POST | `/auth/forgot-password` | `{email}` → always 202 | 5/h/IP |
 | POST | `/auth/reset-password` | `{token, password}` → revokes all sessions | |
 | ~~POST~~ | ~~`/auth/refresh`~~ | dropped (D-008) | |
 
@@ -51,11 +51,10 @@
 | Method | Path | Notes |
 |---|---|---|
 | GET/PATCH | `/me` | profile, preferences, `historyEnabled`, notification settings |
-| POST | `/me/password` | `{currentPassword, newPassword}` |
+| POST | `/me/password` | `{currentPassword, newPassword}`; signs out every other session and voids open reset links |
 | DELETE | `/me` | needs the password; soft-deletes the account, hard-purges after 30 days, and revokes sessions |
-| POST | `/me/export` | starts a GDPR export job → 202 `{jobId}` |
-| GET | `/me/export/{jobId}` | status, and a download URL when ready (expires after 24 h) |
-| GET/POST | `/me/wishlist` · PATCH/DELETE `/me/wishlist/{id}` | add a property or area with a note |
+| GET | `/me/export` | everything stored about the account (GDPR access request), as a JSON download |
+| GET/POST | `/me/wishlist` · PATCH/DELETE `/me/wishlist/{id}` | add a property or area with a note (201; 200 with the existing item if already saved). At most 500 items. |
 | GET | `/me/wishlist/compare?ids=a,b,c,d` | up to 4 items |
 | GET/DELETE | `/me/history/views` · DELETE `/me/history/views/{id}` | |
 | GET/DELETE | `/me/history/searches` · DELETE `/me/history/searches/{id}` | |

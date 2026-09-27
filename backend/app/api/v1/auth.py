@@ -2,6 +2,8 @@
 
 Answers never reveal whether an email has an account: registering an existing email and
 asking to reset an unknown one both return the same 202, and the email says what happened.
+Both branches do the same slow work (a password hash) and send mail after the response, so
+timing does not tell them apart either.
 """
 
 import uuid
@@ -9,13 +11,13 @@ from datetime import timedelta
 from typing import Annotated
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.deps import User, session_cookie_name
+from app.auth.deps import OptionalUser, User, session_cookie_name
 from app.auth.passwords import hash_password, needs_rehash, password_problem, verify_password
-from app.auth.ratelimit import limit
+from app.auth.ratelimit import forget, limit
 from app.auth.sessions import ABSOLUTE, create_session, forget_cached_user, revoke_sessions
 from app.auth.tokens import ip_hash, new_token, token_hash
 from app.config import get_settings, secure_cookies
@@ -44,6 +46,7 @@ Mailer = Annotated[mail.Mailer, Depends(mail.get_mailer)]
 VERIFY_FOR = timedelta(hours=24)
 RESET_FOR = timedelta(hours=1)
 CHECK_EMAIL = "Check your email to continue."
+PURGE_AFTER = timedelta(days=30)
 
 
 def _ip(request: Request) -> str:
@@ -88,7 +91,12 @@ async def _issue_verification(db: AsyncSession, user_id: object) -> str:
 
 @router.post("/register", status_code=202, response_model=Accepted)
 async def register(
-    body: RegisterIn, request: Request, db: Db, cache: Cache, mailer: Mailer
+    body: RegisterIn,
+    request: Request,
+    db: Db,
+    cache: Cache,
+    mailer: Mailer,
+    background: BackgroundTasks,
 ) -> Accepted:
     """Create an account and email a verification link. Always 202."""
     await limit(cache, f"register:{ip_hash(_ip(request))}", 5, 3600)
@@ -97,27 +105,31 @@ async def register(
     if problem := password_problem(body.password, body.email):
         raise HTTPException(422, problem)
     email = body.email.lower()
-    existing = (
-        await db.execute(sa.text("SELECT 1 FROM app_user WHERE email = :e"), {"e": email})
-    ).one_or_none()
-    if existing:
-        await mailer.send(mail.already_registered(email))
-        return Accepted(message=CHECK_EMAIL)
-
-    user_id: uuid.UUID = (
+    # Hashed before the lookup, so an existing email answers as slowly as a new one.
+    password_hash = await hash_password(body.password)
+    user_id: uuid.UUID | None = (
         await db.execute(
             sa.text(
                 "INSERT INTO app_user (email, password_hash, full_name, marketing_opt_in) "
-                "VALUES (:e, :p, :n, :m) RETURNING id"
+                "VALUES (:e, :p, :n, :m) ON CONFLICT (email) DO NOTHING RETURNING id"
             ),
-            {
-                "e": email,
-                "p": hash_password(body.password),
-                "n": body.full_name.strip(),
-                "m": body.marketing_opt_in,
-            },
+            {"e": email, "p": password_hash, "n": body.full_name, "m": body.marketing_opt_in},
         )
-    ).scalar_one()
+    ).scalar_one_or_none()
+    if user_id is None:
+        closed_at = (
+            await db.execute(
+                sa.text("SELECT deleted_at FROM app_user WHERE email = :e"), {"e": email}
+            )
+        ).scalar_one_or_none()
+        await db.rollback()
+        notice = (
+            mail.account_closed(email, (closed_at + PURGE_AFTER).date())
+            if closed_at is not None
+            else mail.already_registered(email)
+        )
+        background.add_task(mailer.send, notice)
+        return Accepted(message=CHECK_EMAIL)
     await db.execute(
         sa.text(
             "INSERT INTO user_role (user_id, role_id) SELECT :u, id FROM role WHERE name = 'user'"
@@ -163,7 +175,7 @@ async def register(
         )
     token = await _issue_verification(db, user_id)
     await db.commit()
-    await mailer.send(mail.verify_email(email, body.full_name.strip(), token))
+    background.add_task(mailer.send, mail.verify_email(email, body.full_name, token))
     return Accepted(message=CHECK_EMAIL)
 
 
@@ -194,20 +206,26 @@ async def verify_email(body: TokenIn, db: Db, cache: Cache) -> Accepted:
 
 
 @router.post("/resend-verification", status_code=202, response_model=Accepted)
-async def resend_verification(user: User, db: Db, cache: Cache, mailer: Mailer) -> Accepted:
+async def resend_verification(
+    user: User, db: Db, cache: Cache, mailer: Mailer, background: BackgroundTasks
+) -> Accepted:
     await limit(cache, f"resend:{user.id}", 3, 3600)
     if user.email_verified:
         return Accepted(message="Your email is already confirmed.")
     token = await _issue_verification(db, user.id)
     await db.commit()
-    await mailer.send(mail.verify_email(user.email, user.full_name, token))
+    background.add_task(mailer.send, mail.verify_email(user.email, user.full_name, token))
     return Accepted(message=CHECK_EMAIL)
 
 
 @router.post("/login", response_model=Me)
 async def login(body: LoginIn, request: Request, response: Response, db: Db, cache: Cache) -> Me:
     email = body.email.lower()
-    await limit(cache, f"login:{ip_hash(_ip(request))}:{email}", 10, 15 * 60)
+    ip = ip_hash(_ip(request))
+    # Per address, and a looser one per IP so one client cannot spray many addresses.
+    per_email = f"login:{ip}:{token_hash(email)}"
+    await limit(cache, per_email, 10, 15 * 60)
+    await limit(cache, f"login:{ip}", 100, 15 * 60)
     row = (
         await db.execute(
             sa.text(
@@ -218,17 +236,16 @@ async def login(body: LoginIn, request: Request, response: Response, db: Db, cac
         )
     ).one_or_none()
     # Always verify against a hash, so an unknown email takes as long as a wrong password.
-    if not verify_password(row[1] if row else None, body.password) or row is None:
+    if not await verify_password(row[1] if row else None, body.password) or row is None:
         raise HTTPException(401, "The email or password is wrong")
     user_id = row[0]
+    await forget(cache, per_email)
     if needs_rehash(row[1]):
         await db.execute(
             sa.text("UPDATE app_user SET password_hash = :p WHERE id = :u"),
-            {"p": hash_password(body.password), "u": user_id},
+            {"p": await hash_password(body.password), "u": user_id},
         )
-    token = await create_session(
-        db, user_id, ip_hash(_ip(request)), request.headers.get("user-agent")
-    )
+    token = await create_session(db, user_id, ip, request.headers.get("user-agent"))
     await db.execute(
         sa.text("UPDATE app_user SET last_login_at = now() WHERE id = :u"), {"u": user_id}
     )
@@ -238,22 +255,27 @@ async def login(body: LoginIn, request: Request, response: Response, db: Db, cac
 
 
 @router.post("/logout", status_code=204)
-async def logout(user: User, response: Response, db: Db, cache: Cache) -> None:
-    await revoke_sessions(db, cache, user.id, only=user.session_id)
-    await db.commit()
+async def logout(user: OptionalUser, response: Response, db: Db, cache: Cache) -> None:
+    """Sign out. Succeeds, and clears the cookie, even if the session had already ended."""
+    if user is not None:
+        await revoke_sessions(db, cache, user.id, only=user.session_id)
     clear_session_cookie(response)
 
 
 @router.post("/logout-all", status_code=204)
 async def logout_all(user: User, response: Response, db: Db, cache: Cache) -> None:
     await revoke_sessions(db, cache, user.id)
-    await db.commit()
     clear_session_cookie(response)
 
 
 @router.post("/forgot-password", status_code=202, response_model=Accepted)
 async def forgot_password(
-    body: EmailIn, request: Request, db: Db, cache: Cache, mailer: Mailer
+    body: EmailIn,
+    request: Request,
+    db: Db,
+    cache: Cache,
+    mailer: Mailer,
+    background: BackgroundTasks,
 ) -> Accepted:
     await limit(cache, f"forgot:{ip_hash(_ip(request))}", 5, 3600)
     email = body.email.lower()
@@ -276,19 +298,22 @@ async def forgot_password(
             {"u": row[0], "h": token_hash(token), "for": RESET_FOR},
         )
         await db.commit()
-        await mailer.send(mail.reset_password(email, row[1], token))
+        background.add_task(mailer.send, mail.reset_password(email, row[1], token))
     return Accepted(message="If that email has an account, a reset link is on its way.")
 
 
 @router.post("/reset-password", response_model=Accepted)
-async def reset_password(body: ResetIn, db: Db, cache: Cache, mailer: Mailer) -> Accepted:
+async def reset_password(
+    body: ResetIn, db: Db, cache: Cache, mailer: Mailer, background: BackgroundTasks
+) -> Accepted:
+    # FOR UPDATE: a second request with the same link waits here, then finds it used.
     row = (
         await db.execute(
             sa.text(
                 "SELECT t.id, u.id, u.email, u.full_name FROM password_reset_token t "
                 "JOIN app_user u ON u.id = t.user_id "
                 "WHERE t.token_hash = :h AND t.used_at IS NULL AND t.expires_at > now() "
-                "AND u.is_active AND u.deleted_at IS NULL"
+                "AND u.is_active AND u.deleted_at IS NULL FOR UPDATE OF t"
             ),
             {"h": token_hash(body.token)},
         )
@@ -306,7 +331,7 @@ async def reset_password(body: ResetIn, db: Db, cache: Cache, mailer: Mailer) ->
     )
     await db.execute(
         sa.text("UPDATE app_user SET password_hash = :p, updated_at = now() WHERE id = :u"),
-        {"p": hash_password(body.password), "u": user_id},
+        {"p": await hash_password(body.password), "u": user_id},
     )
     # Resetting proves control of the email, so the address counts as confirmed.
     await db.execute(
@@ -317,6 +342,5 @@ async def reset_password(body: ResetIn, db: Db, cache: Cache, mailer: Mailer) ->
         {"u": user_id},
     )
     await revoke_sessions(db, cache, user_id)
-    await db.commit()
-    await mailer.send(mail.password_changed(email, name))
+    background.add_task(mailer.send, mail.password_changed(email, name))
     return Accepted(message="Your password is changed. Sign in with the new one.")

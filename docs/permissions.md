@@ -46,7 +46,7 @@
 | search | 60 / min | 300 / min | 600 / min |
 | property summary (hover) | 300 / min | 600 / min | 1,200 / min |
 | autocomplete | 120 / min | 300 / min | 600 / min |
-| auth: login | 10 per 15 min per IP+email | | |
+| auth: login | 10 per 15 min per IP+email (a successful sign-in resets it); 100 per 15 min per IP | | |
 | auth: register / forgot-password | 5 / h / IP | | |
 
 ## Rules outside the matrix

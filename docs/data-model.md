@@ -221,7 +221,7 @@ Constraints: `CHECK` that exactly one target is set, and `unique(user_id, target
 
 ### `view_history`
 `id, user_id FK, property_id FK, viewed_at` · index `(user_id, viewed_at desc)`.
-Retention: 12 months, purged nightly. Nothing is written when `history_enabled = false`.
+Retention: 12 months, purged daily by `python -m app.cli purge-deleted` (and never listed or exported once older). Nothing is written when `history_enabled = false`.
 
 ### `search_history`
 `id, user_id FK, query jsonb (validated filter object), searched_at` · same retention.

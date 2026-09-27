@@ -47,7 +47,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Logout */
+        /**
+         * Logout
+         * @description Sign out. Succeeds, and clears the cookie, even if the session had already ended.
+         */
         post: operations["logout_api_v1_auth_logout_post"];
         delete?: never;
         options?: never;
@@ -275,7 +278,7 @@ export interface paths {
         put?: never;
         /**
          * Change Password
-         * @description Change the password; every other session is signed out.
+         * @description Change the password; every other session is signed out and reset links stop working.
          */
         post: operations["change_password_api_v1_me_password_post"];
         delete?: never;
@@ -296,7 +299,8 @@ export interface paths {
         put?: never;
         /**
          * Add To Wishlist
-         * @description Save a property or an area. Saving the same one again returns the existing item.
+         * @description Save a property or an area (201). Saving the same one again returns the existing item
+         *     (200), with its note replaced if a new one is given.
          */
         post: operations["add_to_wishlist_api_v1_me_wishlist_post"];
         delete?: never;
@@ -586,7 +590,10 @@ export interface components {
             /** Roles */
             roles: string[];
         };
-        /** MePatch */
+        /**
+         * MePatch
+         * @description Only the fields sent are changed; within `profile`, too.
+         */
         MePatch: {
             /** Fullname */
             fullName?: string | null;
@@ -922,7 +929,10 @@ export interface components {
             id: number;
             /** Propertyid */
             propertyId: string;
-            /** Viewedat */
+            /**
+             * Viewedat
+             * Format: date-time
+             */
             viewedAt: string;
         };
         /** WishlistIn */
@@ -941,7 +951,10 @@ export interface components {
         WishlistItemOut: {
             /** Areaslug */
             areaSlug: string | null;
-            /** Createdat */
+            /**
+             * Createdat
+             * Format: date-time
+             */
             createdAt: string;
             /** Id */
             id: number;
@@ -1508,6 +1521,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Already saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WishlistItemOut"];
+                };
+            };
             /** @description Successful Response */
             201: {
                 headers: {

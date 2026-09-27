@@ -9,6 +9,7 @@ const EUR_SHORT = new Intl.NumberFormat("en-IE", {
   notation: "compact",
   maximumFractionDigits: 1,
 });
+const DATE_TIME = new Intl.DateTimeFormat("en-IE", { dateStyle: "medium", timeStyle: "short" });
 const DATE = new Intl.DateTimeFormat("en-IE", {
   day: "numeric",
   month: "short",
@@ -21,11 +22,18 @@ const MONTH = new Intl.DateTimeFormat("en-IE", {
   timeZone: "UTC",
 });
 
-export const formatEur = (value: number) => EUR.format(value);
-export const formatEurShort = (value: number) => EUR_SHORT.format(value);
+// Money may arrive as a JSON number or as a decimal string ("350000.00"); both read the same.
+export const formatEur = (value: number | string) => EUR.format(Number(value));
+export const formatEurShort = (value: number | string) => EUR_SHORT.format(Number(value));
 /** ISO dates ("2026-09-18") read as calendar dates, not as local midnight. */
 export const formatDate = (iso: string) => DATE.format(new Date(`${iso}T00:00:00Z`));
 export const formatMonth = (iso: string) => MONTH.format(new Date(`${iso}T00:00:00Z`));
+
+/** An ISO timestamp in local time; anything unparseable is shown as it came. */
+export function formatDateTime(iso: string): string {
+  const when = new Date(iso);
+  return Number.isNaN(when.getTime()) ? iso : DATE_TIME.format(when);
+}
 
 export function formatDistance(metres: number): string {
   return metres < 1000 ? `${Math.round(metres / 10) * 10} m` : `${(metres / 1000).toFixed(1)} km`;

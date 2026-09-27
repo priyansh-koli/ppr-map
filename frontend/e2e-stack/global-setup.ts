@@ -14,9 +14,13 @@ function resp(args: string[]): string {
 export default async function globalSetup(): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const socket = connect(6379, "127.0.0.1", () => socket.write(resp(["EVAL", SCRIPT, "0"])));
-    socket.once("data", () => {
+    // A RESP reply starts with its type: "+" status, ":" integer, "*" array, "$" bulk string
+    // (nil for this script) are fine; "-" is an error such as NOAUTH, which must stop the run.
+    socket.once("data", (reply) => {
       socket.end();
-      resolve();
+      const text = reply.toString();
+      if ("+:*$".includes(text[0] ?? "-")) resolve();
+      else reject(new Error(`Redis refused the rate-limit reset: ${text.trim()}`));
     });
     socket.once("error", reject);
   });

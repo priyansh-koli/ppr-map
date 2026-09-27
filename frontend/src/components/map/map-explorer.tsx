@@ -164,7 +164,15 @@ function writeUrl(map: MapLibreMap, filters: Filters, hexes: boolean) {
   p.set("lng", c.lng.toFixed(5));
   p.set("z", map.getZoom().toFixed(2));
   if (hexes) p.set("layer", "hexes");
-  window.history.replaceState(null, "", `${window.location.pathname}?${p.toString()}`);
+  // Keep Next's own history state: its patched replaceState then only changes the address and
+  // does not dispatch a router update. That update would replace a navigation in flight, so a
+  // link clicked while the map is still easing (moveend comes after) would go nowhere. The map
+  // reads its view from window.location, never from useSearchParams, so nothing needs it.
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${window.location.pathname}?${p.toString()}`,
+  );
 }
 
 export function MapExplorer() {

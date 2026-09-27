@@ -1,28 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { api, ApiError } from "@/lib/api/client";
+import { api } from "@/lib/api/client";
 import { ROUTES } from "@/lib/routes";
 
+import { messageOf } from "./form";
 import { useSession } from "./session";
+import { SignInLink } from "./sign-in-link";
+
+const buttonClass =
+  "rounded border border-line px-3 py-1 text-sm font-medium text-ink hover:bg-surface-2 disabled:opacity-60";
 
 /** Save a property to the wishlist; signed-out users get a way to sign in first. */
 export function SaveButton({ propertyId }: { propertyId: string }) {
-  const { me } = useSession();
-  const path = usePathname();
-  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  if (!me) {
+  const { me, loading } = useSession();
+  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
+  const [error, setError] = useState<string | null>(null);
+  // Until the session check answers, nobody is known to be signed out.
+  if (loading) {
     return (
-      <Link
-        className="text-sm text-accent underline"
-        href={`${ROUTES.login.path}?next=${encodeURIComponent(path)}`}
-      >
-        Sign in to save
-      </Link>
+      <button type="button" disabled aria-busy className={buttonClass}>
+        Save to wishlist
+      </button>
     );
+  }
+  if (!me) {
+    return <SignInLink className="text-sm text-accent underline">Sign in to save</SignInLink>;
   }
   if (state === "saved") {
     return (
@@ -35,21 +40,29 @@ export function SaveButton({ propertyId }: { propertyId: string }) {
     );
   }
   return (
-    <button
-      type="button"
-      disabled={state === "saving"}
-      className="rounded border border-line px-3 py-1 text-sm font-medium text-ink hover:bg-surface-2"
-      onClick={async () => {
-        setState("saving");
-        try {
-          await api.saveProperty(propertyId);
-          setState("saved");
-        } catch (e) {
-          setState(e instanceof ApiError ? "error" : "error");
-        }
-      }}
-    >
-      {state === "error" ? "Could not save; try again" : "Save to wishlist"}
-    </button>
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        disabled={state === "saving"}
+        className={buttonClass}
+        onClick={async () => {
+          setState("saving");
+          setError(null);
+          try {
+            await api.saveProperty(propertyId);
+            setState("saved");
+          } catch (e) {
+            // The API says why (a full wishlist is a 409), so show that.
+            setError(`Could not save: ${messageOf(e)}`);
+            setState("idle");
+          }
+        }}
+      >
+        Save to wishlist
+      </button>
+      <span role="status" aria-live="assertive" className="text-sm text-ink empty:sr-only">
+        {error ?? ""}
+      </span>
+    </span>
   );
 }

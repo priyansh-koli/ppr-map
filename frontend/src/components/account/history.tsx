@@ -5,16 +5,27 @@ import { useEffect, useState } from "react";
 
 import { useSession } from "@/components/auth/session";
 import { api, type View } from "@/lib/api/client";
+import { formatDateTime } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 
-import { FormMessage, messageOf } from "../auth/form";
-
-const WHEN = new Intl.DateTimeFormat("en-IE", { dateStyle: "medium", timeStyle: "short" });
+import { FormMessage, messageOf, useBusy } from "../auth/form";
 
 export function History() {
   const { me } = useSession();
   const [views, setViews] = useState<View[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const { busy, run } = useBusy();
+  // One change at a time: a Remove racing Clear all would leave the list out of step.
+  const act = (task: () => Promise<void>, failure: string) =>
+    run(async () => {
+      setActionError(null);
+      try {
+        await task();
+      } catch (e) {
+        setActionError(`${failure}: ${messageOf(e)}`);
+      }
+    });
   useEffect(() => {
     api
       .views()
@@ -38,15 +49,19 @@ export function History() {
           Properties you opened in the last 12 months. Only you can see this.
         </p>
       )}
+      <FormMessage error={actionError} />
       {views.length ? (
         <>
           <button
             type="button"
-            className="text-sm text-accent underline"
-            onClick={async () => {
-              await api.clearViews();
-              setViews([]);
-            }}
+            className="text-sm text-accent underline disabled:opacity-60"
+            disabled={busy}
+            onClick={() =>
+              act(async () => {
+                await api.clearViews();
+                setViews([]);
+              }, "Could not clear your history")
+            }
           >
             Clear all
           </button>
@@ -60,18 +75,19 @@ export function History() {
                   >
                     {v.address}
                   </Link>
-                  <span className="block text-xs text-muted">
-                    {WHEN.format(new Date(v.viewedAt))}
-                  </span>
+                  <span className="block text-xs text-muted">{formatDateTime(v.viewedAt)}</span>
                 </span>
                 <button
                   type="button"
-                  className="text-sm text-accent underline"
+                  className="text-sm text-accent underline disabled:opacity-60"
                   aria-label={`Remove ${v.address} from history`}
-                  onClick={async () => {
-                    await api.deleteView(v.id);
-                    setViews((xs) => xs?.filter((x) => x.id !== v.id) ?? null);
-                  }}
+                  disabled={busy}
+                  onClick={() =>
+                    act(async () => {
+                      await api.deleteView(v.id);
+                      setViews((xs) => xs?.filter((x) => x.id !== v.id) ?? null);
+                    }, `Could not remove ${v.address}`)
+                  }
                 >
                   Remove
                 </button>

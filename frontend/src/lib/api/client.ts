@@ -22,13 +22,49 @@ export type MePatch = components["schemas"]["MePatch"];
 /** The GitHub Pages preview (D-034) is static: there is no API or tile server behind it. */
 export const STATIC_PREVIEW = process.env.NEXT_PUBLIC_STATIC_PREVIEW === "1";
 
+/** One entry of a 422 problem's `errors` (FastAPI request validation). */
+export interface ValidationIssue {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
     readonly detail: string,
+    readonly errors: ValidationIssue[] = [],
   ) {
     super(detail);
   }
+
+  /** The request field the first validation error names ("password"), if any. */
+  get field(): string | null {
+    const loc = this.errors[0]?.loc ?? [];
+    const last = loc[loc.length - 1];
+    return loc.length > 1 && typeof last === "string" ? last : null;
+  }
+}
+
+/** Fired on `window` when an authenticated call gets a 401, so the session can re-check. */
+export const UNAUTHORIZED_EVENT = "ppr:unauthorized";
+
+interface Problem {
+  title?: string;
+  detail?: string;
+  errors?: ValidationIssue[];
+}
+
+/** Validation problems have no `detail`; name the first failing field instead. */
+function problemMessage(body: Problem, fallback: string): string {
+  if (body.detail) return body.detail;
+  const first = Array.isArray(body.errors) ? body.errors[0] : undefined;
+  if (first?.msg) {
+    // loc starts with where the value was ("body", "query"); the rest names the field.
+    const field = (first.loc ?? []).slice(1).join(".");
+    return field ? `${field}: ${first.msg}` : first.msg;
+  }
+  return body.title ?? fallback;
 }
 
 /** In the browser the API is on the same origin (Caddy, D-026); on the server, call it directly. */
@@ -60,8 +96,17 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers,
   });
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { detail?: string; title?: string };
-    throw new ApiError(res.status, body.detail ?? body.title ?? res.statusText);
+    const body = (await res.json().catch(() => ({}))) as Problem;
+    // Checking the session or signing in answers 401 by design; anything else means it ended.
+    const quiet = path === "/me" && method === "GET";
+    if (res.status === 401 && !quiet && path !== "/auth/login" && typeof window !== "undefined") {
+      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    }
+    throw new ApiError(
+      res.status,
+      problemMessage(body, res.statusText),
+      Array.isArray(body.errors) ? body.errors : [],
+    );
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
@@ -105,8 +150,11 @@ export const api = {
   noteWishlistItem: (id: number, note: string | null) =>
     send<WishlistItem>("PATCH", `/me/wishlist/${id}`, { note }),
   removeWishlistItem: (id: number) => send<void>("DELETE", `/me/wishlist/${id}`),
-  compare: (ids: string[]) =>
-    get<PropertySummary[]>(`/me/wishlist/compare?ids=${ids.map(encodeURIComponent).join(",")}`),
+  compare: (ids: string[], init?: RequestInit) =>
+    get<PropertySummary[]>(
+      `/me/wishlist/compare?ids=${ids.map(encodeURIComponent).join(",")}`,
+      init,
+    ),
 
   recordView: (propertyId: string) => send<void>("POST", "/me/history/views", { propertyId }),
   views: () => get<View[]>("/me/history/views"),

@@ -1,6 +1,7 @@
 """Account reads shared by the auth and /me endpoints."""
 
 import uuid
+from decimal import Decimal
 from typing import Any
 
 import sqlalchemy as sa
@@ -47,22 +48,45 @@ async def load_me(db: AsyncSession, user_id: uuid.UUID) -> Me:
     )
 
 
+# Every table that holds data about the user, with camelCase keys like the rest of the API.
+# Hashes of secrets (password, session and key hashes) are left out: they are not the
+# user's information and would only help an attacker. A property later withdrawn from the
+# site (removal request) is listed without its address.
 EXPORT_QUERIES = {
-    "consents": "SELECT kind::text, document_version, granted, recorded_at FROM consent_record "
-    "WHERE user_id = :u ORDER BY recorded_at",
-    "wishlist": "SELECT w.target_kind::text, p.public_id AS property, p.address_display, "
-    "a.name AS area, w.note, w.created_at FROM wishlist_item w "
+    "accountDetails": 'SELECT email_verified_at AS "emailVerifiedAt", '
+    'last_login_at AS "lastLoginAt", deleted_at AS "closedAt", '
+    'updated_at AS "updatedAt" FROM app_user WHERE id = :u',
+    "profileAreas": "SELECT a.slug, a.name FROM user_profile p "
+    "JOIN area a ON a.id = ANY(p.area_ids) WHERE p.user_id = :u ORDER BY a.name",
+    "consents": 'SELECT kind::text, document_version AS "documentVersion", granted, '
+    'recorded_at AS "recordedAt", ip_hash AS "ipHash", user_agent AS "userAgent" '
+    "FROM consent_record WHERE user_id = :u ORDER BY recorded_at",
+    "wishlist": "SELECT w.target_kind::text AS kind, "
+    "CASE WHEN p.is_suppressed THEN NULL ELSE p.public_id END AS property, "
+    "CASE WHEN p.is_suppressed THEN '(withdrawn from the site)' ELSE p.address_display END "
+    'AS address, a.name AS area, w.note, w.created_at AS "createdAt" FROM wishlist_item w '
     "LEFT JOIN property p ON p.id = w.property_id LEFT JOIN area a ON a.id = w.area_id "
     "WHERE w.user_id = :u ORDER BY w.created_at",
-    "viewHistory": "SELECT p.public_id AS property, p.address_display, v.viewed_at "
+    "viewHistory": "SELECT CASE WHEN p.is_suppressed THEN NULL ELSE p.public_id END AS property, "
+    "CASE WHEN p.is_suppressed THEN '(withdrawn from the site)' ELSE p.address_display END "
+    'AS address, v.viewed_at AS "viewedAt" '
     "FROM view_history v JOIN property p ON p.id = v.property_id WHERE v.user_id = :u "
-    "ORDER BY v.viewed_at",
-    "searchHistory": "SELECT query, searched_at FROM search_history WHERE user_id = :u "
-    "ORDER BY searched_at",
-    "savedSearches": "SELECT name, query, alert_frequency::text, created_at FROM saved_search "
+    "AND v.viewed_at > now() - interval '365 days' ORDER BY v.viewed_at",
+    "searchHistory": 'SELECT query, searched_at AS "searchedAt" FROM search_history '
+    "WHERE user_id = :u ORDER BY searched_at",
+    "savedSearches": 'SELECT name, query, alert_frequency::text AS "alertFrequency", '
+    'created_at AS "createdAt" FROM saved_search WHERE user_id = :u ORDER BY created_at',
+    "alertsSent": 'SELECT s.name AS "savedSearch", d.data_version AS "dataVersion", '
+    'd.n_matches AS "matches", d.status, d.sent_at AS "sentAt" FROM alert_delivery d '
+    "JOIN saved_search s ON s.id = d.saved_search_id WHERE s.user_id = :u ORDER BY d.sent_at",
+    "sessions": 'SELECT created_at AS "createdAt", last_seen_at AS "lastSeenAt", '
+    'expires_at AS "expiresAt", ip_hash AS "ipHash", user_agent AS "userAgent" '
+    "FROM user_session WHERE user_id = :u AND expires_at > now() ORDER BY created_at",
+    "apiKeys": 'SELECT name, prefix, scopes, created_at AS "createdAt", '
+    'last_used_at AS "lastUsedAt", revoked_at AS "revokedAt" FROM api_key '
     "WHERE user_id = :u ORDER BY created_at",
-    "sessions": "SELECT created_at, last_seen_at, expires_at, user_agent FROM user_session "
-    "WHERE user_id = :u ORDER BY created_at",
+    "auditEntries": 'SELECT action, target_kind AS "targetKind", target_id AS "targetId", '
+    'created_at AS "createdAt" FROM audit_log WHERE actor_user_id = :u ORDER BY created_at',
 }
 
 
@@ -79,6 +103,6 @@ async def export(db: AsyncSession, user_id: uuid.UUID) -> dict[str, Any]:
 def _json(value: Any) -> Any:
     if hasattr(value, "isoformat"):
         return value.isoformat()
-    if isinstance(value, uuid.UUID):
+    if isinstance(value, uuid.UUID | Decimal):
         return str(value)
     return value

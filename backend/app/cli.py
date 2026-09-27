@@ -64,9 +64,31 @@ def sync_permissions() -> None:
     typer.echo(f"Synced {len(stored_roles)} roles, {len(Perm)} permissions, {len(wanted)} grants.")
 
 
+# Daily housekeeping (D-041): what is past its retention period, as (label, statement).
+EXPIRED = [
+    (
+        "expired sessions",
+        "DELETE FROM user_session WHERE expires_at < now() OR last_seen_at < now() - :idle",
+    ),
+    (
+        "used or expired email links",
+        "DELETE FROM email_verification_token WHERE used_at IS NOT NULL OR expires_at < now()",
+    ),
+    (
+        "used or expired reset links",
+        "DELETE FROM password_reset_token WHERE used_at IS NOT NULL OR expires_at < now()",
+    ),
+    ("views older than 12 months", "DELETE FROM view_history WHERE viewed_at < now() - :keep"),
+]
+
+
 @cli.command("purge-deleted")
 def purge_deleted(days: int = 30) -> None:
-    """Delete accounts closed more than `days` ago, with everything they own (cascade)."""
+    """Daily: delete accounts closed more than `days` ago, with everything they own (cascade),
+    and everything else past its retention period (sessions, email links, view history)."""
+    from app.api.v1.me import HISTORY_KEEP
+    from app.auth.sessions import IDLE
+
     engine = sa.create_engine(get_settings().database_url)
     with engine.begin() as conn:
         n = conn.execute(
@@ -76,7 +98,10 @@ def purge_deleted(days: int = 30) -> None:
             ),
             {"d": days},
         ).rowcount
-    typer.echo(f"Purged {n} closed accounts.")
+        typer.echo(f"Purged {n} closed accounts.")
+        for label, sql in EXPIRED:
+            n = conn.execute(sa.text(sql), {"idle": IDLE, "keep": HISTORY_KEEP}).rowcount
+            typer.echo(f"Purged {n} {label}.")
 
 
 @cli.command("openapi")

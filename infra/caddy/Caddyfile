@@ -8,6 +8,10 @@
 	}
 
 	handle /api/* {
+		# No API body is anywhere near this; a larger one is refused before it is parsed.
+		request_body {
+			max_size 1MB
+		}
 		reverse_proxy api:8000
 	}
 

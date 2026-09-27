@@ -46,17 +46,28 @@ const ROWS: { label: string; value: (s: PropertySummary) => ReactNode }[] = [
 
 export function Compare() {
   const ids = (useSearchParams().get("ids") ?? "").split(",").filter(Boolean).join(",");
-  const [items, setItems] = useState<PropertySummary[] | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
+  // Each answer remembers which ids it is for, so a change of ids shows nothing stale.
+  const [result, setResult] = useState<{
+    ids: string;
+    items?: PropertySummary[];
+    failed?: string;
+  } | null>(null);
   useEffect(() => {
-    if (ids) {
-      api
-        .compare(ids.split(","))
-        .then(setItems)
-        .catch((e: unknown) => setFailed(messageOf(e)));
-    }
+    if (!ids) return;
+    const request = new AbortController();
+    api
+      .compare(ids.split(","), { signal: request.signal })
+      .then((items) => {
+        if (!request.signal.aborted) setResult({ ids, items });
+      })
+      .catch((e: unknown) => {
+        if (!request.signal.aborted) setResult({ ids, failed: messageOf(e) });
+      });
+    return () => request.abort();
   }, [ids]);
-  const error = ids ? failed : "Choose properties to compare on your wishlist.";
+  const current = result?.ids === ids ? result : null;
+  const items = current?.items ?? null;
+  const error = ids ? (current?.failed ?? null) : "Choose properties to compare on your wishlist.";
   if (error) {
     return (
       <div className="space-y-3">

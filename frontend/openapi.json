@@ -404,12 +404,14 @@
         "type": "object"
       },
       "MePatch": {
+        "description": "Only the fields sent are changed; within `profile`, too.",
         "properties": {
           "fullName": {
             "anyOf": [
               {
                 "maxLength": 200,
                 "minLength": 1,
+                "pattern": "^[^\\x00-\\x1f\\x7f]+$",
                 "type": "string"
               },
               {
@@ -569,11 +571,12 @@
           "budgetMax": {
             "anyOf": [
               {
+                "maximum": 9999999999.99,
                 "minimum": 0.0,
                 "type": "number"
               },
               {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
                 "type": "string"
               },
               {
@@ -585,11 +588,12 @@
           "budgetMin": {
             "anyOf": [
               {
+                "maximum": 9999999999.99,
                 "minimum": 0.0,
                 "type": "number"
               },
               {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
                 "type": "string"
               },
               {
@@ -952,6 +956,7 @@
           "fullName": {
             "maxLength": 200,
             "minLength": 1,
+            "pattern": "^[^\\x00-\\x1f\\x7f]+$",
             "title": "Fullname",
             "type": "string"
           },
@@ -1495,6 +1500,7 @@
             "type": "string"
           },
           "viewedAt": {
+            "format": "date-time",
             "title": "Viewedat",
             "type": "string"
           }
@@ -1563,6 +1569,7 @@
             "title": "Areaslug"
           },
           "createdAt": {
+            "format": "date-time",
             "title": "Createdat",
             "type": "string"
           },
@@ -1746,6 +1753,7 @@
     },
     "/api/v1/auth/logout": {
       "post": {
+        "description": "Sign out. Succeeds, and clears the cookie, even if the session had already ended.",
         "operationId": "logout_api_v1_auth_logout_post",
         "responses": {
           "204": {
@@ -2191,7 +2199,7 @@
     },
     "/api/v1/me/password": {
       "post": {
-        "description": "Change the password; every other session is signed out.",
+        "description": "Change the password; every other session is signed out and reset links stop working.",
         "operationId": "change_password_api_v1_me_password_post",
         "requestBody": {
           "content": {
@@ -2249,7 +2257,7 @@
         ]
       },
       "post": {
-        "description": "Save a property or an area. Saving the same one again returns the existing item.",
+        "description": "Save a property or an area (201). Saving the same one again returns the existing item\n(200), with its note replaced if a new one is given.",
         "operationId": "add_to_wishlist_api_v1_me_wishlist_post",
         "requestBody": {
           "content": {
@@ -2262,6 +2270,16 @@
           "required": true
         },
         "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WishlistItemOut"
+                }
+              }
+            },
+            "description": "Already saved"
+          },
           "201": {
             "content": {
               "application/json": {
@@ -2653,6 +2671,8 @@
             "name": "property_id",
             "required": true,
             "schema": {
+              "maxLength": 64,
+              "pattern": "^[^\\x00-\\x1f\\x7f]+$",
               "title": "Property Id",
               "type": "string"
             }
@@ -2696,6 +2716,8 @@
             "name": "property_id",
             "required": true,
             "schema": {
+              "maxLength": 64,
+              "pattern": "^[^\\x00-\\x1f\\x7f]+$",
               "title": "Property Id",
               "type": "string"
             }

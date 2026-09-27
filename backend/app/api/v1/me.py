@@ -5,11 +5,11 @@ never a 403 (docs/permissions.md).
 """
 
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Annotated, Any
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
 from pydantic import Field
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,7 +23,7 @@ from app.db import get_session
 from app.policies import PRIVACY_VERSION
 from app.redis_client import get_redis
 from app.schemas.auth import Me, MePatch, PasswordChangeIn, PasswordIn
-from app.schemas.base import ApiModel
+from app.schemas.base import ApiModel, Money
 from app.schemas.properties import PropertySummary
 from app.services import email as mail
 from app.services.accounts import export, load_me
@@ -55,7 +55,7 @@ async def patch_me(body: MePatch, user: User, db: Db, cache: Cache) -> Me:
     if "full_name" in fields:
         await db.execute(
             sa.text("UPDATE app_user SET full_name = :n, updated_at = now() WHERE id = :u"),
-            {"n": body.full_name and body.full_name.strip(), "u": user.id},
+            {"n": body.full_name, "u": user.id},
         )
     if "history_enabled" in fields and body.history_enabled is not None:
         await db.execute(
@@ -63,26 +63,42 @@ async def patch_me(body: MePatch, user: User, db: Db, cache: Cache) -> Me:
             {"h": body.history_enabled, "u": user.id},
         )
     if "marketing_opt_in" in fields and body.marketing_opt_in is not None:
-        await db.execute(
-            sa.text("UPDATE app_user SET marketing_opt_in = :m, updated_at = now() WHERE id = :u"),
+        # A consent record only when the choice actually changes.
+        changed = await db.execute(
+            sa.text(
+                "UPDATE app_user SET marketing_opt_in = :m, updated_at = now() "
+                "WHERE id = :u AND marketing_opt_in IS DISTINCT FROM :m RETURNING id"
+            ),
             {"m": body.marketing_opt_in, "u": user.id},
         )
-        await db.execute(
-            sa.text(
-                "INSERT INTO consent_record (user_id, kind, document_version, granted) "
-                "VALUES (:u, 'marketing_email', :v, :g)"
-            ),
-            {"u": user.id, "v": PRIVACY_VERSION, "g": body.marketing_opt_in},
-        )
+        if changed.one_or_none() is not None:
+            await db.execute(
+                sa.text(
+                    "INSERT INTO consent_record (user_id, kind, document_version, granted) "
+                    "VALUES (:u, 'marketing_email', :v, :g)"
+                ),
+                {"u": user.id, "v": PRIVACY_VERSION, "g": body.marketing_opt_in},
+            )
     if body.profile is not None:
+        # Only the profile fields sent are written; the others keep their stored values.
+        sent = body.profile.model_dump(exclude_unset=True)
         p = body.profile.model_dump()
+        keep = {k: k not in sent for k in p}
         await db.execute(
             sa.text(
                 "INSERT INTO user_profile (user_id, user_type, counties, budget_min, budget_max, "
                 "property_interest) VALUES (:u, :t, CAST(:c AS county[]), :bmin, :bmax, :pi) "
-                "ON CONFLICT (user_id) DO UPDATE SET user_type = excluded.user_type, "
-                "counties = excluded.counties, budget_min = excluded.budget_min, "
-                "budget_max = excluded.budget_max, property_interest = excluded.property_interest, "
+                "ON CONFLICT (user_id) DO UPDATE SET "
+                "user_type = CASE WHEN :keep_t THEN user_profile.user_type "
+                "ELSE excluded.user_type END, "
+                "counties = CASE WHEN :keep_c THEN user_profile.counties "
+                "ELSE excluded.counties END, "
+                "budget_min = CASE WHEN :keep_bmin THEN user_profile.budget_min "
+                "ELSE excluded.budget_min END, "
+                "budget_max = CASE WHEN :keep_bmax THEN user_profile.budget_max "
+                "ELSE excluded.budget_max END, "
+                "property_interest = CASE WHEN :keep_pi THEN user_profile.property_interest "
+                "ELSE excluded.property_interest END, "
                 "updated_at = now()"
             ),
             {
@@ -92,6 +108,11 @@ async def patch_me(body: MePatch, user: User, db: Db, cache: Cache) -> Me:
                 "bmin": p["budget_min"],
                 "bmax": p["budget_max"],
                 "pi": p["property_interest"],
+                "keep_t": keep["user_type"],
+                "keep_c": keep["counties"],
+                "keep_bmin": keep["budget_min"],
+                "keep_bmax": keep["budget_max"],
+                "keep_pi": keep["property_interest"],
             },
         )
     await db.commit()
@@ -105,25 +126,35 @@ async def _check_password(db: AsyncSession, user: CurrentUser, password: str) ->
             sa.text("SELECT password_hash FROM app_user WHERE id = :u"), {"u": user.id}
         )
     ).scalar_one()
-    if not verify_password(hash_, password):
+    if not await verify_password(hash_, password):
         raise HTTPException(403, "The password is wrong")
 
 
 @router.post("/password", status_code=204)
 async def change_password(
-    body: PasswordChangeIn, user: User, db: Db, cache: Cache, mailer: Mailer
+    body: PasswordChangeIn,
+    user: User,
+    db: Db,
+    cache: Cache,
+    mailer: Mailer,
+    background: BackgroundTasks,
 ) -> None:
-    """Change the password; every other session is signed out."""
+    """Change the password; every other session is signed out and reset links stop working."""
     await _check_password(db, user, body.current_password)
     if problem := password_problem(body.new_password, user.email):
         raise HTTPException(422, problem)
     await db.execute(
         sa.text("UPDATE app_user SET password_hash = :p, updated_at = now() WHERE id = :u"),
-        {"p": hash_password(body.new_password), "u": user.id},
+        {"p": await hash_password(body.new_password), "u": user.id},
+    )
+    await db.execute(
+        sa.text(
+            "UPDATE password_reset_token SET used_at = now() WHERE user_id = :u AND used_at IS NULL"
+        ),
+        {"u": user.id},
     )
     await revoke_sessions(db, cache, user.id, keep=user.session_id)
-    await db.commit()
-    await mailer.send(mail.password_changed(user.email, user.full_name))
+    background.add_task(mailer.send, mail.password_changed(user.email, user.full_name))
 
 
 @router.delete("", status_code=204)
@@ -138,7 +169,6 @@ async def delete_me(body: PasswordIn, user: User, response: Response, db: Db, ca
         {"u": user.id},
     )
     await revoke_sessions(db, cache, user.id)
-    await db.commit()
     clear_session_cookie(response)
 
 
@@ -173,14 +203,14 @@ class WishlistItemOut(ApiModel):
     area_slug: str | None
     title: str
     note: str | None
-    created_at: str
-    latest_price_eur: float | None = None
+    created_at: datetime
+    latest_price_eur: Money | None = None
     latest_sale_date: str | None = None
 
 
 WISHLIST = """
 SELECT w.id, w.target_kind::text, p.public_id, a.slug,
-       coalesce(p.address_display, a.name) AS title, w.note, w.created_at::text,
+       coalesce(p.address_display, a.name) AS title, w.note, w.created_at,
        (SELECT s.price_eur FROM sale s WHERE s.property_id = p.id AND s.withdrawn_at IS NULL
         ORDER BY s.sale_date DESC, s.id DESC LIMIT 1) AS price,
        (SELECT s.sale_date::text FROM sale s WHERE s.property_id = p.id AND s.withdrawn_at IS NULL
@@ -188,7 +218,7 @@ SELECT w.id, w.target_kind::text, p.public_id, a.slug,
 FROM wishlist_item w
 LEFT JOIN property p ON p.id = w.property_id
 LEFT JOIN area a ON a.id = w.area_id
-WHERE w.user_id = :u {extra}
+WHERE w.user_id = :u AND NOT coalesce(p.is_suppressed, false) {extra}
 ORDER BY w.created_at DESC, w.id DESC
 """
 
@@ -202,7 +232,7 @@ def _item(r: Any) -> WishlistItemOut:
         title=r[4],
         note=r[5],
         created_at=r[6],
-        latest_price_eur=float(r[7]) if r[7] is not None else None,
+        latest_price_eur=r[7],
         latest_sale_date=r[8],
     )
 
@@ -221,18 +251,19 @@ async def wishlist(user: WishlistUser, db: Db) -> list[WishlistItemOut]:
     return [_item(r) for r in rows]
 
 
-@router.post("/wishlist", status_code=201, response_model=WishlistItemOut)
-async def add_to_wishlist(body: WishlistIn, user: WishlistUser, db: Db) -> WishlistItemOut:
-    """Save a property or an area. Saving the same one again returns the existing item."""
+@router.post(
+    "/wishlist",
+    status_code=201,
+    response_model=WishlistItemOut,
+    responses={200: {"model": WishlistItemOut, "description": "Already saved"}},
+)
+async def add_to_wishlist(
+    body: WishlistIn, user: WishlistUser, db: Db, response: Response
+) -> WishlistItemOut:
+    """Save a property or an area (201). Saving the same one again returns the existing item
+    (200), with its note replaced if a new one is given."""
     if (body.property_id is None) == (body.area_slug is None):
         raise HTTPException(422, "Give either propertyId or areaSlug")
-    count: int = (
-        await db.execute(
-            sa.text("SELECT count(*) FROM wishlist_item WHERE user_id = :u"), {"u": user.id}
-        )
-    ).scalar_one()
-    if count >= MAX_WISHLIST:
-        raise HTTPException(409, f"A wishlist holds at most {MAX_WISHLIST} items")
     if body.property_id is not None:
         target = await db.execute(
             sa.text("SELECT id FROM property WHERE public_id = :p AND NOT is_suppressed"),
@@ -247,27 +278,42 @@ async def add_to_wishlist(body: WishlistIn, user: WishlistUser, db: Db) -> Wishl
     target_id = target.scalar_one_or_none()
     if target_id is None:
         raise NOT_FOUND
-    row = (
+    # One add at a time per user, so the size cap holds under concurrent requests.
+    await db.execute(
+        sa.text("SELECT pg_advisory_xact_lock(hashtextextended(CAST(:u AS text), 1))"),
+        {"u": user.id},
+    )
+    existing = (
+        await db.execute(
+            sa.text(
+                f"UPDATE wishlist_item SET note = coalesce(:n, note) "  # noqa: S608
+                f"WHERE user_id = :u AND {column} = :t RETURNING id"
+            ),
+            {"u": user.id, "t": target_id, "n": body.note},
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        await db.commit()
+        response.status_code = 200
+        return await _one_item(db, user.id, existing)
+    count: int = (
+        await db.execute(
+            sa.text("SELECT count(*) FROM wishlist_item WHERE user_id = :u"), {"u": user.id}
+        )
+    ).scalar_one()
+    if count >= MAX_WISHLIST:
+        raise HTTPException(409, f"A wishlist holds at most {MAX_WISHLIST} items")
+    item_id: int = (
         await db.execute(
             sa.text(
                 f"INSERT INTO wishlist_item (user_id, target_kind, {column}, note) "  # noqa: S608
-                "VALUES (:u, CAST(:k AS wishlist_target_kind), :t, :n) "
-                "ON CONFLICT (user_id, target_kind, property_id, area_id) DO NOTHING RETURNING id"
+                "VALUES (:u, CAST(:k AS wishlist_target_kind), :t, :n) RETURNING id"
             ),
             {"u": user.id, "k": kind, "t": target_id, "n": body.note},
         )
-    ).one_or_none()
-    if row is None:
-        row = (
-            await db.execute(
-                sa.text(
-                    f"SELECT id FROM wishlist_item WHERE user_id = :u AND {column} = :t"  # noqa: S608
-                ),
-                {"u": user.id, "t": target_id},
-            )
-        ).one()
+    ).scalar_one()
     await db.commit()
-    return await _one_item(db, user.id, row[0])
+    return await _one_item(db, user.id, item_id)
 
 
 @router.patch("/wishlist/{item_id}", response_model=WishlistItemOut)
@@ -304,7 +350,9 @@ async def compare(
     ],
 ) -> list[PropertySummary]:
     """Side by side: the hover summaries of up to four saved properties, in the order given."""
-    wanted = [i for i in dict.fromkeys(ids.split(",")) if i]
+    wanted = [i for i in dict.fromkeys(i.strip() for i in ids.split(",")) if i]
+    if any("\x00" in i for i in wanted):
+        raise HTTPException(422, "ids must not contain NUL characters")
     if not 1 <= len(wanted) <= MAX_COMPARE:
         raise HTTPException(422, f"Compare 1 to {MAX_COMPARE} properties")
     rows = (
@@ -335,7 +383,7 @@ class ViewOut(ApiModel):
     id: int
     property_id: str
     address: str
-    viewed_at: str
+    viewed_at: datetime
 
 
 @router.post("/history/views", status_code=204)
@@ -343,6 +391,11 @@ async def record_view(body: ViewIn, user: HistoryUser, db: Db) -> None:
     """Record a property page visit, unless history is switched off (then nothing is kept)."""
     if not user.history_enabled:
         return
+    # Serialise visits by the same user, so two tabs opening a page count once.
+    await db.execute(
+        sa.text("SELECT pg_advisory_xact_lock(hashtextextended(CAST(:u AS text), 2))"),
+        {"u": user.id},
+    )
     await db.execute(
         sa.text(
             "INSERT INTO view_history (user_id, property_id) "
@@ -364,12 +417,13 @@ async def views(user: HistoryUser, db: Db) -> list[ViewOut]:
     rows = (
         await db.execute(
             sa.text(
-                "SELECT v.id, p.public_id, p.address_display, v.viewed_at::text "
+                "SELECT v.id, p.public_id, p.address_display, v.viewed_at "
                 "FROM view_history v "
                 "JOIN property p ON p.id = v.property_id WHERE v.user_id = :u "
+                "AND NOT p.is_suppressed AND v.viewed_at > now() - :keep "
                 "ORDER BY v.viewed_at DESC LIMIT 200"
             ),
-            {"u": user.id},
+            {"u": user.id, "keep": HISTORY_KEEP},
         )
     ).all()
     return [ViewOut(id=r[0], property_id=r[1], address=r[2], viewed_at=r[3]) for r in rows]

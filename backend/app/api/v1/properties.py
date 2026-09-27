@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,6 +39,8 @@ router = APIRouter(tags=["properties"])
 MAX_BBOX_DEGREES = (0.6, 0.4)
 SUMMARY_TTL_S = 7 * 24 * 3600
 NOT_FOUND = HTTPException(404, "No such property")
+# Public ids are short and printable; anything else (a NUL byte, say) is refused up front.
+PropertyId = Annotated[str, Path(max_length=64, pattern=r"^[^\x00-\x1f\x7f]+$")]
 
 
 # The data version changes once a month; the hover path reads it at most once a minute.
@@ -102,7 +104,7 @@ async def meta(session: Session) -> Meta:
 
 
 @router.get("/properties/{property_id}/summary", response_model=PropertySummary)
-async def summary(property_id: str, session: Session, cache: Cache) -> PropertySummary:
+async def summary(property_id: PropertyId, session: Session, cache: Cache) -> PropertySummary:
     """The hover card: one precomputed row, cached in Redis per data version."""
     payload: dict[str, Any] | None = None
     key = f"summary:{property_id}:{(await _meta(session)).data_version}"
@@ -195,7 +197,7 @@ def _caveats(confidence: str, sales: list[Sale], provisional_from: date) -> list
 
 
 @router.get("/properties/{property_id}", response_model=PropertyDetail)
-async def property_detail(property_id: str, session: Session) -> PropertyDetail:
+async def property_detail(property_id: PropertyId, session: Session) -> PropertyDetail:
     """The property page: every sale, location precision, areas, vicinity and area trend."""
     meta_ = await _meta(session)
     p = await q.detail(session, property_id)

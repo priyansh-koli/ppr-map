@@ -87,6 +87,33 @@ def test_audit_log_is_append_only(migrated_db: sa.Engine) -> None:
 
 
 @pytest.mark.db
+def test_purging_an_actor_keeps_their_audit_entries(migrated_db: sa.Engine) -> None:
+    """Deleting an account nulls its actor id (the one change the trigger allows)."""
+    with migrated_db.begin() as conn:
+        user = conn.execute(
+            sa.text(
+                "INSERT INTO app_user (email, password_hash, full_name) "
+                "VALUES ('actor@example.ie', 'x', 'Actor') RETURNING id"
+            )
+        ).scalar_one()
+        conn.execute(
+            sa.text(
+                "INSERT INTO audit_log (actor_user_id, action, target_kind, target_id) "
+                "VALUES (:u, 'purge-test', 'test', '1')"
+            ),
+            {"u": user},
+        )
+    with migrated_db.begin() as conn:
+        conn.execute(sa.text("DELETE FROM app_user WHERE id = :u"), {"u": user})
+        kept = conn.execute(
+            sa.text("SELECT actor_user_id FROM audit_log WHERE action = 'purge-test'")
+        ).one()
+        assert kept.actor_user_id is None
+    with pytest.raises(sa.exc.DBAPIError, match="append-only"), migrated_db.begin() as conn:
+        conn.execute(sa.text("UPDATE audit_log SET action = 'x' WHERE action = 'purge-test'"))
+
+
+@pytest.mark.db
 def test_sync_permissions_is_idempotent(migrated_db: sa.Engine) -> None:
     from app.cli import cli
 

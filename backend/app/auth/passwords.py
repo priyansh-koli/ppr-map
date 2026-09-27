@@ -1,4 +1,10 @@
-"""argon2id password hashing (argon2-cffi defaults follow RFC 9106's recommendations)."""
+"""argon2id password hashing (argon2-cffi defaults follow RFC 9106's recommendations).
+
+Each hash takes tens of milliseconds and 64 MiB, so it runs in a worker thread (never on the
+event loop) and only a few run at once."""
+
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
@@ -9,17 +15,22 @@ MAX_LENGTH = 128
 _hasher = PasswordHasher()
 # Checked against when the email is unknown, so a login takes as long either way.
 _DUMMY_HASH = _hasher.hash("an unused password for timing")
+_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="argon2")
 
 
-def hash_password(password: str) -> str:
-    return _hasher.hash(password)
+async def hash_password(password: str) -> str:
+    return await asyncio.get_running_loop().run_in_executor(_POOL, _hasher.hash, password)
 
 
-def verify_password(password_hash: str | None, password: str) -> bool:
+def _verify(password_hash: str | None, password: str) -> bool:
     try:
         return _hasher.verify(password_hash or _DUMMY_HASH, password) and password_hash is not None
     except (VerifyMismatchError, VerificationError, InvalidHashError):
         return False
+
+
+async def verify_password(password_hash: str | None, password: str) -> bool:
+    return await asyncio.get_running_loop().run_in_executor(_POOL, _verify, password_hash, password)
 
 
 def needs_rehash(password_hash: str) -> bool:

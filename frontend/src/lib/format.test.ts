@@ -1,8 +1,15 @@
-import { formatDate, formatDistance, formatEur, tileDate } from "./format";
+import { formatDate, formatDateTime, formatDistance, formatEur, tileDate } from "./format";
 
 describe("formatting", () => {
   it("formats euro amounts for Ireland", () => {
     expect(formatEur(1700000)).toBe("€1,700,000");
+    // Money can arrive as a decimal string.
+    expect(formatEur("1700000.00")).toBe("€1,700,000");
+  });
+
+  it("formats timestamps, and shows anything unparseable as it came", () => {
+    expect(formatDateTime("2026-09-27T10:00:00+00:00")).toMatch(/27 Sept 2026/);
+    expect(formatDateTime("not a date")).toBe("not a date");
   });
 
   it("reads ISO dates as calendar dates", () => {

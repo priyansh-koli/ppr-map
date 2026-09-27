@@ -29,4 +29,6 @@ USER app
 WORKDIR /srv/backend
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Behind a reverse proxy, set FORWARDED_ALLOW_IPS to the proxy's address (never "*" behind a
+# proxy that appends to X-Forwarded-For), or every client shares the proxy's IP and its limits.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

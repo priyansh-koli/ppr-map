@@ -45,6 +45,9 @@ class FakeRedis:
     async def get(self, key: str) -> Any:
         return self.data.get(key)
 
+    async def mget(self, *keys: str) -> list[Any]:
+        return [self.data.get(k) for k in keys]
+
     async def set(self, key: str, value: Any, ex: int | None = None) -> None:
         self.data[key] = value
 
@@ -56,11 +59,37 @@ class FakeRedis:
         self.data[key] = int(self.data.get(key, 0)) + 1
         return int(self.data[key])
 
-    async def expire(self, key: str, seconds: int) -> None:
+    async def expire(self, key: str, seconds: int, nx: bool = False) -> None:
         return None
 
     async def ttl(self, key: str) -> int:
         return 60
+
+    def pipeline(self, transaction: bool = True) -> "FakePipeline":
+        return FakePipeline(self)
+
+
+class FakePipeline:
+    """Queues calls and runs them on `execute`, like redis.asyncio's pipeline."""
+
+    def __init__(self, redis: FakeRedis) -> None:
+        self.redis = redis
+        self.calls: list[Any] = []
+
+    async def __aenter__(self) -> "FakePipeline":
+        return self
+
+    async def __aexit__(self, *_: object) -> None:
+        return None
+
+    def set(self, key: str, value: Any, ex: int | None = None) -> None:
+        self.calls.append(self.redis.set(key, value, ex))
+
+    def delete(self, *keys: str) -> None:
+        self.calls.append(self.redis.delete(*keys))
+
+    async def execute(self) -> list[Any]:
+        return [await c for c in self.calls]
 
 
 @pytest.fixture
@@ -304,7 +333,10 @@ def test_export_and_delete_account(db: sa.Engine, outbox: Outbox, redis: FakeRed
     assert export.headers["content-disposition"].startswith("attachment")
     data = export.json()
     assert data["account"]["email"] == "h@example.ie"
-    assert data["wishlist"][0]["address_display"] == "178 Pollerton Road, Carlow"
+    assert data["wishlist"][0]["address"] == "178 Pollerton Road, Carlow"
+    assert data["accountDetails"][0]["lastLoginAt"] is not None
+    assert {"documentVersion", "recordedAt", "ipHash"} <= set(data["consents"][0])
+    assert "tokenHash" not in export.text and "token_hash" not in export.text
     assert {c["kind"] for c in data["consents"]} == {
         "terms",
         "privacy",
@@ -326,3 +358,197 @@ def test_idle_sessions_expire(db: sa.Engine, outbox: Outbox, redis: FakeRedis) -
     with db.begin() as conn:
         conn.execute(sa.text("UPDATE user_session SET last_seen_at = now() - interval '15 days'"))
     assert client.get("/api/v1/me").status_code == 401
+
+
+def test_profile_changes_are_validated_and_partial(
+    db: sa.Engine, outbox: Outbox, redis: FakeRedis
+) -> None:
+    client = signed_in(outbox, redis, "j@example.ie")
+    for bad in (
+        {"fullName": None},
+        {"fullName": "   "},
+        {"fullName": "Aoife\nClick http://evil.example"},
+        {"historyEnabled": None},
+        {"profile": {"budgetMin": 1e13}},
+        {"profile": {"budgetMin": 500000, "budgetMax": 300000}},
+    ):
+        res = client.patch("/api/v1/me", json=bad)
+        assert res.status_code == 422, (bad, res.text)
+    assert register(browser(outbox, redis), "k@example.ie", fullName="  ").status_code == 422
+
+    full = {"userType": "first_time_buyer", "counties": ["carlow"], "budgetMax": 300000}
+    assert client.patch("/api/v1/me", json={"profile": full}).status_code == 200
+    me = client.patch("/api/v1/me", json={"profile": {"budgetMin": 200000}}).json()
+    assert me["profile"]["counties"] == ["carlow"] and me["profile"]["budgetMax"] == 300000
+    assert me["profile"]["budgetMin"] == 200000
+    assert client.patch("/api/v1/me", json={"fullName": "  Aoife B  "}).json()["fullName"] == (
+        "Aoife B"
+    )
+
+    def consents() -> int:
+        with db.connect() as conn:
+            return int(
+                conn.execute(
+                    sa.text(
+                        "SELECT count(*) FROM consent_record c JOIN app_user u "
+                        "ON u.id = c.user_id WHERE u.email = 'j@example.ie' "
+                        "AND c.kind = 'marketing_email'"
+                    )
+                ).scalar_one()
+            )
+
+    before = consents()
+    client.patch("/api/v1/me", json={"marketingOptIn": False})  # unchanged
+    assert consents() == before
+    client.patch("/api/v1/me", json={"marketingOptIn": True})
+    assert consents() == before + 1
+
+
+def test_nul_bytes_are_refused_not_500(db: sa.Engine, outbox: Outbox, redis: FakeRedis) -> None:
+    client = signed_in(outbox, redis, "l@example.ie")
+    pid = property_id(db, "178 Pollerton Road, Carlow")
+    assert client.post("/api/v1/me/wishlist", json={"propertyId": "a\x00b"}).status_code == 422
+    assert (
+        client.post("/api/v1/me/wishlist", json={"propertyId": pid, "note": "a\x00"}).status_code
+        == 422
+    )
+    assert client.post("/api/v1/me/history/views", json={"propertyId": "\x00"}).status_code == 422
+    assert client.get("/api/v1/me/wishlist/compare", params={"ids": "a\x00b"}).status_code == 422
+    assert client.get("/api/v1/properties/%00/summary").status_code == 422
+    assert register(browser(outbox, redis), "m@example.ie", fullName="a\x00b").status_code == 422
+
+
+def test_wishlist_resave_and_withdrawn_properties(
+    db: sa.Engine, outbox: Outbox, redis: FakeRedis
+) -> None:
+    client = signed_in(outbox, redis, "n@example.ie")
+    pid = property_id(db, "8 Pollerton Road, Carlow")
+    first = client.post("/api/v1/me/wishlist", json={"propertyId": pid})
+    assert first.status_code == 201
+    again = client.post("/api/v1/me/wishlist", json={"propertyId": pid, "note": "viewing sat"})
+    assert again.status_code == 200 and again.json()["id"] == first.json()["id"]
+    assert again.json()["note"] == "viewing sat"
+    assert "T" in first.json()["createdAt"]  # ISO 8601
+    client.post("/api/v1/me/history/views", json={"propertyId": pid})
+    with db.begin() as conn:
+        conn.execute(
+            sa.text("UPDATE property SET is_suppressed = true WHERE public_id = :p"), {"p": pid}
+        )
+    try:
+        assert client.get("/api/v1/me/wishlist").json() == []
+        assert client.get("/api/v1/me/history/views").json() == []
+        exported = client.get("/api/v1/me/export").json()
+        assert exported["wishlist"][0]["property"] is None
+        assert "8 Pollerton Road" not in client.get("/api/v1/me/export").text
+    finally:
+        with db.begin() as conn:
+            conn.execute(
+                sa.text("UPDATE property SET is_suppressed = false WHERE public_id = :p"),
+                {"p": pid},
+            )
+
+
+def test_reset_link_dies_when_the_password_changes(
+    db: sa.Engine, outbox: Outbox, redis: FakeRedis
+) -> None:
+    client = signed_in(outbox, redis, "o@example.ie")
+    client.post("/api/v1/auth/forgot-password", json={"email": "o@example.ie"})
+    token = outbox.token_for("o@example.ie")
+    body = {"currentPassword": PASSWORD, "newPassword": "another long passphrase"}
+    assert client.post("/api/v1/me/password", json=body).status_code == 204
+    reset = client.post(
+        "/api/v1/auth/reset-password", json={"token": token, "password": "attacker passphrase"}
+    )
+    assert reset.status_code == 400
+
+
+def test_closed_account_email_says_so(db: sa.Engine, outbox: Outbox, redis: FakeRedis) -> None:
+    client = signed_in(outbox, redis, "p@example.ie")
+    assert client.request("DELETE", "/api/v1/me", json={"password": PASSWORD}).status_code == 204
+    assert register(browser(outbox, redis), "P@example.ie").status_code == 202
+    assert outbox.sent[-1].subject == "Your PPR Map account is closed"
+    assert register(browser(outbox, redis), "q@example.ie").status_code == 202
+    assert register(browser(outbox, redis), "q@example.ie").status_code == 202
+    assert outbox.sent[-1].subject == "You already have a PPR Map account"
+
+
+def test_signing_in_resets_the_limit(db: sa.Engine, outbox: Outbox, redis: FakeRedis) -> None:
+    client = signed_in(outbox, redis, "r@example.ie")
+    for _ in range(12):
+        res = client.post(
+            "/api/v1/auth/login", json={"email": "r@example.ie", "password": PASSWORD}
+        )
+        assert res.status_code == 200
+    assert not any("r@example.ie" in k for k in redis.data)  # the address is hashed
+
+
+def test_logout_always_clears_the_cookie(db: sa.Engine, outbox: Outbox, redis: FakeRedis) -> None:
+    client = signed_in(outbox, redis, "s@example.ie")
+    other = browser(outbox, redis)
+    other.cookies.update(client.cookies)
+    other.headers["X-CSRF-Token"] = client.headers["X-CSRF-Token"]
+    assert client.post("/api/v1/auth/logout-all").status_code == 204
+    res = other.post("/api/v1/auth/logout")  # its session had already ended
+    assert res.status_code == 204 and "ppr_session=" in res.headers["set-cookie"]
+
+
+def test_a_revoked_session_is_not_served_from_the_cache(
+    db: sa.Engine, outbox: Outbox, redis: FakeRedis
+) -> None:
+    client = signed_in(outbox, redis, "t@example.ie")
+    token = client.cookies["ppr_session"]
+    assert client.get("/api/v1/me").status_code == 200
+    cached = {k: v for k, v in redis.data.items() if k.startswith("session:")}
+    assert cached
+    assert client.post("/api/v1/auth/logout-all").status_code == 204
+    redis.data.update(cached)  # a lookup that raced the sign-out put its stale copy back
+    stolen = browser(outbox, redis)
+    stolen.cookies.set("ppr_session", token)
+    assert stolen.get("/api/v1/me").status_code == 401
+
+
+def test_csrf_survives_odd_cookies(db: sa.Engine, outbox: Outbox, redis: FakeRedis) -> None:
+    from app.auth.csrf import valid
+
+    assert valid("abc.\u00e9") is False  # non-ASCII: refused, not a TypeError (500)
+    client = browser(outbox, redis)
+    client.cookies.set("ppr_csrf", "stale.value")
+    client.headers["X-CSRF-Token"] = "stale.value"
+    refused = register(client, "u@example.ie")
+    assert refused.status_code == 403
+    assert "ppr_csrf=" in refused.headers["set-cookie"]  # a fresh token to retry with
+
+
+def test_daily_purge(db: sa.Engine, outbox: Outbox, redis: FakeRedis) -> None:
+    from typer.testing import CliRunner
+
+    from app.cli import cli
+
+    gone = signed_in(outbox, redis, "v@example.ie")
+    pid = property_id(db, "178 Pollerton Road, Carlow")
+    gone.post("/api/v1/me/wishlist", json={"propertyId": pid})
+    assert gone.request("DELETE", "/api/v1/me", json={"password": PASSWORD}).status_code == 204
+    kept = signed_in(outbox, redis, "w@example.ie")
+    kept.post("/api/v1/me/history/views", json={"propertyId": pid})
+    with db.begin() as conn:
+        conn.execute(
+            sa.text(
+                "UPDATE app_user SET deleted_at = now() - interval '31 days' "
+                "WHERE email = 'v@example.ie'"
+            )
+        )
+        conn.execute(
+            sa.text(
+                "INSERT INTO audit_log (actor_user_id, action, target_kind, target_id) "
+                "SELECT id, 'purge-test', 'test', '1' FROM app_user WHERE email = 'v@example.ie'"
+            )
+        )
+        conn.execute(sa.text("UPDATE view_history SET viewed_at = now() - interval '400 days'"))
+    result = CliRunner().invoke(cli, ["purge-deleted"])
+    assert result.exit_code == 0, result.output
+    with db.connect() as conn:
+        emails = conn.execute(sa.text("SELECT email FROM app_user")).scalars().all()
+        views = conn.execute(sa.text("SELECT count(*) FROM view_history")).scalar_one()
+    assert "v@example.ie" not in emails and "w@example.ie" in emails
+    assert views == 0
+    assert kept.get("/api/v1/me").status_code == 200

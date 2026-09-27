@@ -3,7 +3,9 @@
 Every API response sets a `ppr_csrf` cookie if the caller has none. The value is
 `random.signature`, readable by our own JavaScript, which echoes it in `X-CSRF-Token` on
 every POST, PUT, PATCH and DELETE. Another site can make the browser send the cookie but
-cannot read it, so it cannot set the header; the signature stops a planted cookie.
+cannot read it, and cannot set a custom header without CORS (which the API does not allow).
+The signature only rejects values the server never issued; it does not tie the token to a
+session, so the header check is the protection.
 """
 
 import hashlib
@@ -31,11 +33,27 @@ def new_csrf_token() -> str:
     return f"{value}.{_sign(value)}"
 
 
+def _same(a: str, b: str) -> bool:
+    # compare_digest raises TypeError on non-ASCII str; bytes always compare.
+    return hmac.compare_digest(a.encode(), b.encode())
+
+
 def valid(token: str | None) -> bool:
     if not token or "." not in token:
         return False
     value, signature = token.rsplit(".", 1)
-    return hmac.compare_digest(signature, _sign(value))
+    return _same(signature, _sign(value))
+
+
+def _set_cookie(response: Response) -> None:
+    response.set_cookie(
+        COOKIE,
+        new_csrf_token(),
+        httponly=False,
+        secure=secure_cookies(get_settings()),
+        samesite="lax",
+        path="/",
+    )
 
 
 class CsrfMiddleware(BaseHTTPMiddleware):
@@ -45,8 +63,8 @@ class CsrfMiddleware(BaseHTTPMiddleware):
         cookie = request.cookies.get(COOKIE)
         if request.method in UNSAFE:
             header = request.headers.get(HEADER)
-            if not (valid(cookie) and header and hmac.compare_digest(header, cookie or "")):
-                return JSONResponse(
+            if not (valid(cookie) and header and _same(header, cookie or "")):
+                refused = JSONResponse(
                     {
                         "type": "about:blank",
                         "title": "Forbidden",
@@ -56,14 +74,11 @@ class CsrfMiddleware(BaseHTTPMiddleware):
                     status_code=403,
                     media_type="application/problem+json",
                 )
+                # A stale or tampered cookie is replaced, so the page's retry can succeed.
+                if not valid(cookie):
+                    _set_cookie(refused)
+                return refused
         response = await call_next(request)
         if not valid(cookie):
-            response.set_cookie(
-                COOKIE,
-                new_csrf_token(),
-                httponly=False,
-                secure=secure_cookies(get_settings()),
-                samesite="lax",
-                path="/",
-            )
+            _set_cookie(response)
         return response

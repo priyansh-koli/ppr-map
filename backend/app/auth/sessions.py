@@ -2,7 +2,8 @@
 
 The cookie holds a random token; the database holds only its keyed hash. A session ends
 after 14 days without use or 90 days in all, and at once on logout, password change or
-account deletion. Lookups are cached in Redis for a minute; revoking deletes the cache key.
+account deletion. Lookups are cached in Redis for a minute; revoking deletes the cache key
+and leaves a short-lived marker, so a lookup that raced the revocation cannot re-cache it.
 """
 
 import contextlib
@@ -58,6 +59,10 @@ def _cache_key(hash_: str) -> str:
     return f"session:{hash_}"
 
 
+def _revoked_key(hash_: str) -> str:
+    return f"session-revoked:{hash_}"
+
+
 async def create_session(
     db: AsyncSession, user_id: uuid.UUID, ip_hash: str | None, user_agent: str | None
 ) -> str:
@@ -82,7 +87,9 @@ async def load_session(db: AsyncSession, cache: Redis | None, token: str) -> Cur
     hash_ = token_hash(token)
     if cache is not None:
         try:
-            hit = await cache.get(_cache_key(hash_))
+            hit, revoked = await cache.mget(_cache_key(hash_), _revoked_key(hash_))
+            if revoked:
+                return None
             if hit:
                 d = json.loads(hit)
                 return CurrentUser(
@@ -138,7 +145,8 @@ async def revoke_sessions(
     only: int | None = None,
     keep: int | None = None,
 ) -> None:
-    """End one session (`only`), or all of a user's sessions except `keep`."""
+    """End one session (`only`), or all of a user's sessions except `keep`. Commits the
+    caller's transaction first, so the cache is cleared only once the rows are gone."""
     rows = await db.execute(
         sa.text(
             "DELETE FROM user_session WHERE user_id = :u "
@@ -148,9 +156,14 @@ async def revoke_sessions(
         {"u": user_id, "only": only, "keep": keep},
     )
     hashes = [r[0] for r in rows]
+    await db.commit()
     if cache is not None and hashes:
         with contextlib.suppress(*REDIS_ERRORS):
-            await cache.delete(*(_cache_key(h) for h in hashes))
+            async with cache.pipeline(transaction=False) as pipe:
+                for h in hashes:
+                    pipe.set(_revoked_key(h), "1", ex=2 * CACHE_TTL_S)
+                pipe.delete(*(_cache_key(h) for h in hashes))
+                await pipe.execute()
 
 
 async def forget_cached_user(cache: Redis | None, db: AsyncSession, user_id: uuid.UUID) -> None:

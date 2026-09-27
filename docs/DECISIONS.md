@@ -354,3 +354,20 @@ Everything below is **Proposed** until the Phase 0 review.
 - **History** records a property page visit only while history is on, counts repeat visits within 30 minutes once, and keeps 12 months.
 - **Legal pages:** `/privacy` and `/terms` describe what the app does today and are marked as drafts until the operator's name and contact details are added and they are reviewed.
 - **Status:** Accepted (implementation detail).
+
+## D-042 Accounts: changes from the Phase 4 review
+
+- **Context:** a review of Phase 4 (code reading, the test suite, and probing the running stack) found bugs and some claims in D-041 that did not hold.
+- **Choice:**
+  - **CSRF:** the signature only rejects tokens the server never issued; it is not tied to a session, so D-041's "the signature stops a planted cookie" was wrong. The protection is that another site cannot send the custom header without CORS, which the API does not allow. A refused request now gets a fresh token, and malformed (non-ASCII) tokens are a 403, not a 500.
+  - **Timing:** argon2 runs in a small thread pool (4), never on the event loop. Registration hashes the password before looking up the email, and every email is sent after the response, so neither registration nor reset timing reveals an account.
+  - **Sign-in limit:** 10 per 15 min per IP and address (a successful sign-in resets it; the address is hashed in the Redis key), plus 100 per 15 min per IP against spraying many addresses. Rate-limit keys get their TTL with `EXPIRE NX` on every call, so a lost first `EXPIRE` cannot lock a caller out for ever.
+  - **Sessions:** revoking commits first, then deletes the cache keys and leaves a 2-minute "revoked" marker, so a lookup that raced the revocation cannot re-cache a dead session. Sign-out answers 204 and clears the cookie even when the session had already ended.
+  - **Links:** a reset link is claimed with `SELECT … FOR UPDATE` (concurrent use of one link succeeded several times before). Changing the password voids open reset links.
+  - **Closed accounts:** registering the address of a closed account sends "your account is closed; it is deleted on <date>, then you can register again", instead of "sign in", which could not work. Reactivation is not offered.
+  - **Retention:** `app.cli purge-deleted` is the daily housekeeping job: closed accounts after 30 days, expired sessions, used or expired email links, and views older than 12 months. Views older than that are also never listed or exported. The audit-log trigger (migration 0005) now allows the one change a purge makes, `actor_user_id` becoming NULL; before, one audit entry blocked every purge.
+  - **Input:** NUL characters are refused (422) in every API string (Postgres cannot store them; they were 500s). Names are trimmed, 1 to 200 characters, without control characters, because they are quoted in emails. Budgets fit `numeric(12,2)` and `budgetMin ≤ budgetMax`. `PATCH /me` changes only the fields sent, including inside `profile`, and null is refused. A marketing consent is recorded only when the choice changes. Caddy refuses API bodies over 1 MB.
+  - **Wishlist and history:** a property withdrawn after a removal request (`is_suppressed`) disappears from the wishlist and history, and the export lists it without its address. Saving an item again answers 200 with the existing item (and a new note, if given), even when the wishlist is full. Adds and visits are serialised per user with advisory locks, so the 500-item cap and the 30-minute dedupe hold under concurrent requests.
+  - **Export:** camelCase keys throughout, and it now includes the account timestamps, profile areas, consent and session IP hashes, API keys (name and prefix only), alerts sent and audit entries. Secret hashes stay out.
+  - **Still open, for Phase 5:** unverified accounts have the full `user` role. Alerts must check `email_verified` themselves before sending (docs/permissions.md says `alert:receive` needs a verified email). The history list is capped at 200 rows without pagination.
+- **Status:** Accepted (implementation detail; corrects D-041).
