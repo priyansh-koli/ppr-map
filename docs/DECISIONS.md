@@ -265,3 +265,12 @@ Everything below is **Proposed** until the Phase 0 review.
 - **Names:** names that are mostly capitals are title-cased (`CARLOW RURAL` → `Carlow Rural`, `DUNDALK No. 2 URBAN` → `Dundalk No. 2 Urban`); names the publisher already cased (`Dún na nGall`) are kept as published.
 - **Licence:** Tailte Éireann data-sharing policy (open, attribution); the townland metadata on data.gov.ie still says "No licence specified" (R-05).
 - **Status:** Accepted (implementation detail).
+
+## D-034 Public preview of the frontend on GitHub Pages
+
+- **Context:** On 2026-09-27 the owner asked for the app to be reachable beyond `localhost`, deployed on GitHub, with the repository made public. GitHub Pages serves static files only, so it cannot run FastAPI, PostGIS, Redis or Martin.
+- **Options:** (a) GitHub Pages for a static export of the frontend; (b) a hosted server for the full stack, which means signing up for a paid or third-party service (needs the owner's approval first); (c) stay local only.
+- **Choice:** (a), for now. `STATIC_EXPORT=1` switches `next.config.ts` to `output: "export"` with a `basePath` from `PAGES_BASE_PATH`, and `.github/workflows/pages.yml` builds and deploys it on every push to `main`. Without the flag, the Docker build is unchanged (`standalone`, with the `/api` rewrite). The dynamic routes pre-render only their sample URLs (`/area/dublin`, `/property/example`) through `generateStaticParams`; the server build still renders any slug or id.
+- **Why:** Free for a public repository, no new account or API, and the Phase 1 pages have no server dependencies.
+- **Limits:** Anything that needs the API (map data, sign-in, search, admin) cannot work on Pages. When Phase 3 adds live data, the full stack needs a real host (option b), and this preview is either retired or kept as a docs site.
+- **Status:** Accepted (owner request, 2026-09-27).

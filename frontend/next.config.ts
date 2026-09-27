@@ -4,12 +4,23 @@ import type { NextConfig } from "next";
 // For `npm run dev` on the host, proxy API calls to a locally running FastAPI.
 const API_ORIGIN = process.env.INTERNAL_API_ORIGIN ?? "http://localhost:8000";
 
-const nextConfig: NextConfig = {
-  output: "standalone",
-  poweredByHeader: false,
-  async rewrites() {
-    return [{ source: "/api/:path*", destination: `${API_ORIGIN}/api/:path*` }];
-  },
-};
+// STATIC_EXPORT=1 builds the public GitHub Pages preview (D-034): plain HTML in `out/`, served
+// under PAGES_BASE_PATH (e.g. `/ppr-map`), with no API behind it, so no rewrites.
+const STATIC_EXPORT = process.env.STATIC_EXPORT === "1";
+
+const nextConfig: NextConfig = STATIC_EXPORT
+  ? {
+      output: "export",
+      basePath: process.env.PAGES_BASE_PATH ?? "",
+      trailingSlash: true,
+      poweredByHeader: false,
+    }
+  : {
+      output: "standalone",
+      poweredByHeader: false,
+      async rewrites() {
+        return [{ source: "/api/:path*", destination: `${API_ORIGIN}/api/:path*` }];
+      },
+    };
 
 export default nextConfig;

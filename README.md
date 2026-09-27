@@ -4,6 +4,8 @@ The Property Price Register, made usable: every residential sale in Ireland sinc
 
 **Status:** Phase 1 (scaffold) is ready for review. Phase 0 research and plan are in `docs/`.
 
+**Live preview:** https://priyansh-koli.github.io/ppr-map/ is the frontend as a static site, rebuilt on every push to `main` (D-034). It has no API or database yet, so it shows the page scaffold only.
+
 ## Quick start
 
 Prerequisites: Python 3.12, Node 22 LTS, and Docker (Docker Desktop or OrbStack).
