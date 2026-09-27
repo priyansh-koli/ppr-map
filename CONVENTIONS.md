@@ -1,4 +1,4 @@
-# CLAUDE.md: project conventions
+# Project conventions
 
 This app makes Ireland's Property Price Register (PPR) explorable on a map. Read `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` before changing structure.
 

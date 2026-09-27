@@ -1,4 +1,4 @@
-"""Schema conventions from CLAUDE.md and docs/data-model.md, enforced."""
+"""Schema conventions from CONVENTIONS.md and docs/data-model.md, enforced."""
 
 import re
 
