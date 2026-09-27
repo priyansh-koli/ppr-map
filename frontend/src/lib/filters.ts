@@ -32,6 +32,13 @@ const TYPES: SaleType[] = ["any", "new", "second_hand"];
 const CONFIDENCES: MinConfidence[] = ["exact", "street", "locality", "routing_key", "county"];
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** "2025-02-30" has the right shape but is not a day. */
+export function isCalendarDate(v: string): boolean {
+  if (!ISO_DATE.test(v)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+}
+
 function num(v: string | null): number | null {
   if (v === null || v.trim() === "") return null;
   const n = Number(v);
@@ -43,7 +50,7 @@ export function parseFilters(params: URLSearchParams): Filters {
   const conf = params.get("minConfidence") as MinConfidence;
   const date = (k: string) => {
     const v = params.get(k);
-    return v && ISO_DATE.test(v) ? v : null;
+    return v && isCalendarDate(v) ? v : null;
   };
   return {
     priceMin: num(params.get("priceMin")),

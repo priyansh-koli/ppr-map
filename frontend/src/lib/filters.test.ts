@@ -21,7 +21,7 @@ describe("map filters", () => {
   it("ignores values it does not understand", () => {
     const f = parseFilters(
       new URLSearchParams(
-        "priceMin=abc&priceMax=-5&dateFrom=yesterday&type=castle&minConfidence=psychic",
+        "priceMin=abc&priceMax=-5&dateFrom=yesterday&dateTo=2025-02-30&type=castle&minConfidence=psychic",
       ),
     );
     expect(f).toEqual(DEFAULT_FILTERS);

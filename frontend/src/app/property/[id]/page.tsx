@@ -137,8 +137,12 @@ export default async function Page({ params }: Props) {
             </tr>
           </thead>
           <tbody>
-            {data.sales.map((sale) => (
-              <tr key={`${sale.date}-${sale.priceEur}`} className="border-t border-line align-top">
+            {/* Repeat filings share a date and price, so the row's position is part of its key. */}
+            {data.sales.map((sale, i) => (
+              <tr
+                key={`${i}-${sale.date}-${sale.priceEur}`}
+                className="border-t border-line align-top"
+              >
                 <td className="py-2">{formatDate(sale.date)}</td>
                 <td className="py-2 font-medium text-ink">{formatEur(sale.priceEur)}</td>
                 <td className="py-2 text-muted">

@@ -205,3 +205,44 @@ def test_hover_fields_keep_their_names(api: TestClient, db: sa.Engine) -> None:
     assert isinstance(body["vicinity"]["shopsWithin1km"]["value"], int)
     assert isinstance(body["area"]["median12m"], float)
     assert "change12mPct" in body["area"]
+
+
+def test_hover_cards_survive_redis_being_down(db: sa.Engine) -> None:
+    """redis-py raises its own ConnectionError; the cache is skipped, not a 500."""
+    from redis.asyncio import Redis
+
+    app = create_app()
+
+    async def dead_redis() -> Redis:
+        return Redis.from_url("redis://127.0.0.1:1/0", socket_connect_timeout=0.2)
+
+    app.dependency_overrides[get_redis] = dead_redis
+    get_engine.cache_clear()
+    get_sessionmaker.cache_clear()
+    with TestClient(app) as client:
+        res = client.get(f"/api/v1/properties/{_id(db, '178 Pollerton Road, Carlow')}/summary")
+    assert res.status_code == 200
+    assert res.json()["latestSale"]["priceEur"] == 240000
+
+
+def test_each_sale_is_counted_in_one_cell_of_one_tile(db: sa.Engine) -> None:
+    """The four z11 tiles under a z10 tile hold exactly the z10 tile's sales."""
+    with db.connect() as conn:
+
+        def total(z: int, x: int, y: int) -> int:
+            sql = sa.text("SELECT coalesce(sum(n), 0) FROM tile_sales_cells(:z, :x, :y, '{}')")
+            return int(conn.execute(sql, {"z": z, "x": x, "y": y}).scalar_one())
+
+        parent = total(10, 492, 334)
+        children = sum(total(11, 2 * 492 + dx, 2 * 334 + dy) for dx in (0, 1) for dy in (0, 1))
+    assert parent == children > 0
+
+
+def test_impossible_dates_fall_back_to_the_default(db: sa.Engine) -> None:
+    with db.connect() as conn:
+
+        def tile(params: str) -> bytes:
+            sql = sa.text("SELECT sales_tiles(14, 7877, 5349, CAST(:p AS json))")
+            return bytes(conn.execute(sql, {"p": params}).scalar_one())
+
+        assert tile('{"dateFrom": "2025-02-30"}') == tile("{}")

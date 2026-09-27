@@ -100,10 +100,17 @@ BASEMAP_ASSETS_REF := 028c18f713baecad011301ff7a69acc39bcc2ae7
 BASEMAP_BBOX := -10.8,51.2,-5.3,55.5
 PMTILES := .tools/pmtiles
 
+# Release files: go-pmtiles-<v>_Darwin_<arch>.zip, but go-pmtiles_<v>_Linux_<arch>.tar.gz.
 $(PMTILES):
 	mkdir -p .tools
-	curl -sSL --fail -o .tools/pmtiles.zip https://github.com/protomaps/go-pmtiles/releases/download/v$(PMTILES_VERSION)/go-pmtiles-$(PMTILES_VERSION)_$$(uname -s)_$$(uname -m | sed 's/aarch64/arm64/').zip
-	cd .tools && unzip -oq pmtiles.zip pmtiles && rm pmtiles.zip
+	@arch=$$(uname -m | sed 's/aarch64/arm64/'); \
+	base=https://github.com/protomaps/go-pmtiles/releases/download/v$(PMTILES_VERSION); \
+	case "$$(uname -s)" in \
+	  Darwin) curl -sSL --fail -o .tools/pmtiles.zip $$base/go-pmtiles-$(PMTILES_VERSION)_Darwin_$$arch.zip \
+	            && cd .tools && unzip -oq pmtiles.zip pmtiles && rm pmtiles.zip ;; \
+	  Linux) curl -sSL --fail $$base/go-pmtiles_$(PMTILES_VERSION)_Linux_$$arch.tar.gz | tar -xz -C .tools pmtiles ;; \
+	  *) echo "make basemap supports macOS and Linux"; exit 1 ;; \
+	esac
 
 basemap: $(PMTILES) ## Download the Ireland basemap (~300 MB) and its fonts and sprites
 	mkdir -p data/basemap

@@ -316,6 +316,8 @@ Everything below is **Proposed** until the Phase 0 review.
 - **Context:** D-004 planned grid aggregates below z12 and points from z12. Measured on the full data: a z12 tile of central Dublin points is 1.2 MB; at z14 it is 68 KB. Sales placed only at a town or townland centre (44% of properties, D-035) would stack hundreds of dots on one spot and read as one sale.
 - **Choice:**
   - `sales_tiles` (migration 0004): below z14, 64 grid cells per tile side (about 75 m at z13) with count and median; from z14, one point per exact or street property, and one **stack** per coarser location with its count and median, drawn hollow with the count on it.
+  - Cells are aligned to the tile and read only the sales inside it, so each sale is counted in exactly one cell of one tile (a test checks that four child tiles add up to their parent).
+  - Tile URLs carry the data version (`?v=2026-09-18.r1`): Martin caches tiles by URL, so a monthly run is shown at once without restarting it.
   - The filters are parsed in SQL with defaults, so a malformed URL gives the default map, never a 500.
   - `/api/v1/properties` (the list view) calls the same `tile_matching_sales` function, so the list and the map cannot disagree. It refuses boxes larger than 0.6° × 0.4° and the UI asks the user to zoom in.
   - Timings on the dev stack (Postgres under emulation): a national z6 tile 2.7 s uncached, z10 55 ms, z14 110 ms; Martin caches tiles in memory.

@@ -2,13 +2,14 @@
 
 import contextlib
 import json
-from collections.abc import AsyncIterator
+import time
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from redis.asyncio import Redis
+from redis.exceptions import RedisError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -41,13 +42,26 @@ SUMMARY_TTL_S = 7 * 24 * 3600
 NOT_FOUND = HTTPException(404, "No such property")
 
 
-async def get_redis() -> AsyncIterator[Redis | None]:
+# The data version changes once a month; the hover path reads it at most once a minute.
+META_TTL_S = 60.0
+# redis-py raises its own exception classes (RedisError, not the built-in ConnectionError).
+CACHE_ERRORS = (RedisError, OSError)
+
+
+class _Shared:
+    """Process-wide state: one Redis client (a connection pool) and the latest meta."""
+
+    redis: Redis | None = None
+    meta: tuple[float, Meta] | None = None
+
+
+async def get_redis() -> Redis | None:
     """Redis for the hover cache; a cache that is down is skipped, not an error."""
-    client = Redis.from_url(get_settings().redis_url, socket_connect_timeout=0.2)
-    try:
-        yield client
-    finally:
-        await client.aclose()
+    if _Shared.redis is None:
+        _Shared.redis = Redis.from_url(
+            get_settings().redis_url, socket_connect_timeout=0.2, socket_timeout=0.2
+        )
+    return _Shared.redis
 
 
 def sales_filter(
@@ -80,15 +94,20 @@ Cache = Annotated[Redis | None, Depends(get_redis)]
 
 
 async def _meta(session: AsyncSession) -> Meta:
+    now = time.monotonic()
+    if _Shared.meta is not None and now - _Shared.meta[0] < META_TTL_S:
+        return _Shared.meta[1]
     row = await q.meta(session)
     if row is None:
         raise HTTPException(503, "Data is not loaded yet")
-    return Meta(
+    meta_ = Meta(
         data_version=row[0],
         ppr_max_sale_date=row[1],
         provisional_from=row[2],
         last_ingest_at=row[3],
     )
+    _Shared.meta = (now, meta_)
+    return meta_
 
 
 @router.get("/meta", response_model=Meta)
@@ -101,21 +120,19 @@ async def meta(session: Session) -> Meta:
 async def summary(property_id: str, session: Session, cache: Cache) -> PropertySummary:
     """The hover card: one precomputed row, cached in Redis per data version."""
     payload: dict[str, Any] | None = None
-    key = None
-    try:
-        version = (await _meta(session)).data_version
-        key = f"summary:{property_id}:{version}"
-        if cache is not None:
+    key = f"summary:{property_id}:{(await _meta(session)).data_version}"
+    if cache is not None:
+        try:
             hit = await cache.get(key)
             payload = json.loads(hit) if hit else None
-    except (OSError, ConnectionError, TimeoutError):
-        cache = None
+        except CACHE_ERRORS:
+            cache = None
     if payload is None:
         payload = await q.summary(session, property_id)
         if payload is None:
             raise NOT_FOUND
-        if cache is not None and key is not None:
-            with contextlib.suppress(OSError, ConnectionError, TimeoutError):
+        if cache is not None:
+            with contextlib.suppress(*CACHE_ERRORS):
                 await cache.set(key, json.dumps(payload, default=str), ex=SUMMARY_TTL_S)
     return PropertySummary.model_validate(payload)
 

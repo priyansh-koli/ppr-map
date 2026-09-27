@@ -25,6 +25,8 @@ const TILES = "/api/v1/tiles";
 const POINT_ZOOM = 14;
 const LIST_ZOOM = 12;
 const HOVER_DELAY_MS = 150;
+// The API's answer for a box too large to list (/api/v1/properties).
+const ZOOM_IN = "Zoom in to list sales";
 
 type Card = { content: CardContent; x?: number; y?: number; pinned: boolean } | null;
 export type ListState =
@@ -33,16 +35,19 @@ export type ListState =
   | { status: "error"; message: string }
   | { status: "ok"; data: PropertyList };
 
-function tileUrl(source: "sales" | "price-hex", query: URLSearchParams): string {
-  const qs = query.toString();
+/** `v` is the data version: Martin caches tiles by URL, so a new monthly run gets new URLs. */
+function tileUrl(source: "sales" | "price-hex", query: URLSearchParams, version: string): string {
+  const q = new URLSearchParams(query);
+  if (version) q.set("v", version);
+  const qs = q.toString();
   return `${window.location.origin}${TILES}/${source}/{z}/{x}/{y}${qs ? `?${qs}` : ""}`;
 }
 
-function addDataLayers(map: MapLibreMap, filters: Filters) {
+function addDataLayers(map: MapLibreMap, filters: Filters, version: string) {
   const price = (p: string) => bandExpression(p) as ExpressionSpecification;
   map.addSource("sales", {
     type: "vector",
-    tiles: [tileUrl("sales", filtersToParams(filters))],
+    tiles: [tileUrl("sales", filtersToParams(filters), version)],
     minzoom: 5,
     maxzoom: 16,
     promoteId: { sales: "id" },
@@ -50,7 +55,7 @@ function addDataLayers(map: MapLibreMap, filters: Filters) {
   });
   map.addSource("price-hex", {
     type: "vector",
-    tiles: [tileUrl("price-hex", new URLSearchParams())],
+    tiles: [tileUrl("price-hex", new URLSearchParams(), version)],
     minzoom: 5,
     maxzoom: 14,
   });
@@ -176,6 +181,8 @@ export function MapExplorer() {
   const highlighted = useRef<string | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pinned = useRef(false);
+  const version = useRef("");
+  const listRequest = useRef<AbortController | null>(null);
   // Map event handlers are registered once; they read the current filters from here.
   const state = useRef({ filters, showHexes });
   useEffect(() => {
@@ -246,17 +253,24 @@ export function MapExplorer() {
       [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map((v) => v.toFixed(5)).join(","),
     );
     query.set("pageSize", "50");
+    // Only the latest view counts: a slower answer for where the map was must not replace it.
+    listRequest.current?.abort();
+    const request = new AbortController();
+    listRequest.current = request;
     setList({ status: "loading" });
     api
-      .list(query)
-      .then((data) => setList({ status: "ok", data }))
-      .catch((e: unknown) =>
+      .list(query, { signal: request.signal })
+      .then((data) => {
+        if (!request.signal.aborted) setList({ status: "ok", data });
+      })
+      .catch((e: unknown) => {
+        if (request.signal.aborted) return;
         setList(
-          e instanceof ApiError && e.status === 422
+          e instanceof ApiError && e.status === 422 && e.detail === ZOOM_IN
             ? { status: "zoom" }
             : { status: "error", message: "The list could not be loaded." },
-        ),
-      );
+        );
+      });
   }, []);
 
   // Map set-up, once. MapLibre and PMTiles are loaded in the browser only.
@@ -276,6 +290,8 @@ export function MapExplorer() {
       maplibregl.setWorkerUrl(`/maplibre/${maplibregl.getVersion()}/maplibre-gl-worker.mjs`);
       const protocol = new Protocol();
       maplibregl.addProtocol("pmtiles", protocol.tile);
+      version.current = (await api.meta().catch(() => null))?.dataVersion ?? "";
+      if (cancelled || !container.current) return;
       const view = readView();
       map = new maplibregl.Map({
         container: container.current,
@@ -299,7 +315,7 @@ export function MapExplorer() {
       map.on("load", () => {
         if (!map) return;
         measure();
-        addDataLayers(map, initial);
+        addDataLayers(map, initial, version.current);
         if (hexesInitially) {
           map.setLayoutProperty("hexes", "visibility", "visible");
           for (const id of ["cells", "stacks", "stack-counts", "sales"])
@@ -353,6 +369,7 @@ export function MapExplorer() {
           ),
         );
         map.on("click", layer, (e) => {
+          clearTimeout(hoverTimer.current);
           pinned.current = true;
           setCard({ content: groupCard(e, kind), x: e.point.x, y: e.point.y, pinned: true });
         });
@@ -363,6 +380,7 @@ export function MapExplorer() {
     return () => {
       cancelled = true;
       clearTimeout(hoverTimer.current);
+      listRequest.current?.abort();
       map?.remove();
       mapRef.current = null;
       import("maplibre-gl").then((m) => m.removeProtocol("pmtiles")).catch(() => {});
@@ -374,7 +392,7 @@ export function MapExplorer() {
     const map = mapRef.current;
     if (!map || !ready) return;
     (map.getSource("sales") as VectorTileSource).setTiles([
-      tileUrl("sales", filtersToParams(filters)),
+      tileUrl("sales", filtersToParams(filters), version.current),
     ]);
     map.setLayoutProperty("hexes", "visibility", showHexes ? "visible" : "none");
     for (const id of ["cells", "stacks", "stack-counts", "sales"]) {

@@ -24,9 +24,15 @@ LANGUAGE sql IMMUTABLE AS $$
 $$;
 
 CREATE FUNCTION tile_param_date(params json, key text) RETURNS date
-LANGUAGE sql IMMUTABLE AS $$
-    SELECT CASE WHEN params ->> key ~ '^\d{4}-\d{2}-\d{2}$'
-                THEN to_date(params ->> key, 'YYYY-MM-DD') END
+LANGUAGE plpgsql IMMUTABLE AS $$
+BEGIN
+    IF params ->> key ~ '^\d{4}-\d{2}-\d{2}$' THEN
+        RETURN (params ->> key)::date;  -- raises for 2025-02-30: caught below
+    END IF;
+    RETURN NULL;
+EXCEPTION WHEN datetime_field_overflow OR invalid_datetime_format THEN
+    RETURN NULL;
+END
 $$;
 
 CREATE FUNCTION tile_param_bool(params json, key text, fallback boolean) RETURNS boolean
@@ -75,57 +81,80 @@ LANGUAGE sql STABLE PARALLEL SAFE AS $$
 $$;
 """
 
-# Below z14: grid cells (64 per tile side, about 75 m at z13) with the count and median of the latest matching
-# sale per property. From z14: precise points (exact, street) one per property, and every
-# coarser location (a town centre, a routing key, a county) as one stack with its count, so
-# hundreds of sales placed at a town centre are not drawn as one misleading dot. (D-004
-# said z12; a z12 tile of central Dublin points is 1.2 MB, a z14 one 68 KB.)
+# Below z14: a grid of 64 x 64 cells aligned to the tile (about 75 m at z13), with the count
+# and median of the latest matching sale per property. Only sales inside the tile are read,
+# so each sale is counted in exactly one cell of exactly one tile.
+SALES_CELLS = r"""
+CREATE FUNCTION tile_sales_cells(z integer, x integer, y integer, query_params json)
+RETURNS TABLE (i integer, j integer, n integer, median integer, cx float8, cy float8)
+LANGUAGE sql STABLE PARALLEL SAFE AS $$
+    WITH env AS (
+        SELECT ST_XMin(e) AS x0, ST_YMin(e) AS y0, (ST_XMax(e) - ST_XMin(e)) / 64 AS cell,
+               ST_Transform(e, 4326) AS e4326
+        FROM (SELECT ST_TileEnvelope(z, x, y) AS e) t
+    ), binned AS (
+        SELECT floor((ST_X(p) - env.x0) / env.cell)::int AS i,
+               floor((ST_Y(p) - env.y0) / env.cell)::int AS j, price_eur
+        FROM env,
+             LATERAL (SELECT ST_Transform(m.geom, 3857) AS p, m.price_eur
+                      FROM tile_matching_sales(env.e4326, query_params) m) s
+    )
+    SELECT b.i, b.j, count(*)::int,
+           round(percentile_cont(0.5) WITHIN GROUP (ORDER BY b.price_eur))::int,
+           env.x0 + (b.i + 0.5) * env.cell, env.y0 + (b.j + 0.5) * env.cell
+    FROM binned b, env
+    WHERE b.i BETWEEN 0 AND 63 AND b.j BETWEEN 0 AND 63
+    GROUP BY b.i, b.j, env.x0, env.y0, env.cell
+$$;
+"""
+
+# From z14: precise points (exact, street) one per property, and every coarser location
+# (a town centre, a routing key, a county) as one stack with its count, so hundreds of
+# sales placed at a town centre are not drawn as one misleading dot. (D-004 said z12; a z12
+# tile of central Dublin points is 1.2 MB, a z14 one 68 KB.) The matching sales are read
+# once and split between the two layers.
 SALES_TILES = r"""
 CREATE FUNCTION sales_tiles(z integer, x integer, y integer, query_params json)
 RETURNS bytea LANGUAGE plpgsql STABLE PARALLEL SAFE AS $$
 DECLARE
     env3857 geometry := ST_TileEnvelope(z, x, y);
-    env4326 geometry := ST_Transform(ST_TileEnvelope(z, x, y, margin => 0.02), 4326);
-    cell float8 := (ST_XMax(env3857) - ST_XMin(env3857)) / 64;
     result bytea;
-    stacks bytea;
 BEGIN
     IF z < 14 THEN
         SELECT ST_AsMVT(t, 'cells') INTO result FROM (
-            SELECT ST_AsMVTGeom(c, env3857) AS geom, n::int AS n, round(median)::int AS median
-            FROM (
-                SELECT ST_SnapToGrid(ST_Transform(m.geom, 3857), cell) AS c, count(*) AS n,
-                       percentile_cont(0.5) WITHIN GROUP (ORDER BY m.price_eur) AS median
-                FROM tile_matching_sales(env4326, query_params) m
-                GROUP BY 1
-            ) g
+            SELECT ST_AsMVTGeom(ST_SetSRID(ST_MakePoint(c.cx, c.cy), 3857), env3857) AS geom,
+                   c.n, c.median
+            FROM tile_sales_cells(z, x, y, query_params) c
         ) t WHERE t.geom IS NOT NULL;
         RETURN coalesce(result, ''::bytea);
     END IF;
 
-    SELECT ST_AsMVT(t, 'sales') INTO result FROM (
-        SELECT ST_AsMVTGeom(ST_Transform(m.geom, 3857), env3857) AS geom,
-               m.public_id AS id, round(m.price_eur)::int AS price,
-               to_char(m.sale_date, 'YYYYMMDD')::int AS date, m.is_new AS "isNew",
-               m.nfmp, m.vatx, m.bulk, m.confidence::text AS confidence,
-               m.n_sales::int AS "nSales"
-        FROM tile_matching_sales(env4326, query_params) m
-        WHERE m.confidence IN ('exact', 'street')
-    ) t WHERE t.geom IS NOT NULL;
-
-    SELECT ST_AsMVT(t, 'stacks') INTO stacks FROM (
-        SELECT ST_AsMVTGeom(ST_Transform(g.geom, 3857), env3857) AS geom, g.n::int AS n,
-               round(g.median)::int AS median, g.confidence::text AS confidence
-        FROM (
-            SELECT m.geom, min(m.confidence) AS confidence, count(*) AS n,
-                   percentile_cont(0.5) WITHIN GROUP (ORDER BY m.price_eur) AS median
-            FROM tile_matching_sales(env4326, query_params) m
-            WHERE m.confidence NOT IN ('exact', 'street')
-            GROUP BY m.geom
-        ) g
-    ) t WHERE t.geom IS NOT NULL;
-
-    RETURN coalesce(result, ''::bytea) || coalesce(stacks, ''::bytea);
+    WITH m AS MATERIALIZED (
+        SELECT * FROM tile_matching_sales(
+            ST_Transform(ST_TileEnvelope(z, x, y, margin => 0.02), 4326), query_params)
+    )
+    SELECT coalesce((
+        SELECT ST_AsMVT(t, 'sales') FROM (
+            SELECT ST_AsMVTGeom(ST_Transform(m.geom, 3857), env3857) AS geom,
+                   m.public_id AS id, round(m.price_eur)::int AS price,
+                   to_char(m.sale_date, 'YYYYMMDD')::int AS date, m.is_new AS "isNew",
+                   m.nfmp, m.vatx, m.bulk, m.confidence::text AS confidence,
+                   m.n_sales::int AS "nSales"
+            FROM m WHERE m.confidence IN ('exact', 'street')
+        ) t WHERE t.geom IS NOT NULL), ''::bytea)
+    || coalesce((
+        SELECT ST_AsMVT(t, 'stacks') FROM (
+            SELECT ST_AsMVTGeom(ST_Transform(g.geom, 3857), env3857) AS geom, g.n::int AS n,
+                   round(g.median)::int AS median, g.confidence::text AS confidence
+            FROM (
+                SELECT m.geom, min(m.confidence) AS confidence, count(*) AS n,
+                       percentile_cont(0.5) WITHIN GROUP (ORDER BY m.price_eur) AS median
+                FROM m WHERE m.confidence NOT IN ('exact', 'street')
+                GROUP BY m.geom
+            ) g
+        ) t WHERE t.geom IS NOT NULL), ''::bytea)
+    INTO result;
+    RETURN result;
 END
 $$;
 """
@@ -152,13 +181,14 @@ $$;
 
 
 def upgrade() -> None:
-    for sql in (HELPERS, MATCHING_SALES, SALES_TILES, PRICE_HEX_TILES):
+    for sql in (HELPERS, MATCHING_SALES, SALES_CELLS, SALES_TILES, PRICE_HEX_TILES):
         op.execute(sql)
 
 
 def downgrade() -> None:
     op.execute("DROP FUNCTION price_hex_tiles(integer, integer, integer, json)")
     op.execute("DROP FUNCTION sales_tiles(integer, integer, integer, json)")
+    op.execute("DROP FUNCTION tile_sales_cells(integer, integer, integer, json)")
     op.execute("DROP FUNCTION tile_matching_sales(geometry, json)")
     op.execute("DROP FUNCTION tile_param_confidence(json)")
     op.execute("DROP FUNCTION tile_param_bool(json, text, boolean)")
