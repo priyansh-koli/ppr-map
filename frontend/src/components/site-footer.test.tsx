@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 
-import { PSRA_ATTRIBUTION, SiteFooter } from "./site-footer";
+import { PSRA_ATTRIBUTION } from "@/lib/attribution";
+import { ROUTES } from "@/lib/routes";
+
+import { SiteFooter } from "./site-footer";
 
 describe("SiteFooter", () => {
   it("always shows the PSRA attribution and error disclaimer", () => {
@@ -13,7 +16,7 @@ describe("SiteFooter", () => {
     render(<SiteFooter />);
     expect(screen.getByRole("link", { name: /request removal/i })).toHaveAttribute(
       "href",
-      "/report",
+      ROUTES.report.path,
     );
   });
 });

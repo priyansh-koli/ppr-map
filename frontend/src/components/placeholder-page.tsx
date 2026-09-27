@@ -4,7 +4,9 @@ import { ROUTES, type RouteKey } from "@/lib/routes";
 
 export function pageMetadata(key: RouteKey): Metadata {
   const route = ROUTES[key];
-  return { title: route.title, description: route.summary };
+  // The home page sits in the root layout's segment, where `title.template` is not applied.
+  const title = key === "home" ? { absolute: `${route.title} · PPR Map` } : route.title;
+  return { title, description: route.summary };
 }
 
 const ACCESS_LABEL = {

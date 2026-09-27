@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 // In Docker, Caddy serves everything from one origin (infra/caddy/Caddyfile).
 // For `npm run dev` on the host, proxy API calls to a locally running FastAPI.
-const API_ORIGIN = process.env.INTERNAL_API_ORIGIN ?? "http://localhost:8000";
+const API_ORIGIN = process.env.INTERNAL_API_ORIGIN || "http://localhost:8000";
 
 // STATIC_EXPORT=1 builds the public GitHub Pages preview (D-034): plain HTML in `out/`, served
 // under PAGES_BASE_PATH (e.g. `/ppr-map`), with no API behind it, so no rewrites.
@@ -14,6 +14,7 @@ const nextConfig: NextConfig = STATIC_EXPORT
       basePath: process.env.PAGES_BASE_PATH ?? "",
       trailingSlash: true,
       poweredByHeader: false,
+      images: { unoptimized: true },
     }
   : {
       output: "standalone",

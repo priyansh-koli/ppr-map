@@ -1,10 +1,7 @@
 import Link from "next/link";
 
-export const PSRA_ATTRIBUTION =
-  "Contains Residential Property Price Register data © Property Services Regulatory Authority (propertypriceregister.ie).";
-
-export const PSRA_DISCLAIMER =
-  "The register may contain errors and is not a property price index. Locations on this site are estimates; each one shows how precise it is.";
+import { PSRA_ATTRIBUTION, PSRA_DISCLAIMER } from "@/lib/attribution";
+import { ROUTES } from "@/lib/routes";
 
 export function SiteFooter() {
   return (
@@ -14,19 +11,19 @@ export function SiteFooter() {
         <p>{PSRA_DISCLAIMER}</p>
         <p>
           Map data © OpenStreetMap contributors (ODbL). Other sources and licences are listed on{" "}
-          <Link className="underline" href="/sources">
+          <Link className="underline" href={ROUTES.sources.path}>
             Data sources and methodology
           </Link>
           .
         </p>
         <nav aria-label="Legal" className="flex gap-4 pt-2">
-          <Link className="underline" href="/privacy">
+          <Link className="underline" href={ROUTES.privacy.path}>
             Privacy
           </Link>
-          <Link className="underline" href="/terms">
+          <Link className="underline" href={ROUTES.terms.path}>
             Terms
           </Link>
-          <Link className="underline" href="/report">
+          <Link className="underline" href={ROUTES.report.path}>
             Report an error or request removal
           </Link>
         </nav>

@@ -1,15 +1,16 @@
 name: Pages
 
 # Public preview of the frontend on GitHub Pages (D-034): a static export, no API or database.
+# Deploys only a commit that passed CI on main, after smoke-testing the export under its base path.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -18,27 +19,35 @@ concurrency:
 jobs:
   build:
     name: Build static export
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - run: npm ci
-      - run: npm test
       - run: npm run build
         env:
           STATIC_EXPORT: "1"
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
           NEXT_TELEMETRY_DISABLED: "1"
-      - uses: actions/upload-pages-artifact@v4
+      - run: npx playwright install --with-deps chromium
+      - name: Smoke-test the export as Pages serves it
+        run: npm run test:e2e
+        env:
+          CI: "true"
+          E2E_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: frontend/out
 
@@ -46,9 +55,13 @@ jobs:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      actions: read
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

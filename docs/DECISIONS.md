@@ -274,3 +274,4 @@ Everything below is **Proposed** until the Phase 0 review.
 - **Why:** Free for a public repository, no new account or API, and the Phase 1 pages have no server dependencies.
 - **Limits:** Anything that needs the API (map data, sign-in, search, admin) cannot work on Pages. When Phase 3 adds live data, the full stack needs a real host (option b), and this preview is either retired or kept as a docs site.
 - **Status:** Accepted (owner request, 2026-09-27).
+- **Update 2026-09-27:** Pages now deploys only after CI passes on `main` (`workflow_run`), and first runs the Playwright route smoke tests against the export served under the base path (`E2E_BASE_PATH`, `e2e/serve-export.mjs`). Before, a commit that failed lint or e2e was still published, and nothing tested the base path.
