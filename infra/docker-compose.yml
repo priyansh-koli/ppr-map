@@ -95,6 +95,7 @@ services:
       - "127.0.0.1:8080:8080"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../data/basemap:/srv/basemap:ro
     restart: unless-stopped
     depends_on: [frontend, api, martin]
 

@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr geocode enrich aggregate pipeline osm-extract geocoder test test-db lint format typecheck e2e e2e-pages ci
+.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr geocode enrich aggregate pipeline osm-extract basemap geocoder test test-db lint format typecheck e2e e2e-pages ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -90,6 +90,33 @@ osm-extract: ## Download the Geofabrik Ireland OSM extract (~400 MB) and check i
 	got=$$( (md5sum $(OSM_PBF).part 2>/dev/null || md5 -r $(OSM_PBF).part) | cut -d' ' -f1); \
 	[ -n "$$want" ] && [ "$$want" = "$$got" ] || { echo "md5 mismatch, keeping $(OSM_PBF).part"; exit 1; }
 	mv $(OSM_PBF).part $(OSM_PBF)
+
+# Basemap (D-005): an Ireland extract of a pinned Protomaps daily build, and the fonts and
+# sprites its style needs, served by Caddy at /basemap/. Nothing is fetched from Protomaps
+# at view time.
+PMTILES_VERSION := 1.31.2
+BASEMAP_BUILD := 20260926
+BASEMAP_ASSETS_REF := 028c18f713baecad011301ff7a69acc39bcc2ae7
+BASEMAP_BBOX := -10.8,51.2,-5.3,55.5
+PMTILES := .tools/pmtiles
+
+$(PMTILES):
+	mkdir -p .tools
+	curl -sSL --fail -o .tools/pmtiles.zip https://github.com/protomaps/go-pmtiles/releases/download/v$(PMTILES_VERSION)/go-pmtiles-$(PMTILES_VERSION)_$$(uname -s)_$$(uname -m | sed 's/aarch64/arm64/').zip
+	cd .tools && unzip -oq pmtiles.zip pmtiles && rm pmtiles.zip
+
+basemap: $(PMTILES) ## Download the Ireland basemap (~300 MB) and its fonts and sprites
+	mkdir -p data/basemap
+	$(PMTILES) extract https://build.protomaps.com/$(BASEMAP_BUILD).pmtiles data/basemap/ireland.pmtiles --bbox=$(BASEMAP_BBOX) --maxzoom=15
+	curl -sSL --fail -o data/basemap/assets.tar.gz https://github.com/protomaps/basemaps-assets/archive/$(BASEMAP_ASSETS_REF).tar.gz
+	rm -rf data/basemap/assets && mkdir -p data/basemap/assets
+	tar -xzf data/basemap/assets.tar.gz -C data/basemap/assets --strip-components=1 \
+	  "basemaps-assets-$(BASEMAP_ASSETS_REF)/fonts/Noto Sans Regular" \
+	  "basemaps-assets-$(BASEMAP_ASSETS_REF)/fonts/Noto Sans Medium" \
+	  "basemaps-assets-$(BASEMAP_ASSETS_REF)/fonts/Noto Sans Italic" \
+	  "basemaps-assets-$(BASEMAP_ASSETS_REF)/fonts/OFL.txt" \
+	  "basemaps-assets-$(BASEMAP_ASSETS_REF)/sprites/v4"
+	rm data/basemap/assets.tar.gz
 
 geocoder: check-docker ## Start self-hosted Nominatim (first run imports Ireland: 1h+)
 	@test -f $(OSM_PBF) || $(MAKE) osm-extract

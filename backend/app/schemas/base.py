@@ -1,4 +1,7 @@
-from pydantic import BaseModel, ConfigDict
+from decimal import Decimal
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, PlainSerializer
 from pydantic.alias_generators import to_camel
 
 
@@ -16,3 +19,7 @@ class Problem(ApiModel):
     status: int
     detail: str | None = None
     errors: list[dict[str, object]] | None = None
+
+
+# Money is Decimal in Python (never float arithmetic) and a plain JSON number on the wire.
+Money = Annotated[Decimal, PlainSerializer(lambda v: float(v), return_type=float, when_used="json")]

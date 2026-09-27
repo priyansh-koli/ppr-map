@@ -31,6 +31,9 @@ data/
 # small real-data samples for tests are the exception
 !pipeline/tests/fixtures/**/*.zip
 
+# downloaded tools (make basemap)
+.tools/
+
 # os / editors
 .DS_Store
 .idea/

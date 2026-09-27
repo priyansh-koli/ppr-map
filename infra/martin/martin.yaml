@@ -1,6 +1,24 @@
-# Martin tile server (D-004). The sales_tiles() function source arrives in Phase 3.
+# Martin tile server (D-004). Caddy serves it at /api/v1/tiles/, so /api/v1/tiles/sales/6/30/20
+# calls sales_tiles(6, 30, 20, query_params) with the URL's query string as JSON.
 listen_addresses: "0.0.0.0:3000"
+# Links in TileJSON must keep the prefix Caddy strips.
+base_path: /api/v1/tiles
+cache_size_mb: 512
 postgres:
   connection_string: ${DATABASE_URL}
   # Only publish sources we configure explicitly; never auto-publish every table.
   auto_publish: false
+  functions:
+    # Migration 0004. Ireland's bounds; grid cells below z14, points from z14.
+    sales:
+      schema: public
+      function: sales_tiles
+      minzoom: 5
+      maxzoom: 18
+      bounds: [-10.7, 51.3, -5.9, 55.5]
+    price-hex:
+      schema: public
+      function: price_hex_tiles
+      minzoom: 5
+      maxzoom: 14
+      bounds: [-10.7, 51.3, -5.9, 55.5]
