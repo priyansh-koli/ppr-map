@@ -1,0 +1,24 @@
+"""Fixed-window rate limits in Redis (docs/permissions.md). If Redis is down, requests are
+allowed: the limits protect against abuse, they are not a correctness guarantee."""
+
+from fastapi import HTTPException
+from redis.asyncio import Redis
+
+from app.redis_client import REDIS_ERRORS
+
+
+async def limit(cache: Redis | None, key: str, max_calls: int, window_s: int) -> None:
+    if cache is None:
+        return
+    try:
+        full = f"ratelimit:{key}"
+        count = await cache.incr(full)
+        if count == 1:
+            await cache.expire(full, window_s)
+        if count > max_calls:
+            ttl = await cache.ttl(full)
+            raise HTTPException(
+                429, "Too many attempts; try again later", headers={"Retry-After": str(max(ttl, 1))}
+            )
+    except REDIS_ERRORS:
+        return

@@ -31,6 +31,8 @@
 | GET | `/sources` | licences and attributions for each data source |
 
 ## Auth
+
+**Built in Phase 4** (D-041), plus `GET /auth/policies` for the terms and privacy versions that registration accepts. Every POST, PUT, PATCH and DELETE needs the `X-CSRF-Token` header.
 | Method | Path | Body / notes | Limit |
 |---|---|---|---|
 | POST | `/auth/register` | `{fullName, email, password, age18Plus: true, acceptTerms: true, termsVersion, privacyVersion, profile?: {userType?, counties?, budgetMin?, budgetMax?, propertyInterest?}, marketingOptIn?: false}`. Always answers 202 so it doesn't reveal whether an account exists. | 5/h/IP |
@@ -44,6 +46,8 @@
 | ~~POST~~ | ~~`/auth/refresh`~~ | dropped (D-008) | |
 
 ## Me
+
+**Built in Phase 4**, except saved searches (Phase 5) and search history (with search, Phase 5). `/me/export` is a direct JSON download, not a job. `POST /me/history/views {propertyId}` records a property page visit.
 | Method | Path | Notes |
 |---|---|---|
 | GET/PATCH | `/me` | profile, preferences, `historyEnabled`, notification settings |

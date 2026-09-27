@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { RecordView } from "@/components/auth/record-view";
+import { SaveButton } from "@/components/auth/save-button";
 import { PlaceholderPage, pageMetadata } from "@/components/placeholder-page";
 import { AreaTrend } from "@/components/property/area-trend";
 import { api, ApiError, type PropertyDetail, STATIC_PREVIEW } from "@/lib/api/client";
@@ -109,6 +111,8 @@ export default async function Page({ params }: Props) {
           {data.routingKey ? ` · Eircode area ${data.routingKey}` : ""}
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-ink">{data.address}</h1>
+        <RecordView propertyId={data.id} />
+        <SaveButton propertyId={data.id} />
         <p className="text-sm">
           <span className="font-medium text-ink">
             Location: {CONFIDENCE_LABEL[loc.confidence]}.

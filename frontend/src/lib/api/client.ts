@@ -10,6 +10,14 @@ export type PropertyList = components["schemas"]["PropertyList"];
 export type PropertyListItem = components["schemas"]["PropertyListItem"];
 export type PropertyDetail = components["schemas"]["PropertyDetail"];
 export type Confidence = PropertySummary["confidence"];
+export type Me = components["schemas"]["Me"];
+export type Profile = components["schemas"]["Profile-Output"];
+export type ProfileInput = components["schemas"]["Profile-Input"];
+export type Policies = components["schemas"]["Policies"];
+export type RegisterIn = components["schemas"]["RegisterIn"];
+export type WishlistItem = components["schemas"]["WishlistItemOut"];
+export type View = components["schemas"]["ViewOut"];
+export type MePatch = components["schemas"]["MePatch"];
 
 /** The GitHub Pages preview (D-034) is static: there is no API or tile server behind it. */
 export const STATIC_PREVIEW = process.env.NEXT_PUBLIC_STATIC_PREVIEW === "1";
@@ -29,14 +37,41 @@ function base(): string {
   return process.env.INTERNAL_API_ORIGIN || "http://localhost:8000";
 }
 
-async function get<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${base()}/api/v1${path}`, init);
+const CSRF_COOKIE = "ppr_csrf";
+
+/** The CSRF cookie the API sets on every response, echoed in a header (D-008). */
+function csrfToken(): string {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie.match(new RegExp(`(?:^|; )${CSRF_COOKIE}=([^;]*)`));
+  return match?.[1] ? decodeURIComponent(match[1]) : "";
+}
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = (init.method ?? "GET").toUpperCase();
+  const headers = new Headers(init.headers);
+  if (method !== "GET") {
+    if (!csrfToken()) await fetch(`${base()}/api/v1/auth/policies`, { credentials: "same-origin" });
+    headers.set("X-CSRF-Token", csrfToken());
+    if (init.body !== undefined) headers.set("Content-Type", "application/json");
+  }
+  const res = await fetch(`${base()}/api/v1${path}`, {
+    credentials: "same-origin",
+    ...init,
+    headers,
+  });
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { detail?: string; title?: string };
     throw new ApiError(res.status, body.detail ?? body.title ?? res.statusText);
   }
+  if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
+
+const get = <T>(path: string, init?: RequestInit) => request<T>(path, init);
+const send = <T>(method: string, path: string, body?: unknown) =>
+  request<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
+
+type Accepted = components["schemas"]["Accepted"];
 
 export const api = {
   meta: (init?: RequestInit) => get<Meta>("/meta", init),
@@ -46,4 +81,35 @@ export const api = {
     get<PropertyList>(`/properties?${query.toString()}`, init),
   property: (id: string, init?: RequestInit) =>
     get<PropertyDetail>(`/properties/${encodeURIComponent(id)}`, init),
+
+  policies: () => get<Policies>("/auth/policies"),
+  register: (body: RegisterIn) => send<Accepted>("POST", "/auth/register", body),
+  verifyEmail: (token: string) => send<Accepted>("POST", "/auth/verify-email", { token }),
+  resendVerification: () => send<Accepted>("POST", "/auth/resend-verification"),
+  login: (email: string, password: string) => send<Me>("POST", "/auth/login", { email, password }),
+  logout: () => send<void>("POST", "/auth/logout"),
+  logoutAll: () => send<void>("POST", "/auth/logout-all"),
+  forgotPassword: (email: string) => send<Accepted>("POST", "/auth/forgot-password", { email }),
+  resetPassword: (token: string, password: string) =>
+    send<Accepted>("POST", "/auth/reset-password", { token, password }),
+
+  me: () => get<Me>("/me"),
+  updateMe: (body: MePatch) => send<Me>("PATCH", "/me", body),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    send<void>("POST", "/me/password", { currentPassword, newPassword }),
+  deleteMe: (password: string) => send<void>("DELETE", "/me", { password }),
+
+  wishlist: () => get<WishlistItem[]>("/me/wishlist"),
+  saveProperty: (propertyId: string, note?: string) =>
+    send<WishlistItem>("POST", "/me/wishlist", { propertyId, note }),
+  noteWishlistItem: (id: number, note: string | null) =>
+    send<WishlistItem>("PATCH", `/me/wishlist/${id}`, { note }),
+  removeWishlistItem: (id: number) => send<void>("DELETE", `/me/wishlist/${id}`),
+  compare: (ids: string[]) =>
+    get<PropertySummary[]>(`/me/wishlist/compare?ids=${ids.map(encodeURIComponent).join(",")}`),
+
+  recordView: (propertyId: string) => send<void>("POST", "/me/history/views", { propertyId }),
+  views: () => get<View[]>("/me/history/views"),
+  clearViews: () => send<void>("DELETE", "/me/history/views"),
+  deleteView: (id: number) => send<void>("DELETE", `/me/history/views/${id}`),
 };

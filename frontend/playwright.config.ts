@@ -15,6 +15,7 @@ function serverCommand(): string {
 
 export default defineConfig({
   testDir: STACK ? "./e2e-stack" : "./e2e",
+  globalSetup: STACK ? "./e2e-stack/global-setup.ts" : undefined,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

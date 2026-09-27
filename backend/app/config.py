@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     app_base_url: str = "http://localhost:8080"
     nominatim_url: str = "http://localhost:8088"
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_user: str = ""
+    smtp_password: str = Field(default="", repr=False)
+    email_from: str = "PPR Map <no-reply@localhost>"
     session_secret: str = Field(default="", repr=False)
     csrf_secret: str = Field(default="", repr=False)
     ip_hash_salt: str = Field(default="", repr=False)
@@ -43,3 +48,8 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def secure_cookies(settings: Settings) -> bool:
+    """Secure, __Host- cookies in production; plain ones on http://localhost in development."""
+    return settings.environment == "production"

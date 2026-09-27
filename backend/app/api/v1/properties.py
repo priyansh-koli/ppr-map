@@ -9,12 +9,11 @@ from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from redis.asyncio import Redis
-from redis.exceptions import RedisError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_settings
 from app.db import get_session
 from app.models.enums import GeocodeConfidence
+from app.redis_client import REDIS_ERRORS, get_redis
 from app.schemas.properties import (
     AreaRef,
     AreaSeries,
@@ -44,24 +43,10 @@ NOT_FOUND = HTTPException(404, "No such property")
 
 # The data version changes once a month; the hover path reads it at most once a minute.
 META_TTL_S = 60.0
-# redis-py raises its own exception classes (RedisError, not the built-in ConnectionError).
-CACHE_ERRORS = (RedisError, OSError)
 
 
 class _Shared:
-    """Process-wide state: one Redis client (a connection pool) and the latest meta."""
-
-    redis: Redis | None = None
     meta: tuple[float, Meta] | None = None
-
-
-async def get_redis() -> Redis | None:
-    """Redis for the hover cache; a cache that is down is skipped, not an error."""
-    if _Shared.redis is None:
-        _Shared.redis = Redis.from_url(
-            get_settings().redis_url, socket_connect_timeout=0.2, socket_timeout=0.2
-        )
-    return _Shared.redis
 
 
 def sales_filter(
@@ -125,14 +110,14 @@ async def summary(property_id: str, session: Session, cache: Cache) -> PropertyS
         try:
             hit = await cache.get(key)
             payload = json.loads(hit) if hit else None
-        except CACHE_ERRORS:
+        except REDIS_ERRORS:
             cache = None
     if payload is None:
         payload = await q.summary(session, property_id)
         if payload is None:
             raise NOT_FOUND
         if cache is not None:
-            with contextlib.suppress(*CACHE_ERRORS):
+            with contextlib.suppress(*REDIS_ERRORS):
                 await cache.set(key, json.dumps(payload, default=str), ex=SUMMARY_TTL_S)
     return PropertySummary.model_validate(payload)
 

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { SaveButton } from "@/components/auth/save-button";
+
 import type { PropertySummary } from "@/lib/api/client";
 import {
   CONFIDENCE_LABEL,
@@ -88,12 +90,12 @@ function PropertyCard({
           {summary.area.provisional ? " (provisional)" : ""}
         </p>
       ) : null}
-      <Link
-        className="inline-block text-sm font-medium text-accent underline"
-        href={`/property/${id}`}
-      >
-        Full sale history and details
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Link className="text-sm font-medium text-accent underline" href={`/property/${id}`}>
+          Full sale history and details
+        </Link>
+        <SaveButton propertyId={id} />
+      </div>
     </div>
   );
 }

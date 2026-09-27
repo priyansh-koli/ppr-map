@@ -1,132 +1,38 @@
 """The map, hover and property endpoints, and the tile functions, on real data.
 
 Needs TEST_DATABASE_URL and the pipeline package (CI installs both). The database is built
-the way production is: the real Carlow fixtures from pipeline/tests/fixtures go through the
-pipeline's own boundary load, PPR ingest, geocoder (replaying recorded Nominatim answers),
-enrichment and aggregates.
+the way production is: see `carlow_db` in conftest.py.
 """
 
 import json
 from collections.abc import AsyncIterator, Iterator
-from dataclasses import replace
-from datetime import date
 
-import httpx
 import pytest
 import sqlalchemy as sa
-from alembic import command
-from alembic.config import Config
 from fastapi.testclient import TestClient
 
-from app.api.v1.properties import get_redis
-from app.config import get_settings
-from app.db import get_engine, get_sessionmaker
-from app.main import create_app
-from tests.conftest import BACKEND_DIR, REPO_ROOT
-
-pipeline = pytest.importorskip("ppr_pipeline", reason="needs the pipeline package")
-
-from ppr_pipeline.aggregate import aggregate  # noqa: E402
-from ppr_pipeline.boundaries import LAYERS, load_boundaries  # noqa: E402
-from ppr_pipeline.enrich.pobal import ed_key, load_pobal  # noqa: E402
-from ppr_pipeline.enrich.pois import (  # noqa: E402
-    GTFS_SOURCE,
-    OSM_SOURCE,
-    read_gtfs,
-    replace_pois,
-)
-from ppr_pipeline.enrich.vicinity import compute_vicinity  # noqa: E402
-from ppr_pipeline.geocode.runner import geocode_properties  # noqa: E402
-from ppr_pipeline.ppr.ingest import ingest_ppr  # noqa: E402
+from app.redis_client import get_redis
+from tests.conftest import CARLOW_BBOX, make_api, property_id
 
 pytestmark = pytest.mark.db
 
-FIXTURES = REPO_ROOT / "pipeline" / "tests" / "fixtures"
-# Carlow town, around Pollerton.
-CARLOW_BBOX = "-6.95,52.80,-6.88,52.86"
 
-
-def _build(engine: sa.Engine) -> None:
-    with engine.begin() as conn:
-        conn.execute(
-            sa.text("TRUNCATE property, sale, ingest_run, area, poi RESTART IDENTITY CASCADE")
-        )
-    layers = [replace(la, filename=la.filename.replace(".zip", ".gpkg")) for la in LAYERS]
-    load_boundaries(engine, FIXTURES / "boundaries", layers)
-    ingest_ppr(engine, (FIXTURES / "ppr_carlow_2025.csv").read_bytes(), "file:///carlow.csv")
-    recorded = json.loads((FIXTURES / "nominatim" / "responses.json").read_text())
-
-    def replay(request: httpx.Request) -> httpx.Response:
-        key = f"{request.url.params['q']}|{request.url.params['viewbox']}"
-        return httpx.Response(200, json=recorded["responses"].get(key, []))
-
-    geocode_properties(
-        engine, "http://nominatim.test", client=httpx.Client(transport=httpx.MockTransport(replay))
-    )
-    osm = json.loads((FIXTURES / "osm_pois_carlow.json").read_text())
-    with engine.begin() as conn:
-        as_of, stops = read_gtfs(FIXTURES / "gtfs_carlow.zip")
-        replace_pois(conn, GTFS_SOURCE, as_of, stops, "lonlat")
-        rows = [(p["type"], p["name"], p["lon"], p["lat"], p["ref"], p["attrs"]) for p in osm]
-        replace_pois(conn, OSM_SOURCE, date(2026, 9, 26), rows, "lonlat")
-        load_pobal(
-            conn,
-            (FIXTURES / "pobal_carlow_rural.csv").read_bytes(),
-            {ed_key("017010"): "2ae19629-1857-13a3-e055-000000000001"},
-        )
-    compute_vicinity(engine)
-    aggregate(engine)
-
-
-@pytest.fixture(scope="module")
-def db(database_url_module: str) -> Iterator[sa.Engine]:
-    engine = sa.create_engine(database_url_module)
-    _build(engine)
-    yield engine
-    engine.dispose()
-
-
-@pytest.fixture(scope="module")
-def database_url_module() -> Iterator[str]:
-    import os
-
-    url = os.environ.get("TEST_DATABASE_URL")
-    if not url:
-        pytest.skip("TEST_DATABASE_URL not set (start PostGIS with `make up`)")
-    mp = pytest.MonkeyPatch()
-    mp.setenv("DATABASE_URL", url)
-    for cache in (get_settings, get_engine, get_sessionmaker):
-        cache.cache_clear()
-    cfg = Config(str(BACKEND_DIR / "alembic.ini"))
-    cfg.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
-    command.upgrade(cfg, "head")
-    yield url
-    mp.undo()
-    for cache in (get_settings, get_engine, get_sessionmaker):
-        cache.cache_clear()
+async def no_cache() -> AsyncIterator[None]:
+    yield None
 
 
 @pytest.fixture
-def api(db: sa.Engine) -> Iterator[TestClient]:
-    app = create_app()
+def db(carlow_db: sa.Engine) -> sa.Engine:
+    return carlow_db
 
-    async def no_cache() -> AsyncIterator[None]:
-        yield None
 
-    app.dependency_overrides[get_redis] = no_cache
-    get_engine.cache_clear()
-    get_sessionmaker.cache_clear()
-    with TestClient(app) as client:
+@pytest.fixture
+def api(carlow_db: sa.Engine) -> Iterator[TestClient]:
+    with make_api({get_redis: no_cache}) as client:
         yield client
 
 
-def _id(db: sa.Engine, address: str) -> str:
-    with db.connect() as conn:
-        return str(
-            conn.execute(
-                sa.text("SELECT public_id FROM property WHERE address_display = :a"), {"a": address}
-            ).scalar_one()
-        )
+_id = property_id
 
 
 def test_meta(api: TestClient) -> None:
@@ -211,15 +117,10 @@ def test_hover_cards_survive_redis_being_down(db: sa.Engine) -> None:
     """redis-py raises its own ConnectionError; the cache is skipped, not a 500."""
     from redis.asyncio import Redis
 
-    app = create_app()
-
     async def dead_redis() -> Redis:
         return Redis.from_url("redis://127.0.0.1:1/0", socket_connect_timeout=0.2)
 
-    app.dependency_overrides[get_redis] = dead_redis
-    get_engine.cache_clear()
-    get_sessionmaker.cache_clear()
-    with TestClient(app) as client:
+    with make_api({get_redis: dead_redis}) as client:
         res = client.get(f"/api/v1/properties/{_id(db, '178 Pollerton Road, Carlow')}/summary")
     assert res.status_code == 200
     assert res.json()["latestSale"]["priceEur"] == 240000

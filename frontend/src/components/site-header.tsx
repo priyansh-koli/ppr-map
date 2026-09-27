@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AccountMenu } from "@/components/auth/account-menu";
 import { FreshnessBanner } from "@/components/freshness-banner";
 
 import { PRIMARY_NAV, ROUTES } from "@/lib/routes";
@@ -21,9 +22,7 @@ export function SiteHeader() {
               </li>
             ))}
             <li>
-              <Link className="font-medium text-accent hover:underline" href={ROUTES.login.path}>
-                Sign in
-              </Link>
+              <AccountMenu />
             </li>
           </ul>
         </nav>

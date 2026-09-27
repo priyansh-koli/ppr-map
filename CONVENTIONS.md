@@ -4,7 +4,7 @@ This app makes Ireland's Property Price Register (PPR) explorable on a map. Read
 
 ## Working rules (from the project owner)
 
-- Work in phases and **stop at each STOP checkpoint** for review. Current phase: **3 (map, property page, API), complete and awaiting review** (2026-09-27; D-038 to D-040). Phase 2 was reviewed on 2026-09-27 (results in D-035 to D-037). Phase 1 was reviewed on 2026-09-26. Phase 0 was reviewed on 2026-09-26: Q-09 = no licensed listing data, Q-10 = yes to the index-based estimate. Other open questions use their documented defaults.
+- Work in phases and **stop at each STOP checkpoint** for review. Current phase: **4 (accounts), complete and awaiting review** (2026-09-27; D-041). Phase 3 was reviewed on 2026-09-27 (D-038 to D-040). Phase 2 was reviewed on 2026-09-27 (results in D-035 to D-037). Phase 1 was reviewed on 2026-09-26. Phase 0 was reviewed on 2026-09-26: Q-09 = no licensed listing data, Q-10 = yes to the index-based estimate. Other open questions use their documented defaults.
 - **Ask before adding any paid service or signing up for any API.** Also ask before contacting any third party on the project's behalf.
 - Secrets live only in `.env`. Commit `.env.example` with every variable, documented, and no values.
 - Write tests with each feature, not afterwards.
@@ -68,7 +68,8 @@ Run `make help` for the full list.
 | `make pipeline` | the monthly run: ingest, geocode, enrich, aggregate |
 | `make basemap` | download the Ireland basemap, fonts and sprites into `data/basemap` (served at `/basemap/`) |
 | `make api-types` | regenerate `frontend/openapi.json` and the TypeScript API types after changing an endpoint |
-| `make e2e-stack` | Playwright against the running stack with real data |
+| `make e2e-stack` | Playwright against the running stack with real data (accounts read their emails from Mailpit) |
+| `python -m app.cli purge-deleted` | delete accounts closed more than 30 days ago (run daily in production) |
 
 New migrations: `cd backend && ../.venv/bin/alembic revision --autogenerate -m "..."` against the running database, then review the file.
 

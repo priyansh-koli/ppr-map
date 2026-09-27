@@ -37,7 +37,8 @@ def test_openapi_is_served_under_v1(client: TestClient) -> None:
 
 
 def test_problem_json_keeps_headers(client: TestClient) -> None:
-    res = client.post("/api/v1/health")
+    client.get("/api/v1/health")  # any API response sets the CSRF cookie
+    res = client.post("/api/v1/health", headers={"X-CSRF-Token": client.cookies["ppr_csrf"]})
     assert res.status_code == 405
     assert res.headers["content-type"] == "application/problem+json"
     assert res.headers["allow"] == "GET"

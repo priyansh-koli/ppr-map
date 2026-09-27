@@ -64,6 +64,21 @@ def sync_permissions() -> None:
     typer.echo(f"Synced {len(stored_roles)} roles, {len(Perm)} permissions, {len(wanted)} grants.")
 
 
+@cli.command("purge-deleted")
+def purge_deleted(days: int = 30) -> None:
+    """Delete accounts closed more than `days` ago, with everything they own (cascade)."""
+    engine = sa.create_engine(get_settings().database_url)
+    with engine.begin() as conn:
+        n = conn.execute(
+            sa.text(
+                "DELETE FROM app_user WHERE deleted_at IS NOT NULL "
+                "AND deleted_at < now() - make_interval(days => :d)"
+            ),
+            {"d": days},
+        ).rowcount
+    typer.echo(f"Purged {n} closed accounts.")
+
+
 @cli.command("openapi")
 def openapi() -> None:
     """Print the OpenAPI schema; `make api-types` writes it to frontend/openapi.json."""

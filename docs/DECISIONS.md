@@ -340,3 +340,17 @@ Everything below is **Proposed** until the Phase 0 review.
   - The frontend's types are generated from `frontend/openapi.json` (`make api-types`). A backend test fails if that file is stale, and CI's `npm run api:check` fails if the types are.
   - The property page shows the Eircode routing key, not the full Eircode: the address is shown already, and the full code adds nothing for buyers.
 - **Status:** Accepted (implementation detail).
+
+## D-041 Accounts as built (Phase 4)
+
+- **Sessions (D-008):** a random 256-bit token in an httpOnly, SameSite=Lax cookie (`__Host-ppr_session` and Secure in production; `ppr_session` on http://localhost). Postgres stores only an HMAC of it under `SESSION_SECRET`, so a leaked table cannot be replayed. Sessions end after 14 days idle, 90 days in all, or at once on sign-out, password change or reset, and account deletion. Lookups are cached in Redis for 60 s, and revoking deletes the cache keys.
+- **CSRF:** a signed double-submit token. Every API response sets `ppr_csrf` (`random.HMAC`) if missing; every POST, PUT, PATCH and DELETE must echo it in `X-CSRF-Token`. The signature stops a planted cookie.
+- **Passwords:** argon2id; at least 10 characters, at most 128, and not the email address (length over composition rules, NIST SP 800-63B). An unknown email still costs one hash check, so sign-in timing does not reveal accounts.
+- **No account enumeration:** registering an existing email and asking to reset an unknown one both answer the same 202; the email says what happened.
+- **Rate limits:** fixed windows in Redis (sign-in 10 per 15 min per IP and email; registration and reset 5 per hour per IP; resend 3 per hour). If Redis is down, requests are allowed: the limits stop abuse, they do not guard correctness.
+- **Email:** plain-text SMTP; Mailpit catches it in development. The production provider is still your choice (docs/external-services.md).
+- **Data export** is a synchronous JSON download instead of the planned background job: one account's data is small.
+- **Deletion:** closing an account deactivates it and ends its sessions at once; `python -m app.cli purge-deleted` removes accounts closed more than 30 days ago with everything they own. It needs a daily schedule once the scheduler exists.
+- **History** records a property page visit only while history is on, counts repeat visits within 30 minutes once, and keeps 12 months.
+- **Legal pages:** `/privacy` and `/terms` describe what the app does today and are marked as drafts until the operator's name and contact details are added and they are reviewed.
+- **Status:** Accepted (implementation detail).

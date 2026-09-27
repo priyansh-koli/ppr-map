@@ -1,0 +1,84 @@
+"""Account reads shared by the auth and /me endpoints."""
+
+import uuid
+from typing import Any
+
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.permissions import Role, permissions_for
+from app.schemas.auth import Me, Profile
+
+ME = """
+SELECT u.id, u.email, u.full_name, u.email_verified_at IS NOT NULL, u.history_enabled,
+       u.marketing_opt_in, u.created_at,
+       coalesce(array_agg(r.name) FILTER (WHERE r.name IS NOT NULL), '{}') AS roles,
+       p.user_type::text, p.counties::text[], p.budget_min, p.budget_max,
+       p.property_interest::text
+FROM app_user u
+LEFT JOIN user_role ur ON ur.user_id = u.id
+LEFT JOIN role r ON r.id = ur.role_id
+LEFT JOIN user_profile p ON p.user_id = u.id
+WHERE u.id = :u
+GROUP BY u.id, p.user_id
+"""
+
+
+async def load_me(db: AsyncSession, user_id: uuid.UUID) -> Me:
+    r = (await db.execute(sa.text(ME), {"u": user_id})).one()
+    roles = {Role(x) for x in r[7] if x in Role.__members__.values()}
+    return Me(
+        id=str(r[0]),
+        email=r[1],
+        full_name=r[2],
+        email_verified=r[3],
+        history_enabled=r[4],
+        marketing_opt_in=r[5],
+        created_at=r[6],
+        roles=sorted(roles),
+        permissions=sorted(permissions_for(roles)),
+        profile=Profile(
+            user_type=r[8],
+            counties=r[9],
+            budget_min=r[10],
+            budget_max=r[11],
+            property_interest=r[12],
+        ),
+    )
+
+
+EXPORT_QUERIES = {
+    "consents": "SELECT kind::text, document_version, granted, recorded_at FROM consent_record "
+    "WHERE user_id = :u ORDER BY recorded_at",
+    "wishlist": "SELECT w.target_kind::text, p.public_id AS property, p.address_display, "
+    "a.name AS area, w.note, w.created_at FROM wishlist_item w "
+    "LEFT JOIN property p ON p.id = w.property_id LEFT JOIN area a ON a.id = w.area_id "
+    "WHERE w.user_id = :u ORDER BY w.created_at",
+    "viewHistory": "SELECT p.public_id AS property, p.address_display, v.viewed_at "
+    "FROM view_history v JOIN property p ON p.id = v.property_id WHERE v.user_id = :u "
+    "ORDER BY v.viewed_at",
+    "searchHistory": "SELECT query, searched_at FROM search_history WHERE user_id = :u "
+    "ORDER BY searched_at",
+    "savedSearches": "SELECT name, query, alert_frequency::text, created_at FROM saved_search "
+    "WHERE user_id = :u ORDER BY created_at",
+    "sessions": "SELECT created_at, last_seen_at, expires_at, user_agent FROM user_session "
+    "WHERE user_id = :u ORDER BY created_at",
+}
+
+
+async def export(db: AsyncSession, user_id: uuid.UUID) -> dict[str, Any]:
+    """Everything stored about a user (GDPR access request), as plain JSON."""
+    me = await load_me(db, user_id)
+    out: dict[str, Any] = {"account": me.model_dump(mode="json", by_alias=True)}
+    for key, sql in EXPORT_QUERIES.items():
+        rows = (await db.execute(sa.text(sql), {"u": user_id})).mappings().all()
+        out[key] = [{k: _json(v) for k, v in row.items()} for row in rows]
+    return out
+
+
+def _json(value: Any) -> Any:
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    if isinstance(value, uuid.UUID):
+        return str(value)
+    return value

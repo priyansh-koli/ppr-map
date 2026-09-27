@@ -1,6 +1,26 @@
 {
   "components": {
     "schemas": {
+      "Accepted": {
+        "description": "202 answers never say whether an account exists.",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "status": {
+            "const": "accepted",
+            "default": "accepted",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "Accepted",
+        "type": "object"
+      },
       "AreaLine": {
         "properties": {
           "change12mPct": {
@@ -98,6 +118,52 @@
           "points"
         ],
         "title": "AreaSeries",
+        "type": "object"
+      },
+      "County": {
+        "enum": [
+          "carlow",
+          "cavan",
+          "clare",
+          "cork",
+          "donegal",
+          "dublin",
+          "galway",
+          "kerry",
+          "kildare",
+          "kilkenny",
+          "laois",
+          "leitrim",
+          "limerick",
+          "longford",
+          "louth",
+          "mayo",
+          "meath",
+          "monaghan",
+          "offaly",
+          "roscommon",
+          "sligo",
+          "tipperary",
+          "waterford",
+          "westmeath",
+          "wexford",
+          "wicklow"
+        ],
+        "title": "County",
+        "type": "string"
+      },
+      "EmailIn": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "EmailIn",
         "type": "object"
       },
       "Flood": {
@@ -253,6 +319,141 @@
         "title": "Location",
         "type": "object"
       },
+      "LoginIn": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 1000,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginIn",
+        "type": "object"
+      },
+      "Me": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "emailVerified": {
+            "title": "Emailverified",
+            "type": "boolean"
+          },
+          "fullName": {
+            "title": "Fullname",
+            "type": "string"
+          },
+          "historyEnabled": {
+            "title": "Historyenabled",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "marketingOptIn": {
+            "title": "Marketingoptin",
+            "type": "boolean"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/Profile-Output"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "emailVerified",
+          "historyEnabled",
+          "marketingOptIn",
+          "roles",
+          "permissions",
+          "profile",
+          "createdAt"
+        ],
+        "title": "Me",
+        "type": "object"
+      },
+      "MePatch": {
+        "properties": {
+          "fullName": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fullname"
+          },
+          "historyEnabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Historyenabled"
+          },
+          "marketingOptIn": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketingoptin"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Profile-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "MePatch",
+        "type": "object"
+      },
       "Meta": {
         "properties": {
           "dataVersion": {
@@ -292,6 +493,39 @@
         "title": "Meta",
         "type": "object"
       },
+      "PasswordChangeIn": {
+        "properties": {
+          "currentPassword": {
+            "maxLength": 1000,
+            "title": "Currentpassword",
+            "type": "string"
+          },
+          "newPassword": {
+            "title": "Newpassword",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "title": "PasswordChangeIn",
+        "type": "object"
+      },
+      "PasswordIn": {
+        "properties": {
+          "password": {
+            "maxLength": 1000,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "PasswordIn",
+        "type": "object"
+      },
       "PoiType": {
         "enum": [
           "school_primary",
@@ -311,6 +545,158 @@
         ],
         "title": "PoiType",
         "type": "string"
+      },
+      "Policies": {
+        "properties": {
+          "privacyVersion": {
+            "title": "Privacyversion",
+            "type": "string"
+          },
+          "termsVersion": {
+            "title": "Termsversion",
+            "type": "string"
+          }
+        },
+        "required": [
+          "termsVersion",
+          "privacyVersion"
+        ],
+        "title": "Policies",
+        "type": "object"
+      },
+      "Profile-Input": {
+        "properties": {
+          "budgetMax": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budgetmax"
+          },
+          "budgetMin": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budgetmin"
+          },
+          "counties": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/County"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counties"
+          },
+          "propertyInterest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PropertyInterest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "userType": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "Profile",
+        "type": "object"
+      },
+      "Profile-Output": {
+        "properties": {
+          "budgetMax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budgetmax"
+          },
+          "budgetMin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budgetmin"
+          },
+          "counties": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/County"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counties"
+          },
+          "propertyInterest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PropertyInterest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "userType": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "Profile",
+        "type": "object"
       },
       "PropertyDetail": {
         "properties": {
@@ -406,6 +792,15 @@
         ],
         "title": "PropertyDetail",
         "type": "object"
+      },
+      "PropertyInterest": {
+        "enum": [
+          "new",
+          "second_hand",
+          "both"
+        ],
+        "title": "PropertyInterest",
+        "type": "string"
       },
       "PropertyList": {
         "properties": {
@@ -535,6 +930,89 @@
           "dataVersion"
         ],
         "title": "PropertySummary",
+        "type": "object"
+      },
+      "RegisterIn": {
+        "properties": {
+          "acceptTerms": {
+            "const": true,
+            "title": "Acceptterms",
+            "type": "boolean"
+          },
+          "age18Plus": {
+            "const": true,
+            "title": "Age18Plus",
+            "type": "boolean"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "fullName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Fullname",
+            "type": "string"
+          },
+          "marketingOptIn": {
+            "default": false,
+            "title": "Marketingoptin",
+            "type": "boolean"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "privacyVersion": {
+            "title": "Privacyversion",
+            "type": "string"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Profile-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "termsVersion": {
+            "title": "Termsversion",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName",
+          "email",
+          "password",
+          "age18Plus",
+          "acceptTerms",
+          "termsVersion",
+          "privacyVersion"
+        ],
+        "title": "RegisterIn",
+        "type": "object"
+      },
+      "ResetIn": {
+        "properties": {
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "token": {
+            "maxLength": 200,
+            "minLength": 10,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "ResetIn",
         "type": "object"
       },
       "Sale": {
@@ -849,6 +1327,32 @@
         "title": "StopValue",
         "type": "object"
       },
+      "TokenIn": {
+        "properties": {
+          "token": {
+            "maxLength": 200,
+            "minLength": 10,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "TokenIn",
+        "type": "object"
+      },
+      "UserType": {
+        "enum": [
+          "first_time_buyer",
+          "mover",
+          "investor",
+          "agent",
+          "researcher"
+        ],
+        "title": "UserType",
+        "type": "string"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -962,6 +1466,192 @@
         ],
         "title": "Vicinity",
         "type": "object"
+      },
+      "ViewIn": {
+        "properties": {
+          "propertyId": {
+            "title": "Propertyid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "propertyId"
+        ],
+        "title": "ViewIn",
+        "type": "object"
+      },
+      "ViewOut": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "propertyId": {
+            "title": "Propertyid",
+            "type": "string"
+          },
+          "viewedAt": {
+            "title": "Viewedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "propertyId",
+          "address",
+          "viewedAt"
+        ],
+        "title": "ViewOut",
+        "type": "object"
+      },
+      "WishlistIn": {
+        "properties": {
+          "areaSlug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Areaslug"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "propertyId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The property's public id",
+            "title": "Propertyid"
+          }
+        },
+        "title": "WishlistIn",
+        "type": "object"
+      },
+      "WishlistItemOut": {
+        "properties": {
+          "areaSlug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Areaslug"
+          },
+          "createdAt": {
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "latestPriceEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latestpriceeur"
+          },
+          "latestSaleDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latestsaledate"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "propertyId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propertyid"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "propertyId",
+          "areaSlug",
+          "title",
+          "note",
+          "createdAt"
+        ],
+        "title": "WishlistItemOut",
+        "type": "object"
+      },
+      "WishlistNote": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "WishlistNote",
+        "type": "object"
       }
     }
   },
@@ -972,6 +1662,283 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "operationId": "forgot_password_api_v1_auth_forgot_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Forgot Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "operationId": "logout_all_api_v1_auth_logout_all_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout All",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/policies": {
+      "get": {
+        "description": "The versions of the terms and privacy policy that registration accepts.",
+        "operationId": "policies_api_v1_auth_policies_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Policies"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Policies",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "description": "Create an account and email a verification link. Always 202.",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/resend-verification": {
+      "post": {
+        "operationId": "resend_verification_api_v1_auth_resend_verification_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Resend Verification",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "operationId": "reset_password_api_v1_auth_reset_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "operationId": "verify_email_api_v1_auth_verify_email_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Email",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "description": "Liveness and dependency check: database and Redis.",
@@ -1001,6 +1968,458 @@
         "summary": "Health",
         "tags": [
           "meta"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "delete": {
+        "description": "Close the account now; its data is purged after 30 days (`app.cli purge-deleted`).",
+        "operationId": "delete_me_api_v1_me_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Me",
+        "tags": [
+          "me"
+        ]
+      },
+      "get": {
+        "operationId": "get_me_api_v1_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Me",
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_me_api_v1_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Me",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/export": {
+      "get": {
+        "description": "Everything stored about the account, as a JSON download (GDPR access request).",
+        "operationId": "export_me_api_v1_me_export_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Export Me",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/history/views": {
+      "delete": {
+        "operationId": "clear_views_api_v1_me_history_views_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Clear Views",
+        "tags": [
+          "me"
+        ]
+      },
+      "get": {
+        "operationId": "views_api_v1_me_history_views_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ViewOut"
+                  },
+                  "title": "Response Views Api V1 Me History Views Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Views",
+        "tags": [
+          "me"
+        ]
+      },
+      "post": {
+        "description": "Record a property page visit, unless history is switched off (then nothing is kept).",
+        "operationId": "record_view_api_v1_me_history_views_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ViewIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record View",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/history/views/{view_id}": {
+      "delete": {
+        "operationId": "delete_view_api_v1_me_history_views__view_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "view_id",
+            "required": true,
+            "schema": {
+              "title": "View Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete View",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/password": {
+      "post": {
+        "description": "Change the password; every other session is signed out.",
+        "operationId": "change_password_api_v1_me_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Password",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/wishlist": {
+      "get": {
+        "operationId": "wishlist_api_v1_me_wishlist_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WishlistItemOut"
+                  },
+                  "title": "Response Wishlist Api V1 Me Wishlist Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Wishlist",
+        "tags": [
+          "me"
+        ]
+      },
+      "post": {
+        "description": "Save a property or an area. Saving the same one again returns the existing item.",
+        "operationId": "add_to_wishlist_api_v1_me_wishlist_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WishlistIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WishlistItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add To Wishlist",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/wishlist/compare": {
+      "get": {
+        "description": "Side by side: the hover summaries of up to four saved properties, in the order given.",
+        "operationId": "compare_api_v1_me_wishlist_compare_get",
+        "parameters": [
+          {
+            "description": "Up to 4 property ids from the wishlist, comma-separated",
+            "in": "query",
+            "name": "ids",
+            "required": true,
+            "schema": {
+              "description": "Up to 4 property ids from the wishlist, comma-separated",
+              "title": "Ids",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PropertySummary"
+                  },
+                  "title": "Response Compare Api V1 Me Wishlist Compare Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Compare",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/wishlist/{item_id}": {
+      "delete": {
+        "operationId": "remove_wishlist_item_api_v1_me_wishlist__item_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Wishlist Item",
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "operationId": "note_wishlist_item_api_v1_me_wishlist__item_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WishlistNote"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WishlistItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Note Wishlist Item",
+        "tags": [
+          "me"
         ]
       }
     },
