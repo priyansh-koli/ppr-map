@@ -1,0 +1,63 @@
+/**
+ * Against the running stack with real data (`make up`, the pipeline run, `make basemap`):
+ * `make e2e-stack`. Not part of CI, which has no data.
+ */
+import { expect, test } from "@playwright/test";
+
+test("the banner shows how recent the register is", async ({ page }) => {
+  await page.goto("./");
+  await expect(page.getByText(/Property Price Register data up to \d+ \w+ \d{4}/)).toBeVisible();
+});
+
+test("the national map loads sales tiles and the basemap", async ({ page }) => {
+  const tiles = page.waitForResponse((r) => r.url().includes("/api/v1/tiles/sales/") && r.ok());
+  const basemap = page.waitForResponse(
+    (r) => r.url().includes("/basemap/ireland.pmtiles") && r.status() === 206,
+  );
+  await page.goto("./map");
+  await tiles;
+  await basemap;
+  await expect(page.getByText(/Zoom in to a town/)).toBeVisible();
+});
+
+test("the list is a keyboard equivalent of the map", async ({ page }) => {
+  await page.goto("./map?lat=53.3321&lng=-6.2711&z=16");
+  const list = page.getByRole("region").or(page.locator("section[aria-labelledby=list-heading]"));
+  const first = page.locator("section[aria-labelledby=list-heading] li button").first();
+  await expect(first).toBeVisible({ timeout: 15_000 });
+  const address = (await first.locator("span").first().textContent()) ?? "";
+  await first.focus();
+  await page.keyboard.press("Enter");
+  const dialog = page.getByRole("dialog", { name: "Sale details" });
+  await expect(dialog.getByText(address)).toBeVisible();
+  await expect(dialog.getByText(/€[\d,]+/).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  expect(list).toBeTruthy();
+});
+
+test("details lead to the property page", async ({ page }) => {
+  await page.goto("./map?lat=53.3321&lng=-6.2711&z=16");
+  const first = page.locator("section[aria-labelledby=list-heading] li button").first();
+  await expect(first).toBeVisible({ timeout: 15_000 });
+  const address = (await first.locator("span").first().textContent()) ?? "";
+  await first.click();
+  await page.getByRole("link", { name: /Full sale history/ }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(address);
+  await expect(page.getByRole("heading", { name: "Sales" })).toBeVisible();
+});
+
+test("filters change the list and the address bar", async ({ page }) => {
+  await page.goto("./map?lat=53.3321&lng=-6.2711&z=16");
+  await expect(page.locator("section[aria-labelledby=list-heading] li button").first()).toBeVisible(
+    {
+      timeout: 15_000,
+    },
+  );
+  await page.getByLabel("Type").selectOption("new");
+  await expect(page).toHaveURL(/type=new/);
+  const texts = await page
+    .locator("section[aria-labelledby=list-heading] li button")
+    .allTextContents();
+  for (const t of texts) expect(t).toContain("new");
+});

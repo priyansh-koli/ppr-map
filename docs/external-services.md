@@ -35,7 +35,7 @@
 | Service | Purpose | Free tier / cost | Licence / terms | Env var | Status |
 |---|---|---|---|---|---|
 | Self-hosted **Nominatim** (Docker, Ireland extract) | batch geocoding | free; ~4–8 GB RAM while importing | ODbL data, GPL software | `NOMINATIM_URL` | Proposed (D-003) |
-| **Protomaps basemap** (PMTiles on object storage) | map background | free data; storage and CDN egress cost only | ODbL (OSM) attribution | `NEXT_PUBLIC_BASEMAP_PMTILES_URL` | Proposed (D-005) |
+| **Protomaps basemap** (PMTiles on object storage) | map background | free data; storage and CDN egress cost only | ODbL (OSM) attribution; fonts OFL | `NEXT_PUBLIC_BASEMAP_PMTILES_URL` (unused while served locally) | In use locally (D-039): `make basemap` extracts Ireland from the pinned build 20260926 and serves it, its fonts and sprites from our own origin. Object storage for production is still your choice. |
 | MapTiler Cloud (dev only) | quick basemap for local dev | free tier for non-commercial / development use | MapTiler terms | `NEXT_PUBLIC_MAPTILER_KEY` | Optional; ask before signing up |
 | Object storage + CDN (e.g. Cloudflare R2, S3 + CloudFront) | basemap, exports | **PAID** at scale; small free tiers | – | `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | Needs your choice |
 | Transactional email (e.g. Postmark, SES, Resend) | verification, reset, alerts | **PAID** beyond small free tiers | provider DPA needed (GDPR) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM` | Needs your choice. Local dev uses Mailpit (no account needed). |

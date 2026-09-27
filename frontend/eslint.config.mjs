@@ -11,5 +11,8 @@ export default defineConfig([
     "playwright-report/**",
     "test-results/**",
     "next-env.d.ts",
+    // copied from node_modules (scripts/copy-maplibre-worker.mjs) and generated (make api-types)
+    "public/maplibre/**",
+    "src/lib/api/schema.d.ts",
   ]),
 ]);

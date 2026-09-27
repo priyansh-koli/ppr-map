@@ -1,0 +1,61 @@
+{
+    "items": [
+        {
+            "id": "y2xig6nyampo",
+            "address": "49 South Circular Road, Dublin 8",
+            "confidence": "exact",
+            "lat": 53.33212575,
+            "lng": -6.2710744,
+            "latestSale": {
+                "date": "2026-09-18",
+                "priceEur": 1700000.0,
+                "isNew": false,
+                "flags": {
+                    "notFullMarketPrice": false,
+                    "vatExclusive": false,
+                    "bulk": false
+                }
+            },
+            "nSales": 2
+        },
+        {
+            "id": "xz2f7fgs3wr5",
+            "address": "21 Kingsland Parade, South Circular Rd, Portobello Dublin 8",
+            "confidence": "street",
+            "lat": 53.3322706,
+            "lng": -6.2718749,
+            "latestSale": {
+                "date": "2026-05-29",
+                "priceEur": 540000.0,
+                "isNew": false,
+                "flags": {
+                    "notFullMarketPrice": false,
+                    "vatExclusive": false,
+                    "bulk": false
+                }
+            },
+            "nSales": 1
+        },
+        {
+            "id": "55kv3gtv56mq",
+            "address": "33 South Circular Road, Dublin 8",
+            "confidence": "exact",
+            "lat": 53.33216,
+            "lng": -6.27026717331961,
+            "latestSale": {
+                "date": "2026-03-20",
+                "priceEur": 750000.0,
+                "isNew": false,
+                "flags": {
+                    "notFullMarketPrice": false,
+                    "vatExclusive": false,
+                    "bulk": false
+                }
+            },
+            "nSales": 1
+        }
+    ],
+    "total": 36,
+    "page": 1,
+    "pageSize": 3
+}

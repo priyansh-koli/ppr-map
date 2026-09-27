@@ -1,0 +1,1314 @@
+{
+  "components": {
+    "schemas": {
+      "AreaLine": {
+        "properties": {
+          "change12mPct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change12Mpct"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "median12m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median12M"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "provisional": {
+            "title": "Provisional",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "n",
+          "provisional"
+        ],
+        "title": "AreaLine",
+        "type": "object"
+      },
+      "AreaRef": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "slug"
+        ],
+        "title": "AreaRef",
+        "type": "object"
+      },
+      "AreaSeries": {
+        "properties": {
+          "area": {
+            "$ref": "#/components/schemas/AreaRef"
+          },
+          "periodKind": {
+            "const": "rolling_12m",
+            "default": "rolling_12m",
+            "title": "Periodkind",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/StatsPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "area",
+          "points"
+        ],
+        "title": "AreaSeries",
+        "type": "object"
+      },
+      "Flood": {
+        "properties": {
+          "link": {
+            "title": "Link",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note",
+          "link"
+        ],
+        "title": "Flood",
+        "type": "object"
+      },
+      "GeocodeConfidence": {
+        "description": "Ordered from most to least precise (D-003).",
+        "enum": [
+          "exact",
+          "street",
+          "locality",
+          "routing_key",
+          "county",
+          "unmatched"
+        ],
+        "title": "GeocodeConfidence",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Health": {
+        "properties": {
+          "database": {
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Database",
+            "type": "string"
+          },
+          "redis": {
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Redis",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "database",
+          "redis"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "LatestSale": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "flags": {
+            "$ref": "#/components/schemas/SaleFlags"
+          },
+          "isNew": {
+            "title": "Isnew",
+            "type": "boolean"
+          },
+          "priceEur": {
+            "title": "Priceeur",
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "priceEur",
+          "isNew",
+          "flags"
+        ],
+        "title": "LatestSale",
+        "type": "object"
+      },
+      "Location": {
+        "properties": {
+          "confidence": {
+            "$ref": "#/components/schemas/GeocodeConfidence"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "lat",
+          "lng",
+          "confidence",
+          "method",
+          "source"
+        ],
+        "title": "Location",
+        "type": "object"
+      },
+      "Meta": {
+        "properties": {
+          "dataVersion": {
+            "title": "Dataversion",
+            "type": "string"
+          },
+          "lastIngestAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastingestat"
+          },
+          "pprMaxSaleDate": {
+            "format": "date",
+            "title": "Pprmaxsaledate",
+            "type": "string"
+          },
+          "provisionalFrom": {
+            "description": "Sales on or after this date are provisional.",
+            "format": "date",
+            "title": "Provisionalfrom",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataVersion",
+          "pprMaxSaleDate",
+          "provisionalFrom",
+          "lastIngestAt"
+        ],
+        "title": "Meta",
+        "type": "object"
+      },
+      "PoiType": {
+        "enum": [
+          "school_primary",
+          "school_post_primary",
+          "school_special",
+          "bus_stop",
+          "luas_stop",
+          "rail_station",
+          "dart_station",
+          "shop",
+          "supermarket",
+          "pharmacy",
+          "park",
+          "gym",
+          "restaurant",
+          "gp"
+        ],
+        "title": "PoiType",
+        "type": "string"
+      },
+      "PropertyDetail": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "areaSeries": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AreaSeries"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "areas": {
+            "items": {
+              "$ref": "#/components/schemas/AreaRef"
+            },
+            "title": "Areas",
+            "type": "array"
+          },
+          "caveats": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Caveats",
+            "type": "array"
+          },
+          "county": {
+            "title": "County",
+            "type": "string"
+          },
+          "dataVersion": {
+            "title": "Dataversion",
+            "type": "string"
+          },
+          "dublinDistrict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dublindistrict"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "routingKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routingkey"
+          },
+          "sales": {
+            "items": {
+              "$ref": "#/components/schemas/Sale"
+            },
+            "title": "Sales",
+            "type": "array"
+          },
+          "vicinity": {
+            "$ref": "#/components/schemas/Vicinity"
+          }
+        },
+        "required": [
+          "id",
+          "address",
+          "county",
+          "routingKey",
+          "dublinDistrict",
+          "location",
+          "sales",
+          "areas",
+          "vicinity",
+          "areaSeries",
+          "caveats",
+          "dataVersion"
+        ],
+        "title": "PropertyDetail",
+        "type": "object"
+      },
+      "PropertyList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PropertyListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "PropertyList",
+        "type": "object"
+      },
+      "PropertyListItem": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/GeocodeConfidence"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "latestSale": {
+            "$ref": "#/components/schemas/LatestSale"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "nSales": {
+            "title": "Nsales",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "address",
+          "confidence",
+          "lat",
+          "lng",
+          "latestSale",
+          "nSales"
+        ],
+        "title": "PropertyListItem",
+        "type": "object"
+      },
+      "PropertySummary": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "area": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AreaLine"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/GeocodeConfidence"
+          },
+          "dataVersion": {
+            "title": "Dataversion",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "latestSale": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LatestSale"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previousSales": {
+            "items": {
+              "$ref": "#/components/schemas/SaleBrief"
+            },
+            "title": "Previoussales",
+            "type": "array"
+          },
+          "vicinity": {
+            "$ref": "#/components/schemas/Vicinity"
+          }
+        },
+        "required": [
+          "id",
+          "address",
+          "confidence",
+          "vicinity",
+          "dataVersion"
+        ],
+        "title": "PropertySummary",
+        "type": "object"
+      },
+      "Sale": {
+        "properties": {
+          "bulkGroupSize": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bulkgroupsize"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "isNew": {
+            "title": "Isnew",
+            "type": "boolean"
+          },
+          "notFullMarketPrice": {
+            "title": "Notfullmarketprice",
+            "type": "boolean"
+          },
+          "possibleDuplicate": {
+            "title": "Possibleduplicate",
+            "type": "boolean"
+          },
+          "priceEur": {
+            "title": "Priceeur",
+            "type": "number"
+          },
+          "sizeBand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sizeband"
+          },
+          "vatExclusive": {
+            "title": "Vatexclusive",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "date",
+          "priceEur",
+          "isNew",
+          "notFullMarketPrice",
+          "vatExclusive",
+          "bulkGroupSize",
+          "sizeBand",
+          "possibleDuplicate"
+        ],
+        "title": "Sale",
+        "type": "object"
+      },
+      "SaleBrief": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "priceEur": {
+            "title": "Priceeur",
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "priceEur"
+        ],
+        "title": "SaleBrief",
+        "type": "object"
+      },
+      "SaleFlags": {
+        "properties": {
+          "bulk": {
+            "title": "Bulk",
+            "type": "boolean"
+          },
+          "notFullMarketPrice": {
+            "title": "Notfullmarketprice",
+            "type": "boolean"
+          },
+          "vatExclusive": {
+            "title": "Vatexclusive",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "notFullMarketPrice",
+          "vatExclusive",
+          "bulk"
+        ],
+        "title": "SaleFlags",
+        "type": "object"
+      },
+      "SchoolValue": {
+        "properties": {
+          "distanceM": {
+            "title": "Distancem",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "distanceM"
+        ],
+        "title": "SchoolValue",
+        "type": "object"
+      },
+      "Sourced_SchoolValue_": {
+        "properties": {
+          "asOf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asof"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/SchoolValue"
+          }
+        },
+        "required": [
+          "value",
+          "source"
+        ],
+        "title": "Sourced[SchoolValue]",
+        "type": "object"
+      },
+      "Sourced_StopValue_": {
+        "properties": {
+          "asOf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asof"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/StopValue"
+          }
+        },
+        "required": [
+          "value",
+          "source"
+        ],
+        "title": "Sourced[StopValue]",
+        "type": "object"
+      },
+      "Sourced_int_": {
+        "properties": {
+          "asOf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asof"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value",
+          "source"
+        ],
+        "title": "Sourced[int]",
+        "type": "object"
+      },
+      "Sourced_str_": {
+        "properties": {
+          "asOf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asof"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "source"
+        ],
+        "title": "Sourced[str]",
+        "type": "object"
+      },
+      "StatsPoint": {
+        "properties": {
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "periodStart": {
+            "format": "date",
+            "title": "Periodstart",
+            "type": "string"
+          },
+          "provisional": {
+            "title": "Provisional",
+            "type": "boolean"
+          },
+          "suppressed": {
+            "title": "Suppressed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "periodStart",
+          "n",
+          "median",
+          "provisional",
+          "suppressed"
+        ],
+        "title": "StatsPoint",
+        "type": "object"
+      },
+      "StopValue": {
+        "properties": {
+          "distanceM": {
+            "title": "Distancem",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "type": {
+            "$ref": "#/components/schemas/PoiType"
+          }
+        },
+        "required": [
+          "type",
+          "distanceM"
+        ],
+        "title": "StopValue",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "Vicinity": {
+        "properties": {
+          "deprivation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced_str_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distances": {
+            "anyOf": [
+              {
+                "const": "straight line",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distances"
+          },
+          "flood": {
+            "$ref": "#/components/schemas/Flood"
+          },
+          "nearestPostPrimarySchool": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced_SchoolValue_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nearestPrimarySchool": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced_SchoolValue_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nearestStop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced_StopValue_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shopsWithin1km": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced_int_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "flood"
+        ],
+        "title": "Vicinity",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Ireland's Property Price Register, made usable. Contains Residential Property Price Register data \u00a9 Property Services Regulatory Authority; it may contain errors.",
+    "title": "PPR Map API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "description": "Liveness and dependency check: database and Redis.",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/v1/meta": {
+      "get": {
+        "description": "Data freshness for the banner: the latest sale in the register and what is provisional.",
+        "operationId": "meta_api_v1_meta_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Meta"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Meta",
+        "tags": [
+          "properties"
+        ]
+      }
+    },
+    "/api/v1/properties": {
+      "get": {
+        "description": "The list view synced with the map: the latest matching sale per property in the box.",
+        "operationId": "list_properties_api_v1_properties_get",
+        "parameters": [
+          {
+            "description": "west,south,east,north in degrees",
+            "in": "query",
+            "name": "bbox",
+            "required": true,
+            "schema": {
+              "description": "west,south,east,north in degrees",
+              "title": "Bbox",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "-date",
+              "enum": [
+                "-date",
+                "date",
+                "-price",
+                "price"
+              ],
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Pagesize",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priceMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pricemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priceMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pricemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dateFrom",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Datefrom"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dateTo",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dateto"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "enum": [
+                "new",
+                "second_hand",
+                "any"
+              ],
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeNonMarket",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Excludenonmarket",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeBulk",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Excludebulk",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minConfidence",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/GeocodeConfidence",
+              "default": "locality"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "The box is too large: zoom in"
+          }
+        },
+        "summary": "List Properties",
+        "tags": [
+          "properties"
+        ]
+      }
+    },
+    "/api/v1/properties/{property_id}": {
+      "get": {
+        "description": "The property page: every sale, location precision, areas, vicinity and area trend.",
+        "operationId": "property_detail_api_v1_properties__property_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "property_id",
+            "required": true,
+            "schema": {
+              "title": "Property Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Property Detail",
+        "tags": [
+          "properties"
+        ]
+      }
+    },
+    "/api/v1/properties/{property_id}/summary": {
+      "get": {
+        "description": "The hover card: one precomputed row, cached in Redis per data version.",
+        "operationId": "summary_api_v1_properties__property_id__summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "property_id",
+            "required": true,
+            "schema": {
+              "title": "Property Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Summary",
+        "tags": [
+          "properties"
+        ]
+      }
+    }
+  }
+}

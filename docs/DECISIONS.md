@@ -310,3 +310,31 @@ Everything below is **Proposed** until the Phase 0 review.
   - `property_summary`: one JSON row per property. The area line uses the settlement if it has unsuppressed 12-month stats, else the county. Flood is always the OPW link with no value (D-010).
   - `data_version` is the latest sale date and the PPR ingest run id (`2026-09-18.r1`).
 - **Status:** Accepted (implementation detail).
+
+## D-038 Map tiles and the synced list, as built
+
+- **Context:** D-004 planned grid aggregates below z12 and points from z12. Measured on the full data: a z12 tile of central Dublin points is 1.2 MB; at z14 it is 68 KB. Sales placed only at a town or townland centre (44% of properties, D-035) would stack hundreds of dots on one spot and read as one sale.
+- **Choice:**
+  - `sales_tiles` (migration 0004): below z14, 64 grid cells per tile side (about 75 m at z13) with count and median; from z14, one point per exact or street property, and one **stack** per coarser location with its count and median, drawn hollow with the count on it.
+  - The filters are parsed in SQL with defaults, so a malformed URL gives the default map, never a 500.
+  - `/api/v1/properties` (the list view) calls the same `tile_matching_sales` function, so the list and the map cannot disagree. It refuses boxes larger than 0.6° × 0.4° and the UI asks the user to zoom in.
+  - Timings on the dev stack (Postgres under emulation): a national z6 tile 2.7 s uncached, z10 55 ms, z14 110 ms; Martin caches tiles in memory.
+  - Price colours: one blue hue in four steps, validated as an ordinal ramp against the basemap's land colour (the dataviz checks: monotone lightness, visible steps, light end at 2.25:1). Five steps did not pass.
+- **Status:** Accepted (implementation detail; revises the zoom in D-004).
+
+## D-039 Basemap and map library, as built
+
+- **Choice:**
+  - `make basemap` downloads the `pmtiles` CLI (v1.31.2), extracts Ireland to z15 from the pinned Protomaps build 20260926 (561 MB), and fetches the fonts and sprites at a pinned commit. Caddy serves them at `/basemap/` with range requests. Viewing the map calls no third party (D-021).
+  - MapLibre GL 6 is ESM-only and starts its worker from a URL beside its module, which bundlers do not copy. A `predev`/`prebuild` step copies the worker and its shared chunk to `public/maplibre/<version>/` and the map calls `setWorkerUrl`.
+  - Object storage and a CDN for production (D-005) remain an open, possibly paid, choice.
+- **Status:** Accepted (implementation detail).
+
+## D-040 API response conventions added in Phase 3
+
+- **Choice:**
+  - Money is `Decimal` in Python and a plain JSON number on the wire (`Money` in `app/schemas/base.py`).
+  - Where Pydantic's camelCase generator would mangle a name (`shops_within1km` to `shopsWithin1Km`), the alias is explicit; a test guards the hover fields.
+  - The frontend's types are generated from `frontend/openapi.json` (`make api-types`). A backend test fails if that file is stale, and CI's `npm run api:check` fails if the types are.
+  - The property page shows the Eircode routing key, not the full Eircode: the address is shown already, and the full code adds nothing for buyers.
+- **Status:** Accepted (implementation detail).

@@ -72,6 +72,8 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
+      - name: Generated API types match openapi.json
+        run: npm run api:check
       - run: npm test
       - run: npm run build
 

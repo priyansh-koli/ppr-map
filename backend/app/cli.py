@@ -1,5 +1,7 @@
 """Management commands: `python -m app.cli --help`."""
 
+import json
+
 import sqlalchemy as sa
 import typer
 from sqlalchemy.dialects.postgresql import insert
@@ -60,6 +62,14 @@ def sync_permissions() -> None:
                 )
             )
     typer.echo(f"Synced {len(stored_roles)} roles, {len(Perm)} permissions, {len(wanted)} grants.")
+
+
+@cli.command("openapi")
+def openapi() -> None:
+    """Print the OpenAPI schema; `make api-types` writes it to frontend/openapi.json."""
+    from app.main import create_app
+
+    typer.echo(json.dumps(create_app().openapi(), indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

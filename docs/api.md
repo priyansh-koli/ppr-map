@@ -27,7 +27,7 @@
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/health` | liveness: DB and Redis ping |
-| GET | `/meta` | `{dataVersion, pprMaxSaleDate, provisionalFrom, lastIngestAt}`, used by the freshness banner |
+| GET | `/meta` | **Built (Phase 3).** `{dataVersion, pprMaxSaleDate, provisionalFrom, lastIngestAt}`, used by the freshness banner |
 | GET | `/sources` | licences and attributions for each data source |
 
 ## Auth
@@ -62,19 +62,20 @@
 ## Map
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/tiles/sales/{z}/{x}/{y}.pbf?{SearchFilter subset}` | Served by Martin. Returns grid aggregates below z12 and property points from z12 up (D-004). `Cache-Control: public, max-age=86400` keyed on `dataVersion`. |
-| GET | `/tiles/price-hex/{z}/{x}/{y}.pbf?window=&segment=` | replaces `/map/heatmap` (D-009) |
+| GET | `/tiles/sales/{z}/{x}/{y}?{SearchFilter subset}` | **Built (Phase 3).** Martin calling `sales_tiles` (migration 0004). Below z14: layer `cells` (`n`, `median`). From z14: layer `sales` (points for exact and street locations) and layer `stacks` (`n`, `median`, `confidence`: every coarser location, one feature each). Filters: `priceMin`, `priceMax`, `dateFrom`, `dateTo`, `type`, `excludeNonMarket`, `excludeBulk`, `minConfidence`; anything unparseable falls back to the default (D-038). |
+| GET | `/tiles/price-hex/{z}/{x}/{y}?window=&segment=` | **Built (Phase 3).** Layer `hexes` (`n`, `median`, `suppressed`); H3 r6 up to z7, r7 for z8-9, r8 from z10 (D-009). |
 | GET | `/tiles/planning/{z}/{x}/{y}.pbf?since=&minUnits=` | planning application points layer |
 | GET | `/tiles/environment/{kind}/{z}/{x}/{y}.pbf` | radon, noise and zoning (GZT) overlays |
 | GET | `/tiles/pois/{z}/{x}/{y}.pbf?types=` | layer toggles for schools, transport and amenities |
 
-The point tile layer carries these properties: `id`, `price`, `date` (yyyymmdd int), `isNew`, `nfmp`, `vatx`, `bulk`, `confidence`, `nSales`.
+The `sales` point layer carries: `id`, `price`, `date` (yyyymmdd int), `isNew`, `nfmp`, `vatx`, `bulk`, `confidence`, `nSales`.
 
 ## Properties
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/properties/{id}/summary` | The hover card. Budget is < 100 ms p95 and it reads only Redis or `property_summary` (see the shape below). |
-| GET | `/properties/{id}` | full record: all sales, enrichment, area stats, sources and caveats |
+| GET | `/properties?bbox=w,s,e,n&{SearchFilter subset}&sort=&page=&pageSize=` | **Built (Phase 3).** The list synced with the map: the latest matching sale per property in the box, using the same SQL as the tiles, so they always agree. A box wider than 0.6° or taller than 0.4° is refused (422, "Zoom in to list sales"). |
+| GET | `/properties/{id}/summary` | **Built (Phase 3).** The hover card. Reads only Redis (`summary:{id}:{dataVersion}`) or `property_summary`: 10 ms uncached, 3 ms cached on the dev stack. |
+| GET | `/properties/{id}` | **Built (Phase 3).** Every sale, location precision and method, areas, vicinity, the most local 12-month median series, and caveats. The full Eircode is not returned, only its routing key. |
 | GET | `/properties/{id}/comparables?radiusM=500&months=24` | same street plus nearby, market sales only; only `exact` and `street` confidence are used for the distance test |
 | GET | `/properties/{id}/planning?radiusM=250&years=5` | planning at this address plus nearby; no applicant fields exist to return |
 | GET | `/properties/{id}/estimate` | the D-020 index estimate: `{low, mid, high, method, basedOnSale, indexSeries}`, or 404 with a reason if ineligible |

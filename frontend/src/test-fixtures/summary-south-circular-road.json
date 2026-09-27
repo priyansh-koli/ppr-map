@@ -1,0 +1,72 @@
+{
+    "id": "y2xig6nyampo",
+    "address": "49 South Circular Road, Dublin 8",
+    "confidence": "exact",
+    "latestSale": {
+        "date": "2026-09-18",
+        "priceEur": 1700000.0,
+        "isNew": false,
+        "flags": {
+            "notFullMarketPrice": false,
+            "vatExclusive": false,
+            "bulk": false
+        }
+    },
+    "previousSales": [
+        {
+            "date": "2022-07-14",
+            "priceEur": 1425000.0
+        }
+    ],
+    "area": {
+        "name": "Dublin city and suburbs",
+        "kind": "settlement",
+        "median12m": 500000.0,
+        "n": 12126,
+        "change12mPct": 2.0,
+        "provisional": true
+    },
+    "vicinity": {
+        "nearestStop": {
+            "value": {
+                "name": "Victoria Street",
+                "type": "bus_stop",
+                "distanceM": 32
+            },
+            "source": "NTA GTFS",
+            "asOf": "2026-09-26"
+        },
+        "nearestPrimarySchool": {
+            "value": {
+                "name": "Presentation Primary School, Warrenmount",
+                "distanceM": 534
+            },
+            "source": "OpenStreetMap",
+            "asOf": "2026-09-26"
+        },
+        "nearestPostPrimarySchool": {
+            "value": {
+                "name": "Presentation Secondary School Warrenmount",
+                "distanceM": 619
+            },
+            "source": "OpenStreetMap",
+            "asOf": "2026-09-26"
+        },
+        "shopsWithin1km": {
+            "value": 214,
+            "source": "OpenStreetMap",
+            "asOf": "2026-09-26"
+        },
+        "deprivation": {
+            "value": "Marginally Above Average",
+            "source": "Pobal HP Deprivation Index 2022 (Electoral Division)",
+            "asOf": "2022"
+        },
+        "distances": "straight line",
+        "flood": {
+            "note": "Check the OPW flood maps",
+            "link": "https://www.floodinfo.ie/map/floodmaps/"
+        }
+    },
+    "dataVersion": "2026-09-18.r1"
+}

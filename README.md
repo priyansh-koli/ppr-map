@@ -2,7 +2,7 @@
 
 The Property Price Register, made usable: every residential sale in Ireland since 2010 on a map, with honest geocoding, sale history and vicinity context.
 
-**Status:** Phase 2 (data pipeline) is ready for review: every sale since 2010 is loaded, geocoded with a confidence level, enriched and aggregated (see `docs/DECISIONS.md` D-035 to D-037). Phase 0 research and plan are in `docs/`.
+**Status:** Phase 3 (map, property page, API) is ready for review: the map explorer with filters, hover cards and a synced list, property pages, and the API behind them (see `docs/DECISIONS.md` D-038 to D-040). Phase 2 built the data pipeline (D-035 to D-037).
 
 **Live preview:** https://priyansh-koli.github.io/ppr-map/ is the frontend as a static site, rebuilt after CI passes on `main` (D-034). It has no API or database yet, so it shows the page scaffold only.
 
@@ -16,6 +16,15 @@ make install      # Python venv + npm packages
 make up           # PostGIS, Redis, API, Martin, Next.js, Caddy, Mailpit
 make migrate      # schema + roles/permissions
 open http://localhost:8080
+```
+
+To fill the map with real data (first run: about 2 hours, mostly geocoding):
+
+```bash
+.venv/bin/ppr ingest tailte_boundaries   # counties, EDs, Small Areas, townlands, towns
+make geocoder     # self-hosted Nominatim (first start imports Ireland; Docker memory >= 12 GB)
+make pipeline     # PPR ingest, geocode, enrich, aggregate
+make basemap      # the Ireland basemap, fonts and sprites (~600 MB)
 ```
 
 `make test` runs the unit tests; `make test-db` adds the live-database checks.

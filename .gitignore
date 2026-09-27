@@ -38,3 +38,6 @@ data/
 .DS_Store
 .idea/
 .vscode/
+
+# copied from node_modules before dev and build (scripts/copy-maplibre-worker.mjs)
+frontend/public/maplibre/

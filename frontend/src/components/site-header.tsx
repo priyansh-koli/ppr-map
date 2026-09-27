@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { FreshnessBanner } from "@/components/freshness-banner";
+
 import { PRIMARY_NAV, ROUTES } from "@/lib/routes";
 
 export function SiteHeader() {
@@ -26,9 +28,7 @@ export function SiteHeader() {
           </ul>
         </nav>
       </div>
-      <p className="bg-surface-2 px-4 py-1 text-center text-xs text-muted" role="status">
-        Data freshness appears here once ingestion runs (Phase 2).
-      </p>
+      <FreshnessBanner />
     </header>
   );
 }

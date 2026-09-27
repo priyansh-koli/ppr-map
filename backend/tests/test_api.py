@@ -56,3 +56,13 @@ def test_unhandled_errors_are_problem_json() -> None:
     assert res.status_code == 500
     assert res.headers["content-type"] == "application/problem+json"
     assert res.json() == {"type": "about:blank", "title": "Internal Server Error", "status": 500}
+
+
+def test_committed_openapi_schema_is_current() -> None:
+    """The frontend's types are generated from frontend/openapi.json: run `make api-types`."""
+    import json
+
+    from tests.conftest import REPO_ROOT
+
+    committed = json.loads((REPO_ROOT / "frontend" / "openapi.json").read_text())
+    assert committed == json.loads(json.dumps(create_app().openapi())), "run `make api-types`"

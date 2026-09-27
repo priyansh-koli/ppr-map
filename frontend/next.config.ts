@@ -15,12 +15,19 @@ const nextConfig: NextConfig = STATIC_EXPORT
       trailingSlash: true,
       poweredByHeader: false,
       images: { unoptimized: true },
+      // Pages that need the API show a notice instead (src/lib/api/client.ts).
+      env: { NEXT_PUBLIC_STATIC_PREVIEW: "1" },
     }
   : {
       output: "standalone",
       poweredByHeader: false,
       async rewrites() {
-        return [{ source: "/api/:path*", destination: `${API_ORIGIN}/api/:path*` }];
+        return [
+          { source: "/api/:path*", destination: `${API_ORIGIN}/api/:path*` },
+          // `npm run dev` against the Docker stack (INTERNAL_API_ORIGIN=http://localhost:8080):
+          // the basemap is served by Caddy too. In Docker, Caddy answers /basemap itself.
+          { source: "/basemap/:path*", destination: `${API_ORIGIN}/basemap/:path*` },
+        ];
       },
     };
 

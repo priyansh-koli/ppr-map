@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr geocode enrich aggregate pipeline osm-extract basemap geocoder test test-db lint format typecheck e2e e2e-pages ci
+.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr geocode enrich aggregate pipeline osm-extract basemap geocoder test test-db lint format typecheck api-types e2e e2e-stack e2e-pages ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -131,8 +131,15 @@ test-db: ## Backend and pipeline tests including live PostGIS checks (needs `mak
 	set -a; source .env; set +a; cd backend && ../.venv/bin/pytest -q
 	set -a; source .env; set +a; cd pipeline && ../.venv/bin/pytest -q
 
+api-types: ## Regenerate frontend/openapi.json and the TypeScript API types from the backend
+	cd backend && ../.venv/bin/python -m app.cli openapi > ../frontend/openapi.json
+	cd frontend && npm run api:types
+
 e2e: ## Playwright smoke tests over every route
 	cd frontend && npm run test:e2e
+
+e2e-stack: ## Playwright against the running stack with real data (make up + pipeline + basemap)
+	cd frontend && E2E_STACK=1 npx playwright test
 
 e2e-pages: ## The same tests against the GitHub Pages static export, under /ppr-map
 	cd frontend && STATIC_EXPORT=1 PAGES_BASE_PATH=/ppr-map npm run build && E2E_BASE_PATH=/ppr-map npm run test:e2e

@@ -1,0 +1,541 @@
+{
+    "id": "y2xig6nyampo",
+    "address": "49 South Circular Road, Dublin 8",
+    "county": "dublin",
+    "routingKey": "D08",
+    "dublinDistrict": "D8",
+    "location": {
+        "lat": 53.33212575,
+        "lng": -6.2710744,
+        "confidence": "exact",
+        "method": "nominatim:building/house",
+        "source": "OpenStreetMap contributors (Nominatim)"
+    },
+    "sales": [
+        {
+            "date": "2026-09-18",
+            "priceEur": 1700000.0,
+            "isNew": false,
+            "notFullMarketPrice": false,
+            "vatExclusive": false,
+            "bulkGroupSize": null,
+            "sizeBand": null,
+            "possibleDuplicate": false
+        },
+        {
+            "date": "2022-07-14",
+            "priceEur": 1425000.0,
+            "isNew": false,
+            "notFullMarketPrice": false,
+            "vatExclusive": false,
+            "bulkGroupSize": null,
+            "sizeBand": null,
+            "possibleDuplicate": false
+        }
+    ],
+    "areas": [
+        {
+            "kind": "small_area",
+            "name": "268162017",
+            "slug": "sa-268162017"
+        },
+        {
+            "kind": "electoral_division",
+            "name": "Wood Quay B",
+            "slug": "ed-wood-quay-b-283c40"
+        },
+        {
+            "kind": "settlement",
+            "name": "Dublin city and suburbs",
+            "slug": "dublin-city-and-suburbs-140399"
+        },
+        {
+            "kind": "county",
+            "name": "Dublin",
+            "slug": "dublin"
+        }
+    ],
+    "vicinity": {
+        "nearestStop": {
+            "value": {
+                "name": "Victoria Street",
+                "type": "bus_stop",
+                "distanceM": 32
+            },
+            "source": "NTA GTFS",
+            "asOf": "2026-09-26"
+        },
+        "nearestPrimarySchool": {
+            "value": {
+                "name": "Presentation Primary School, Warrenmount",
+                "distanceM": 534
+            },
+            "source": "OpenStreetMap",
+            "asOf": "2026-09-26"
+        },
+        "nearestPostPrimarySchool": {
+            "value": {
+                "name": "Presentation Secondary School Warrenmount",
+                "distanceM": 619
+            },
+            "source": "OpenStreetMap",
+            "asOf": "2026-09-26"
+        },
+        "shopsWithin1km": {
+            "value": 214,
+            "source": "OpenStreetMap",
+            "asOf": "2026-09-26"
+        },
+        "deprivation": {
+            "value": "Marginally Above Average",
+            "source": "Pobal HP Deprivation Index 2022 (Electoral Division)",
+            "asOf": "2022"
+        },
+        "distances": "straight line",
+        "flood": {
+            "note": "Check the OPW flood maps",
+            "link": "https://www.floodinfo.ie/map/floodmaps/"
+        }
+    },
+    "areaSeries": {
+        "area": {
+            "kind": "settlement",
+            "name": "Dublin city and suburbs",
+            "slug": "dublin-city-and-suburbs-140399"
+        },
+        "periodKind": "rolling_12m",
+        "points": [
+            {
+                "periodStart": "2021-09-01",
+                "n": 12123,
+                "median": 395000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2021-10-01",
+                "n": 12070,
+                "median": 398000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2021-11-01",
+                "n": 12101,
+                "median": 400000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2021-12-01",
+                "n": 11930,
+                "median": 404000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-01-01",
+                "n": 12000,
+                "median": 405000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-02-01",
+                "n": 11958,
+                "median": 407000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-03-01",
+                "n": 11891,
+                "median": 410000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-04-01",
+                "n": 11963,
+                "median": 411000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-05-01",
+                "n": 12023,
+                "median": 414096.91,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-06-01",
+                "n": 12244,
+                "median": 415000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-07-01",
+                "n": 12345,
+                "median": 420000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-08-01",
+                "n": 12468,
+                "median": 422000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-09-01",
+                "n": 12570,
+                "median": 425000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-10-01",
+                "n": 12541,
+                "median": 425000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-11-01",
+                "n": 12569,
+                "median": 425000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2022-12-01",
+                "n": 12445,
+                "median": 427312.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-01-01",
+                "n": 12411,
+                "median": 430000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-02-01",
+                "n": 12500,
+                "median": 430000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-03-01",
+                "n": 12614,
+                "median": 432000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-04-01",
+                "n": 12547,
+                "median": 432000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-05-01",
+                "n": 12742,
+                "median": 435000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-06-01",
+                "n": 12717,
+                "median": 435000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-07-01",
+                "n": 12630,
+                "median": 431717.91,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-08-01",
+                "n": 12763,
+                "median": 431000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-09-01",
+                "n": 12682,
+                "median": 435000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-10-01",
+                "n": 12842,
+                "median": 435000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-11-01",
+                "n": 12747,
+                "median": 435000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2023-12-01",
+                "n": 12983,
+                "median": 440000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-01-01",
+                "n": 13025,
+                "median": 440000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-02-01",
+                "n": 12949,
+                "median": 440000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-03-01",
+                "n": 12839,
+                "median": 440000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-04-01",
+                "n": 12868,
+                "median": 440529.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-05-01",
+                "n": 12872,
+                "median": 445000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-06-01",
+                "n": 12841,
+                "median": 449000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-07-01",
+                "n": 13010,
+                "median": 450000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-08-01",
+                "n": 12820,
+                "median": 455000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-09-01",
+                "n": 12821,
+                "median": 457500.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-10-01",
+                "n": 13053,
+                "median": 460000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-11-01",
+                "n": 13132,
+                "median": 465000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2024-12-01",
+                "n": 13154,
+                "median": 465000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-01-01",
+                "n": 13239,
+                "median": 470000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-02-01",
+                "n": 13315,
+                "median": 470000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-03-01",
+                "n": 13336,
+                "median": 474800.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-04-01",
+                "n": 13428,
+                "median": 475771.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-05-01",
+                "n": 13400,
+                "median": 480000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-06-01",
+                "n": 13337,
+                "median": 484581.49,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-07-01",
+                "n": 13377,
+                "median": 485000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-08-01",
+                "n": 13435,
+                "median": 488000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-09-01",
+                "n": 13500,
+                "median": 490000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-10-01",
+                "n": 13288,
+                "median": 490000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-11-01",
+                "n": 13163,
+                "median": 493000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2025-12-01",
+                "n": 13146,
+                "median": 495000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2026-01-01",
+                "n": 13026,
+                "median": 496000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2026-02-01",
+                "n": 12958,
+                "median": 500000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2026-03-01",
+                "n": 13033,
+                "median": 500000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2026-04-01",
+                "n": 12969,
+                "median": 500000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2026-05-01",
+                "n": 12898,
+                "median": 500000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2026-06-01",
+                "n": 12936,
+                "median": 500000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2026-07-01",
+                "n": 12949,
+                "median": 500000.0,
+                "provisional": false,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2026-08-01",
+                "n": 12852,
+                "median": 500000.0,
+                "provisional": true,
+                "suppressed": false
+            },
+            {
+                "periodStart": "2026-09-01",
+                "n": 12126,
+                "median": 500000.0,
+                "provisional": true,
+                "suppressed": false
+            }
+        ]
+    },
+    "caveats": [
+        "Sales from the last two months are provisional: late filings still arrive."
+    ],
+    "dataVersion": "2026-09-18.r1"
+}
