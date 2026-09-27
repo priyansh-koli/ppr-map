@@ -53,6 +53,8 @@ class IngestKind(enum.StrEnum):
     PLANNING = "planning"
     ENVIRONMENT = "environment"
     BENCHMARKS = "benchmarks"
+    GEOCODE = "geocode"
+    AGGREGATE = "aggregate"
 
 
 class IngestStatus(enum.StrEnum):

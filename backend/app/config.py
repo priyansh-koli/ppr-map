@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     )
     redis_url: str = "redis://localhost:6379/0"
     app_base_url: str = "http://localhost:8080"
+    nominatim_url: str = "http://localhost:8088"
     session_secret: str = Field(default="", repr=False)
     csrf_secret: str = Field(default="", repr=False)
     ip_hash_salt: str = Field(default="", repr=False)

@@ -37,7 +37,7 @@ def test_cli_lists_sources_and_refuses_blocked_ones() -> None:
 
 
 def test_unimplemented_steps_exit_with_code_2() -> None:
-    result = runner.invoke(app, ["geocode"])
+    result = runner.invoke(app, ["ingest", "planning"])
     assert result.exit_code == 2
 
 

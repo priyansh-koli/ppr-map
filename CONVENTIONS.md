@@ -62,6 +62,10 @@ Run `make help` for the full list.
 | `.venv/bin/ppr ingest tailte_boundaries` | download and load counties, EDs, Small Areas, townlands, settlements (about 4 min) |
 | `make geocoder` | start self-hosted Nominatim (first run imports Ireland, about 20 min; Docker memory ≥ 12 GB) |
 | `make ingest-ppr` | download the PPR and load it (skips an unchanged file; `ppr ingest ppr --file X --force` to reload) |
+| `make geocode` | geocode new properties with the D-003 cascade (`ppr geocode --refresh` redoes all; `--limit N` for a trial) |
+| `make enrich` | reload GTFS stops, OSM amenities and schools, Pobal deprivation; recompute vicinity values |
+| `make aggregate` | rebuild `area_stats`, `price_hex` and `property_summary` |
+| `make pipeline` | the monthly run: ingest, geocode, enrich, aggregate |
 
 New migrations: `cd backend && ../.venv/bin/alembic revision --autogenerate -m "..."` against the running database, then review the file.
 

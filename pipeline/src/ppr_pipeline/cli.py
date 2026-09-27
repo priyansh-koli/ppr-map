@@ -5,9 +5,13 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from app.config import get_settings
 
 from ppr_pipeline import boundaries
+from ppr_pipeline.aggregate import aggregate as rebuild_aggregates
 from ppr_pipeline.db import get_engine
+from ppr_pipeline.enrich.run import enrich as enrich_all
+from ppr_pipeline.geocode.runner import geocode_properties
 from ppr_pipeline.ppr import ingest as ppr_ingest
 from ppr_pipeline.sources import load_sources
 
@@ -83,18 +87,43 @@ def ingest(
 
 
 @app.command()
-def geocode() -> None:
-    """Geocode new or changed properties with the D-003 cascade."""
-    _todo()
+def geocode(
+    refresh: Annotated[
+        bool, typer.Option(help="Redo every property, except admin-locked ones.")
+    ] = False,
+    limit: Annotated[
+        int | None, typer.Option(help="Send at most this many properties to Nominatim.")
+    ] = None,
+) -> None:
+    """Geocode new properties with the D-003 cascade (needs `make geocoder`)."""
+    summary = geocode_properties(
+        get_engine(),
+        get_settings().nominatim_url,
+        refresh=refresh,
+        limit=limit,
+        progress=typer.echo,
+    )
+    for name, value in summary.items():
+        typer.echo(f"  {name}: {value}")
 
 
 @app.command()
-def enrich() -> None:
-    """Recompute per-property enrichment."""
-    _todo()
+def enrich(
+    refresh: Annotated[
+        bool, typer.Option(help="Download GTFS and Pobal again even if present.")
+    ] = False,
+) -> None:
+    """Reload stops, amenities and deprivation, then recompute vicinity values."""
+    summary = enrich_all(
+        get_engine(), load_sources(), DATA_DIR, refresh_downloads=refresh, progress=typer.echo
+    )
+    for name, value in summary.items():
+        typer.echo(f"  {name}: {value}")
 
 
 @app.command()
 def aggregate() -> None:
     """Rebuild area stats, price hexes and hover summaries."""
-    _todo()
+    summary = rebuild_aggregates(get_engine(), progress=typer.echo)
+    for name, value in summary.items():
+        typer.echo(f"  {name}: {value}")

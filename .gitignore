@@ -28,6 +28,8 @@ data/
 *.zip
 *.osm.pbf
 *.pmtiles
+# small real-data samples for tests are the exception
+!pipeline/tests/fixtures/**/*.zip
 
 # os / editors
 .DS_Store

@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr osm-extract geocoder test test-db lint format typecheck e2e e2e-pages ci
+.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr geocode enrich aggregate pipeline osm-extract geocoder test test-db lint format typecheck e2e e2e-pages ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -68,6 +68,17 @@ typecheck: ## mypy (strict) + tsc
 
 ingest-ppr: ## Download the Property Price Register and load it (needs `make up` + `make migrate`)
 	set -a; source .env; set +a; .venv/bin/ppr ingest ppr
+
+geocode: ## Geocode new properties (needs `make geocoder`; the first full run takes 1-2 h)
+	set -a; source .env; set +a; .venv/bin/ppr geocode
+
+enrich: ## Reload stops, amenities and deprivation; recompute vicinity values
+	set -a; source .env; set +a; .venv/bin/ppr enrich
+
+aggregate: ## Rebuild area stats, price hexes and hover summaries
+	set -a; source .env; set +a; .venv/bin/ppr aggregate
+
+pipeline: ingest-ppr geocode enrich aggregate ## The monthly run, in order
 
 OSM_PBF := data/osm/ireland-and-northern-ireland-latest.osm.pbf
 OSM_URL := https://download.geofabrik.de/europe/ireland-and-northern-ireland-latest.osm.pbf

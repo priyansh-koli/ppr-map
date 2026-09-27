@@ -34,8 +34,8 @@ sources:
     attribution: "© OpenStreetMap contributors (ODbL)."
     cadence: monthly
     use: true
-    verified: false  # URL pattern is standard; confirm in Phase 2
-    checked_on: null
+    verified: true  # downloaded and md5-checked for Nominatim and amenities (D-032)
+    checked_on: 2026-09-26
 
   planning:
     name: National Planning Applications (DHLGH / MyPlan)
@@ -109,6 +109,8 @@ sources:
     use: true
     verified: true
     checked_on: 2026-09-26
+    datasets:  # the CSV the data.gov.ie record links to (checked 2026-09-27)
+      csv: "https://www.pobal.ie/wp-content/uploads/2024/01/hp-deprivation-index-scores-2022.csv"
 
   tailte_boundaries:
     name: Tailte Éireann statutory boundaries (counties, EDs, Small Areas 2022, townlands 2026)

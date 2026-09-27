@@ -1,0 +1,2625 @@
+{
+ "boxes": {
+  "carlow": [
+   -7.107835540265068,
+   52.46365874820594,
+   -6.50491658533197,
+   52.91796360669651
+  ],
+  "cork": [
+   -10.303131269132395,
+   51.388710754775786,
+   -7.841144643582312,
+   52.3879570209384
+  ],
+  "galway": [
+   -10.314230707047146,
+   52.968156538016075,
+   -7.967336821634348,
+   53.71890459157265
+  ],
+  "kerry": [
+   -10.690758700034815,
+   51.68831373142262,
+   -9.118874071260658,
+   52.602451962346734
+  ],
+  "tipperary": [
+   -8.480079096239288,
+   52.20196276463995,
+   -7.372060661815178,
+   53.167547234028746
+  ]
+ },
+ "responses": {
+  "1 Sherwood, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "1 Sherwood, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "12 Brooklawns, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "12 Brooklawns, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "130 Hunters Green, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "house_number": "130",
+     "road": "Hunters Green"
+    },
+    "category": "building",
+    "display_name": "130, Hunters Green, Pollerton Big, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.84102095",
+    "lon": "-6.904333545042697",
+    "name": "",
+    "namedetails": null,
+    "osm_id": 131843924,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "house"
+   }
+  ],
+  "143 Cois Dara, Chapelstown, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "residential": "Cois Dara"
+    },
+    "category": "landuse",
+    "display_name": "Cois Dara, Chapelstown, Carlow Rural ED, Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.8304776",
+    "lon": "-6.900687048732099",
+    "name": "Cois Dara",
+    "namedetails": {
+     "name": "Cois Dara"
+    },
+    "osm_id": 1124981330,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "residential": "Cois Dara",
+     "road": "Cois Dara"
+    },
+    "category": "highway",
+    "display_name": "Cois Dara, Chapelstown, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 K8N1, Éire / Ireland",
+    "lat": "52.8302359",
+    "lon": "-6.9018661",
+    "name": "Cois Dara",
+    "namedetails": {
+     "name": "Cois Dara"
+    },
+    "osm_id": 1124981327,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "residential": "Cois Dara",
+     "road": "Cois Dara"
+    },
+    "category": "highway",
+    "display_name": "Cois Dara, Chapelstown, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 K8N1, Éire / Ireland",
+    "lat": "52.829752",
+    "lon": "-6.9014959",
+    "name": "Cois Dara",
+    "namedetails": {
+     "name": "Cois Dara"
+    },
+    "osm_id": 1124981329,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "construction"
+   }
+  ],
+  "144 Cois Dara, Chapelstown, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "residential": "Cois Dara"
+    },
+    "category": "landuse",
+    "display_name": "Cois Dara, Chapelstown, Carlow Rural ED, Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.8304776",
+    "lon": "-6.900687048732099",
+    "name": "Cois Dara",
+    "namedetails": {
+     "name": "Cois Dara"
+    },
+    "osm_id": 1124981330,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "residential": "Cois Dara",
+     "road": "Cois Dara"
+    },
+    "category": "highway",
+    "display_name": "Cois Dara, Chapelstown, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 K8N1, Éire / Ireland",
+    "lat": "52.8302359",
+    "lon": "-6.9018661",
+    "name": "Cois Dara",
+    "namedetails": {
+     "name": "Cois Dara"
+    },
+    "osm_id": 1124981327,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "residential": "Cois Dara",
+     "road": "Cois Dara"
+    },
+    "category": "highway",
+    "display_name": "Cois Dara, Chapelstown, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 K8N1, Éire / Ireland",
+    "lat": "52.829752",
+    "lon": "-6.9014959",
+    "name": "Cois Dara",
+    "namedetails": {
+     "name": "Cois Dara"
+    },
+    "osm_id": 1124981329,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "construction"
+   }
+  ],
+  "178 Pollerton Road, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8371041",
+    "lon": "-6.9149574",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728817,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 FF25, Éire / Ireland",
+    "lat": "52.8363813",
+    "lon": "-6.9227479",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 986206920,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8365415",
+    "lon": "-6.9215701",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 1306884016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8392278",
+    "lon": "-6.9094191",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728811,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8391178",
+    "lon": "-6.9093865",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 23396439,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   }
+  ],
+  "18 Castlewood Gdns, Pollerton Road, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "18 Castlewood Gdns, Pollerton Road|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "182 Pollerton Rd, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8392278",
+    "lon": "-6.9094191",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728811,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8391178",
+    "lon": "-6.9093865",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 23396439,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8371041",
+    "lon": "-6.9149574",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728817,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 FF25, Éire / Ireland",
+    "lat": "52.8363813",
+    "lon": "-6.9227479",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 986206920,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8365415",
+    "lon": "-6.9215701",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 1306884016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   }
+  ],
+  "2 Pearse Terrace, The Mall, Thurles|-8.510079096239288,53.19754723402875,-7.342060661815178,52.17196276463995": [],
+  "2 Rathdale, Kearneys Lane, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "20 The Fairways, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "residential": "The Fairways"
+    },
+    "category": "landuse",
+    "display_name": "The Fairways, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.84727545",
+    "lon": "-6.897040128176172",
+    "name": "The Fairways",
+    "namedetails": {
+     "name": "The Fairways"
+    },
+    "osm_id": 132056896,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "residential": "The Fairways",
+     "road": "The Fairways"
+    },
+    "category": "highway",
+    "display_name": "The Fairways, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.847074",
+    "lon": "-6.8971697",
+    "name": "The Fairways",
+    "namedetails": {
+     "name": "The Fairways"
+    },
+    "osm_id": 23992679,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   }
+  ],
+  "24 Sherwood, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "24 Sherwood, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "27 Grange Court, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "27 Grange Court, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "32 Beechwood Park, Pollerton Road, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "32 Beechwood Park, Pollerton Road|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "32 The Willows, Pollerton Rd, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "32 The Willows, Pollerton Rd|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "33 The Fairways, Pollerton Little, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "residential": "The Fairways"
+    },
+    "category": "landuse",
+    "display_name": "The Fairways, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.84727545",
+    "lon": "-6.897040128176172",
+    "name": "The Fairways",
+    "namedetails": {
+     "name": "The Fairways"
+    },
+    "osm_id": 132056896,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "residential": "The Fairways",
+     "road": "The Fairways"
+    },
+    "category": "highway",
+    "display_name": "The Fairways, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.847074",
+    "lon": "-6.8971697",
+    "name": "The Fairways",
+    "namedetails": {
+     "name": "The Fairways"
+    },
+    "osm_id": 23992679,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   }
+  ],
+  "34 The Fairways, Pollerton Little, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "residential": "The Fairways"
+    },
+    "category": "landuse",
+    "display_name": "The Fairways, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.84727545",
+    "lon": "-6.897040128176172",
+    "name": "The Fairways",
+    "namedetails": {
+     "name": "The Fairways"
+    },
+    "osm_id": 132056896,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "residential": "The Fairways",
+     "road": "The Fairways"
+    },
+    "category": "highway",
+    "display_name": "The Fairways, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.847074",
+    "lon": "-6.8971697",
+    "name": "The Fairways",
+    "namedetails": {
+     "name": "The Fairways"
+    },
+    "osm_id": 23992679,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   }
+  ],
+  "37 Dolman Gardens, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "37 Dolman Gardens, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "4 The Downs, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "residential": "The Downs"
+    },
+    "category": "landuse",
+    "display_name": "The Downs, Pollerton Big, Carlow Rural ED, Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.8449716",
+    "lon": "-6.897103085949298",
+    "name": "The Downs",
+    "namedetails": {
+     "name": "The Downs"
+    },
+    "osm_id": 132091608,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "residential": "The Downs",
+     "road": "The Downs"
+    },
+    "category": "highway",
+    "display_name": "The Downs, Pollerton Big, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8455529",
+    "lon": "-6.8968039",
+    "name": "The Downs",
+    "namedetails": {
+     "name": "The Downs"
+    },
+    "osm_id": 111576121,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   }
+  ],
+  "42 The Willows, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "house_number": "42",
+     "residential": "The Willows",
+     "road": "The Willows"
+    },
+    "category": "building",
+    "display_name": "42, The Willows, Kernanstown, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.840777700000004",
+    "lon": "-6.906652194790425",
+    "name": "",
+    "namedetails": null,
+    "osm_id": 131996088,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "house"
+   }
+  ],
+  "45 The Willows, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "house_number": "45",
+     "residential": "The Willows",
+     "road": "The Willows"
+    },
+    "category": "building",
+    "display_name": "45, The Willows, Kernanstown, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.840868",
+    "lon": "-6.906485235229545",
+    "name": "",
+    "namedetails": null,
+    "osm_id": 131996091,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "house"
+   }
+  ],
+  "47 Castlewood Gardens, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "47 Castlewood Gardens, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "48 Castlewood Gardens, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "48 Castlewood Gardens, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "5 Abbey Glen, Athenry, Galway|-10.344230707047146,53.74890459157265,-7.937336821634347,52.938156538016074": [
+   {
+    "address": {
+     "house_number": "5",
+     "residential": "Abbey Glen",
+     "road": "Abbey Glen"
+    },
+    "category": "building",
+    "display_name": "5, Abbey Glen, Athenry ED, Athenry-Oranmore Municipal District, County Galway, Connacht, H65 KW10, Éire / Ireland",
+    "lat": "53.29575915",
+    "lon": "-8.741976000000001",
+    "name": "",
+    "namedetails": null,
+    "osm_id": 213161005,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "house"
+   }
+  ],
+  "54 Castlewood Gardens, Pollerton Rd, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "54 Castlewood Gardens, Pollerton Rd|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "55 Dolmen Gardens, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "55 Dolmen Gardens, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "66 Beechwood Park, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "residential": "Beechwood Park"
+    },
+    "category": "landuse",
+    "display_name": "Beechwood Park, Pollerton Big, Carlow Rural ED, Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.844559399999994",
+    "lon": "-6.901671594516193",
+    "name": "Beechwood Park",
+    "namedetails": {
+     "name": "Beechwood Park"
+    },
+    "osm_id": 2248535,
+    "osm_type": "relation",
+    "place_rank": 22,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "residential": "Beechwood Park",
+     "road": "Beechwood Park"
+    },
+    "category": "highway",
+    "display_name": "Beechwood Park, Pollerton Big, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8441491",
+    "lon": "-6.9013702",
+    "name": "Beechwood Park",
+    "namedetails": {
+     "name": "Beechwood Park"
+    },
+    "osm_id": 111627016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   }
+  ],
+  "8 Pollerton Road, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8371041",
+    "lon": "-6.9149574",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728817,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 FF25, Éire / Ireland",
+    "lat": "52.8363813",
+    "lon": "-6.9227479",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 986206920,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8365415",
+    "lon": "-6.9215701",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 1306884016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8392278",
+    "lon": "-6.9094191",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728811,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8391178",
+    "lon": "-6.9093865",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 23396439,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   }
+  ],
+  "8 Rathdale, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "house_number": "8",
+     "road": "Rathdale"
+    },
+    "category": "building",
+    "display_name": "8, Rathdale, Pollerton Big, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.84164255",
+    "lon": "-6.904006416241836",
+    "name": "",
+    "namedetails": null,
+    "osm_id": 132005895,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "house"
+   }
+  ],
+  "9 Beechwood Park, Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "house_number": "9",
+     "residential": "Beechwood Park",
+     "road": "Beechwood Park"
+    },
+    "category": "building",
+    "display_name": "9, Beechwood Park, Pollerton Big, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8459295",
+    "lon": "-6.90000771272846",
+    "name": "",
+    "namedetails": null,
+    "osm_id": 132020363,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "house"
+   }
+  ],
+  "Athenry|-10.344230707047146,53.74890459157265,-7.937336821634347,52.938156538016074": [
+   {
+    "address": {},
+    "category": "place",
+    "display_name": "Athenry, Athenry-Oranmore Municipal District, County Galway, Connacht, Éire / Ireland",
+    "lat": "53.2990442",
+    "lon": "-8.7465621",
+    "name": "Athenry",
+    "namedetails": {
+     "name": "Athenry",
+     "name:en": "Athenry",
+     "name:ga": "Baile Átha an Rí",
+     "name:ru": "Атенрай"
+    },
+    "osm_id": 14574245,
+    "osm_type": "relation",
+    "place_rank": 18,
+    "type": "town"
+   },
+   {
+    "address": {},
+    "category": "place",
+    "display_name": "Athenry, Athenry-Oranmore Municipal District, County Galway, Connacht, Éire / Ireland",
+    "lat": "53.2990442",
+    "lon": "-8.7465621",
+    "name": "Athenry",
+    "namedetails": {
+     "name": "Athenry",
+     "name:en": "Athenry",
+     "name:ga": "Baile Átha an Rí",
+     "name:ru": "Атенрай"
+    },
+    "osm_id": 1094043754,
+    "osm_type": "way",
+    "place_rank": 18,
+    "type": "town"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Athenry, Athenry ED, Athenry-Oranmore Municipal District, County Galway, Connacht, Éire / Ireland",
+    "lat": "53.297494900000004",
+    "lon": "-8.747483735296242",
+    "name": "Athenry",
+    "namedetails": {
+     "name": "Athenry",
+     "name:en": "Athenry",
+     "name:ga": "Baile Átha an Rí"
+    },
+    "osm_id": 6314770,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Athenry, County Galway, Connacht, Éire / Ireland",
+    "lat": "53.292783799999995",
+    "lon": "-8.749609573451533",
+    "name": "Athenry",
+    "namedetails": {
+     "alt_name:en": "Athenry Barony",
+     "name": "Athenry",
+     "name:en": "Barony of Athenry",
+     "name:ga": "Baile Átha an Rí",
+     "official_name:en": "Athenry",
+     "official_name:ga": "Baile Átha an Rí"
+    },
+    "osm_id": 6291510,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "barony"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Athenry, County Galway, Connacht, Éire / Ireland",
+    "lat": "53.2995661",
+    "lon": "-8.783033957800509",
+    "name": "Athenry",
+    "namedetails": {
+     "name": "Athenry",
+     "name:en": "Athenry",
+     "name:ga": "Baile Átha an Rí"
+    },
+    "osm_id": 6224169,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "civil_parish"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Athenry-Oranmore Municipal District, County Galway, Connacht, Éire / Ireland",
+    "lat": "53.345798900000005",
+    "lon": "-8.816047338457047",
+    "name": "Athenry-Oranmore Municipal District",
+    "namedetails": {
+     "name": "Athenry-Oranmore Municipal District"
+    },
+    "osm_id": 9304197,
+    "osm_type": "relation",
+    "place_rank": 16,
+    "type": "administrative"
+   }
+  ],
+  "Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.69060955",
+    "lon": "-6.82494235458732",
+    "name": "County Carlow",
+    "namedetails": {
+     "ISO3166-2": "IE-CW",
+     "name": "County Carlow",
+     "name:ang": "Carhlawscīr",
+     "name:ar": "مقاطعة كارلو",
+     "name:ast": "Condáu de Carlow",
+     "name:bg": "Карлоу",
+     "name:br": "Kontelezh Ceatharlach",
+     "name:ca": "Comtat de Carlow",
+     "name:ceb": "County Carlow",
+     "name:cs": "Hrabství Carlow",
+     "name:cy": "Swydd Carlow",
+     "name:da": "County Carlow",
+     "name:de": "County Carlow",
+     "name:en": "County Carlow",
+     "name:eo": "Graflando Carlow",
+     "name:es": "Condado de Carlow",
+     "name:et": "Carlow' krahvkond",
+     "name:eu": "Carlow konderria",
+     "name:fa": "شهرستان کارلو",
+     "name:fi": "Carlow’n kreivikunta",
+     "name:fr": "Comté de Carlow",
+     "name:frr": "Carlow",
+     "name:ga": "Contae Cheatharlach",
+     "name:gd": "Contae Cheatharlach",
+     "name:gl": "Condado de Carlow",
+     "name:gv": "Coontae Chaarlagh",
+     "name:he": "מחוז קרלו",
+     "name:hu": "Carlow megye",
+     "name:id": "County Carlow",
+     "name:it": "Contea di Carlow",
+     "name:ja": "カーロウ県",
+     "name:ka": "კარლოუს საგრაფო",
+     "name:kk": "Карлоу",
+     "name:ko": "칼로주",
+     "name:ku": "County Carlow",
+     "name:lt": "Karlou grafystė",
+     "name:mk": "Карлоу",
+     "name:nan": "Carlow Kūn",
+     "name:nl": "County Carlow",
+     "name:nn": "County Carlow",
+     "name:no": "Carlow",
+     "name:pl": "Carlow",
+     "name:pnb": "کارلو",
+     "name:pt": "Condado de Carlow",
+     "name:qu": "Contae Cheatharlach",
+     "name:ro": "Comitatul Carlow",
+     "name:ru": "Карлоу",
+     "name:sco": "Coontie Carlow",
+     "name:sh": "Carlow",
+     "name:sk": "Carlow",
+     "name:sq": "Carlow",
+     "name:sr": "Карлоу",
+     "name:sv": "Carlow",
+     "name:sw": "Wilaya ya Carlow",
+     "name:tg": "Вилояти Карло",
+     "name:tr": "Carlow Kontluğu",
+     "name:uk": "Карлоу",
+     "name:ur": "کاؤنٹی کارلو",
+     "name:wuu": "卡洛郡",
+     "name:zh": "卡洛郡",
+     "official_name:en": "Carlow",
+     "official_name:ga": "Ceatharlach"
+    },
+    "osm_id": 285977,
+    "osm_type": "relation",
+    "place_rank": 12,
+    "type": "administrative"
+   },
+   {
+    "address": {},
+    "category": "place",
+    "display_name": "Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.8408344",
+    "lon": "-6.9261131",
+    "name": "Carlow",
+    "namedetails": {
+     "name": "Carlow",
+     "name:en": "Carlow",
+     "name:ga": "Ceatharlach",
+     "name:gd": "Ceatharlach",
+     "name:ru": "Карлоу"
+    },
+    "osm_id": 14587154,
+    "osm_type": "relation",
+    "place_rank": 18,
+    "type": "town"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Carlow, Carlow Rural ED, The Municipal District of Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.8295785",
+    "lon": "-6.921377822391353",
+    "name": "Carlow",
+    "namedetails": {
+     "name": "Carlow",
+     "name:en": "Carlow",
+     "name:ga": "Ceatharlach"
+    },
+    "osm_id": 2249481,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   }
+  ],
+  "Castledermot Rd, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "Castledermot Rd|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "road": "Castledermot Road"
+    },
+    "category": "highway",
+    "display_name": "Castledermot Road, Baltinglass, Baltinglass ED, The Municipal District of Baltinglass, County Wicklow, Leinster, W91 DA22, Éire / Ireland",
+    "lat": "52.9298715",
+    "lon": "-6.7133414",
+    "name": "Castledermot Road",
+    "namedetails": {
+     "name": "Castledermot Road",
+     "ref": "L3279"
+    },
+    "osm_id": 1104689266,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "tertiary"
+   },
+   {
+    "address": {
+     "road": "Castledermot Road"
+    },
+    "category": "highway",
+    "display_name": "Castledermot Road, Baltinglass, Baltinglass ED, The Municipal District of Baltinglass, County Wicklow, Leinster, W91 TR29, Éire / Ireland",
+    "lat": "52.9318288",
+    "lon": "-6.7107942",
+    "name": "Castledermot Road",
+    "namedetails": {
+     "name": "Castledermot Road",
+     "ref": "L3279"
+    },
+    "osm_id": 115981833,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "tertiary"
+   }
+  ],
+  "Chapelstown|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Chapelstown, Carlow Rural ED, The Municipal District of Carlow, County Carlow, Leinster, R93 K8N1, Éire / Ireland",
+    "lat": "52.8293659",
+    "lon": "-6.89586689131569",
+    "name": "Chapelstown",
+    "namedetails": {
+     "name": "Chapelstown",
+     "name:en": "Chapelstown",
+     "name:ga": "Baile an tSéipéil"
+    },
+    "osm_id": 2249158,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   },
+   {
+    "address": {
+     "road": "N80"
+    },
+    "category": "shop",
+    "display_name": "PJ Nolan Heating and Plumbing, N80, Chapelstown, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 K8N1, Éire / Ireland",
+    "lat": "52.8279761",
+    "lon": "-6.9005283",
+    "name": "PJ Nolan Heating and Plumbing",
+    "namedetails": {
+     "addr:housename": "Chapelstown",
+     "name": "PJ Nolan Heating and Plumbing"
+    },
+    "osm_id": 6564103559,
+    "osm_type": "node",
+    "place_rank": 30,
+    "type": "hardware"
+   },
+   {
+    "address": {
+     "road": "N80"
+    },
+    "category": "shop",
+    "display_name": "PJ Nolan Tiles, N80, Chapelstown, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 K8N1, Éire / Ireland",
+    "lat": "52.8280361",
+    "lon": "-6.9011238",
+    "name": "PJ Nolan Tiles",
+    "namedetails": {
+     "addr:housename": "Chapelstown",
+     "name": "PJ Nolan Tiles"
+    },
+    "osm_id": 6564103560,
+    "osm_type": "node",
+    "place_rank": 30,
+    "type": "tiles"
+   }
+  ],
+  "Fenit, Tralee|-10.720758700034814,52.632451962346735,-9.088874071260658,51.658313731422616": [
+   {
+    "address": {
+     "neighbourhood": "Mounthawk",
+     "road": "Fenit Road"
+    },
+    "category": "highway",
+    "display_name": "Fenit Road, Mounthawk, Clogherbrien ED, Tralee Municipal District, County Kerry, Munster, V96 E6ND, Éire / Ireland",
+    "lat": "52.2832416",
+    "lon": "-9.7271494",
+    "name": "Fenit Road",
+    "namedetails": {
+     "name": "Fenit Road",
+     "name:en": "Fenit Road",
+     "ref": "R558"
+    },
+    "osm_id": 990216716,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {},
+    "category": "place",
+    "display_name": "Fenit, Tralee Municipal District, County Kerry, Munster, Éire / Ireland",
+    "lat": "52.2766382",
+    "lon": "-9.8644109",
+    "name": "Fenit",
+    "namedetails": {
+     "name": "Fenit",
+     "name:en": "Fenit",
+     "name:ga": "An Fhianait",
+     "name:ru": "Фенит"
+    },
+    "osm_id": 52218265,
+    "osm_type": "node",
+    "place_rank": 19,
+    "type": "village"
+   },
+   {
+    "address": {
+     "road": "Tralee to Fenit Greenway"
+    },
+    "category": "highway",
+    "display_name": "Tralee to Fenit Greenway, Ballynahaglish ED, Tralee Municipal District, County Kerry, Munster, Éire / Ireland",
+    "lat": "52.2781488",
+    "lon": "-9.8403334",
+    "name": "Tralee to Fenit Greenway",
+    "namedetails": {
+     "name": "Tralee to Fenit Greenway"
+    },
+    "osm_id": 1075435197,
+    "osm_type": "way",
+    "place_rank": 27,
+    "type": "cycleway"
+   },
+   {
+    "address": {
+     "road": "Tralee to Fenit Greenway"
+    },
+    "category": "leisure",
+    "display_name": "Tralee Golf Club, Tralee to Fenit Greenway, Ballynahaglish ED, Tralee Municipal District, County Kerry, Munster, Éire / Ireland",
+    "lat": "52.3029664",
+    "lon": "-9.859066728588356",
+    "name": "Tralee Golf Club",
+    "namedetails": {
+     "name": "Tralee Golf Club"
+    },
+    "osm_id": 351897616,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "golf_course"
+   },
+   {
+    "address": {
+     "road": "Tralee to Fenit Greenway"
+    },
+    "category": "aeroway",
+    "display_name": "Tralee Golf Club, Tralee to Fenit Greenway, Ballynahaglish ED, Tralee Municipal District, County Kerry, Munster, Éire / Ireland",
+    "lat": "52.3013755",
+    "lon": "-9.856102",
+    "name": "Tralee Golf Club",
+    "namedetails": {
+     "name": "Tralee Golf Club"
+    },
+    "osm_id": 12162575224,
+    "osm_type": "node",
+    "place_rank": 30,
+    "type": "helipad"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Fenit, Ballynahaglish ED, Tralee Municipal District, County Kerry, Munster, Éire / Ireland",
+    "lat": "52.2885048",
+    "lon": "-9.874281255642835",
+    "name": "Fenit",
+    "namedetails": {
+     "name": "Fenit"
+    },
+    "osm_id": 10950832,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "civil_parish"
+   },
+   {
+    "address": {
+     "neighbourhood": "Cahermoneen",
+     "road": "Greenway"
+    },
+    "category": "highway",
+    "display_name": "Greenway, Cahermoneen, Tralee Rural ED, Tralee Municipal District, County Kerry, Munster, V92 RW90, Éire / Ireland",
+    "lat": "52.2847893",
+    "lon": "-9.7192851",
+    "name": "Greenway",
+    "namedetails": {
+     "alt_name": "Tralee Fenit Greenway",
+     "loc_name": "Skinny Mile",
+     "name": "Greenway"
+    },
+    "osm_id": 425617937,
+    "osm_type": "way",
+    "place_rank": 27,
+    "type": "cycleway"
+   },
+   {
+    "address": {
+     "neighbourhood": "Gallowsfields",
+     "road": "Greenway"
+    },
+    "category": "highway",
+    "display_name": "Greenway, Gallowsfields, Tralee Rural ED, Tralee Municipal District, County Kerry, Munster, V92 YH5V, Éire / Ireland",
+    "lat": "52.2767642",
+    "lon": "-9.708613",
+    "name": "Greenway",
+    "namedetails": {
+     "alt_name": "Tralee Fenit Greenway",
+     "loc_name": "Skinny Mile",
+     "name": "Greenway",
+     "name:ga": "Bealach Glas"
+    },
+    "osm_id": 1288814511,
+    "osm_type": "way",
+    "place_rank": 27,
+    "type": "cycleway"
+   },
+   {
+    "address": {
+     "neighbourhood": "Balloonagh",
+     "road": "Greenway"
+    },
+    "category": "highway",
+    "display_name": "Greenway, Balloonagh, Tralee Urban ED, Tralee Municipal District, County Kerry, Munster, V92 FP92, Éire / Ireland",
+    "lat": "52.2727096",
+    "lon": "-9.7028193",
+    "name": "Greenway",
+    "namedetails": {
+     "alt_name": "Tralee Fenit Greenway",
+     "name": "Greenway",
+     "name:ga": "Bealach Glas"
+    },
+    "osm_id": 292019894,
+    "osm_type": "way",
+    "place_rank": 27,
+    "type": "cycleway"
+   },
+   {
+    "address": {
+     "neighbourhood": "Cahermoneen",
+     "road": "Greenway"
+    },
+    "category": "highway",
+    "display_name": "Greenway, Cahermoneen, Tralee Rural ED, Tralee Municipal District, County Kerry, Munster, V92 R9HY, Éire / Ireland",
+    "lat": "52.2804215",
+    "lon": "-9.7135018",
+    "name": "Greenway",
+    "namedetails": {
+     "alt_name": "Tralee Fenit Greenway",
+     "loc_name": "Skinny Mile",
+     "name": "Greenway"
+    },
+    "osm_id": 1125276039,
+    "osm_type": "way",
+    "place_rank": 27,
+    "type": "cycleway"
+   }
+  ],
+  "Kearneys Lane, Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "Main St, Rathcormac|-10.333131269132394,52.4179570209384,-7.8111446435823115,51.358710754775785": [
+   {
+    "address": {
+     "road": "Main Street"
+    },
+    "category": "amenity",
+    "display_name": "Rathcormac Clinic, Main Street, Rathcormack, The Municipal District of Fermoy, County Cork, Munster, P61 TD96, Éire / Ireland",
+    "lat": "52.07851425",
+    "lon": "-8.281145846201728",
+    "name": "Rathcormac Clinic",
+    "namedetails": {
+     "name": "Rathcormac Clinic"
+    },
+    "osm_id": 400976341,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "clinic"
+   },
+   {
+    "address": {
+     "road": "Main Street"
+    },
+    "category": "shop",
+    "display_name": "Rathcormac Fireplaces, Main Street, Rathcormack, The Municipal District of Fermoy, County Cork, Munster, P61 TD96, Éire / Ireland",
+    "lat": "52.077779199999995",
+    "lon": "-8.281906490406882",
+    "name": "Rathcormac Fireplaces",
+    "namedetails": {
+     "name": "Rathcormac Fireplaces"
+    },
+    "osm_id": 400792982,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "yes"
+   }
+  ],
+  "Old Leighlin|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Old Leighlin, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.75850385",
+    "lon": "-7.044069915785309",
+    "name": "Old Leighlin",
+    "namedetails": {
+     "alt_name": "Old Leighlin Parish",
+     "name": "Old Leighlin"
+    },
+    "osm_id": 11791304,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "parish"
+   },
+   {
+    "address": {},
+    "category": "place",
+    "display_name": "Oldleighlin, The Municipal District of Muinebeag, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.7364256",
+    "lon": "-7.0238712",
+    "name": "Oldleighlin",
+    "namedetails": {
+     "alt_name": "Old Leighlin",
+     "name": "Oldleighlin",
+     "name:en": "Oldleighlin",
+     "name:ga": "Seanleithghlinn"
+    },
+    "osm_id": 756566860,
+    "osm_type": "node",
+    "place_rank": 19,
+    "type": "village"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Oldleighlin, The Municipal District of Muinebeag, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.7390461",
+    "lon": "-7.045822236613882",
+    "name": "Oldleighlin",
+    "namedetails": {
+     "name": "Oldleighlin",
+     "name:en": "Old Leighlin",
+     "name:ga": "Seanleithghlinn",
+     "official_name:en": "Old Leighlin",
+     "official_name:ga": "Seanleithghlinn"
+    },
+    "osm_id": 2294416,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "civil_parish"
+   }
+  ],
+  "Pollacton House, Pollerton Big, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "Pollacton House, Pollerton Big|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "Pollerton Big, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Pollerton Big, Carlow Rural ED, The Municipal District of Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8463523",
+    "lon": "-6.896022417317844",
+    "name": "Pollerton Big",
+    "namedetails": {
+     "name": "Pollerton Big",
+     "name:en": "Pollerton Big",
+     "name:ga": "Baile Phollaird Mór"
+    },
+    "osm_id": 2248558,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   }
+  ],
+  "Pollerton Big|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Pollerton Big, Carlow Rural ED, The Municipal District of Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8463523",
+    "lon": "-6.896022417317844",
+    "name": "Pollerton Big",
+    "namedetails": {
+     "name": "Pollerton Big",
+     "name:en": "Pollerton Big",
+     "name:ga": "Baile Phollaird Mór"
+    },
+    "osm_id": 2248558,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   }
+  ],
+  "Pollerton Little, Castledermot Rd, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "Pollerton Little, Castledermot Rd|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "Pollerton Little|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Pollerton Little, Carlow Rural ED, The Municipal District of Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.851467850000006",
+    "lon": "-6.890079563692836",
+    "name": "Pollerton Little",
+    "namedetails": {
+     "name": "Pollerton Little",
+     "name:en": "Pollerton Little",
+     "name:ga": "Baile Phollaird Beag"
+    },
+    "osm_id": 2248537,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   }
+  ],
+  "Pollerton Rd, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8371041",
+    "lon": "-6.9149574",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728817,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 FF25, Éire / Ireland",
+    "lat": "52.8363813",
+    "lon": "-6.9227479",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 986206920,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8365415",
+    "lon": "-6.9215701",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 1306884016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8392278",
+    "lon": "-6.9094191",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728811,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8391178",
+    "lon": "-6.9093865",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 23396439,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   }
+  ],
+  "Pollerton Rd|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8371041",
+    "lon": "-6.9149574",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728817,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 FF25, Éire / Ireland",
+    "lat": "52.8363813",
+    "lon": "-6.9227479",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 986206920,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8365415",
+    "lon": "-6.9215701",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 1306884016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8392278",
+    "lon": "-6.9094191",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728811,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8391178",
+    "lon": "-6.9093865",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 23396439,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   }
+  ],
+  "Pollerton Road, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8371041",
+    "lon": "-6.9149574",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728817,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 FF25, Éire / Ireland",
+    "lat": "52.8363813",
+    "lon": "-6.9227479",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 986206920,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8365415",
+    "lon": "-6.9215701",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 1306884016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8392278",
+    "lon": "-6.9094191",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728811,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8391178",
+    "lon": "-6.9093865",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 23396439,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   }
+  ],
+  "Pollerton Road|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8371041",
+    "lon": "-6.9149574",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728817,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 FF25, Éire / Ireland",
+    "lat": "52.8363813",
+    "lon": "-6.9227479",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 986206920,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8365415",
+    "lon": "-6.9215701",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 1306884016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8392278",
+    "lon": "-6.9094191",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728811,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8391178",
+    "lon": "-6.9093865",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 23396439,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   }
+  ],
+  "Pollerton, Carlow|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Pollerton Big, Carlow Rural ED, The Municipal District of Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8463523",
+    "lon": "-6.896022417317844",
+    "name": "Pollerton Big",
+    "namedetails": {
+     "name": "Pollerton Big",
+     "name:en": "Pollerton Big",
+     "name:ga": "Baile Phollaird Mór"
+    },
+    "osm_id": 2248558,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Pollerton Little, Carlow Rural ED, The Municipal District of Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.851467850000006",
+    "lon": "-6.890079563692836",
+    "name": "Pollerton Little",
+    "namedetails": {
+     "name": "Pollerton Little",
+     "name:en": "Pollerton Little",
+     "name:ga": "Baile Phollaird Beag"
+    },
+    "osm_id": 2248537,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   },
+   {
+    "address": {
+     "residential": "Pollerton Manor"
+    },
+    "category": "landuse",
+    "display_name": "Pollerton Manor, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.84795465",
+    "lon": "-6.895433605857287",
+    "name": "Pollerton Manor",
+    "namedetails": {
+     "name": "Pollerton Manor"
+    },
+    "osm_id": 132057288,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8371041",
+    "lon": "-6.9149574",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728817,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "residential": "Pollerton Manor",
+     "road": "Pollerton Manor"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Manor, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8477631",
+    "lon": "-6.8953606",
+    "name": "Pollerton Manor",
+    "namedetails": {
+     "name": "Pollerton Manor"
+    },
+    "osm_id": 132057287,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 FF25, Éire / Ireland",
+    "lat": "52.8363813",
+    "lon": "-6.9227479",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 986206920,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8365415",
+    "lon": "-6.9215701",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 1306884016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8392278",
+    "lon": "-6.9094191",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728811,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8391178",
+    "lon": "-6.9093865",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 23396439,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Palatine Road"
+    },
+    "category": "amenity",
+    "display_name": "Pollerton Big Station, Palatine Road, Pollerton Big, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8439807",
+    "lon": "-6.900513440228837",
+    "name": "Pollerton Big Station",
+    "namedetails": {
+     "name": "Pollerton Big Station"
+    },
+    "osm_id": 239937198,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "fuel"
+   }
+  ],
+  "Pollerton|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Pollerton Big, Carlow Rural ED, The Municipal District of Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8463523",
+    "lon": "-6.896022417317844",
+    "name": "Pollerton Big",
+    "namedetails": {
+     "name": "Pollerton Big",
+     "name:en": "Pollerton Big",
+     "name:ga": "Baile Phollaird Mór"
+    },
+    "osm_id": 2248558,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Pollerton Little, Carlow Rural ED, The Municipal District of Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.851467850000006",
+    "lon": "-6.890079563692836",
+    "name": "Pollerton Little",
+    "namedetails": {
+     "name": "Pollerton Little",
+     "name:en": "Pollerton Little",
+     "name:ga": "Baile Phollaird Beag"
+    },
+    "osm_id": 2248537,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   },
+   {
+    "address": {
+     "residential": "Pollerton Manor"
+    },
+    "category": "landuse",
+    "display_name": "Pollerton Manor, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, Éire / Ireland",
+    "lat": "52.84795465",
+    "lon": "-6.895433605857287",
+    "name": "Pollerton Manor",
+    "namedetails": {
+     "name": "Pollerton Manor"
+    },
+    "osm_id": 132057288,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8371041",
+    "lon": "-6.9149574",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728817,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "residential": "Pollerton Manor",
+     "road": "Pollerton Manor"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Manor, Pollerton Little, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8477631",
+    "lon": "-6.8953606",
+    "name": "Pollerton Manor",
+    "namedetails": {
+     "name": "Pollerton Manor"
+    },
+    "osm_id": 132057287,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 FF25, Éire / Ireland",
+    "lat": "52.8363813",
+    "lon": "-6.9227479",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 986206920,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Urban ED, The Municipal District of Carlow, County Carlow, Leinster, R93 V6P5, Éire / Ireland",
+    "lat": "52.8365415",
+    "lon": "-6.9215701",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 1306884016,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Rathnapish, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8392278",
+    "lon": "-6.9094191",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 60728811,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Pollerton Road"
+    },
+    "category": "highway",
+    "display_name": "Pollerton Road, Carlow, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 F298, Éire / Ireland",
+    "lat": "52.8391178",
+    "lon": "-6.9093865",
+    "name": "Pollerton Road",
+    "namedetails": {
+     "name": "Pollerton Road",
+     "name:en": "Pollerton Road",
+     "name:ga": "Bóthar Pollerton",
+     "ref": "R726"
+    },
+    "osm_id": 23396439,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "secondary"
+   },
+   {
+    "address": {
+     "road": "Palatine Road"
+    },
+    "category": "amenity",
+    "display_name": "Pollerton Big Station, Palatine Road, Pollerton Big, Carlow Rural ED, Carlow, County Carlow, Leinster, R93 Y381, Éire / Ireland",
+    "lat": "52.8439807",
+    "lon": "-6.900513440228837",
+    "name": "Pollerton Big Station",
+    "namedetails": {
+     "name": "Pollerton Big Station"
+    },
+    "osm_id": 239937198,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "fuel"
+   }
+  ],
+  "Raheen Lane, Old Leighlin|-7.137835540265068,52.94796360669651,-6.47491658533197,52.433658748205936": [],
+  "Rathcormac|-10.333131269132394,52.4179570209384,-7.8111446435823115,51.358710754775785": [
+   {
+    "address": {
+     "road": "Rathcormac/Fermoy Bypass"
+    },
+    "category": "highway",
+    "display_name": "Rathcormac, Rathcormac/Fermoy Bypass, Rathcormack, The Municipal District of Fermoy, County Cork, Munster, T56 YY29, Éire / Ireland",
+    "lat": "52.0501482",
+    "lon": "-8.3078635",
+    "name": "Rathcormac",
+    "namedetails": {
+     "name": "Rathcormac",
+     "ref": "16"
+    },
+    "osm_id": 38934733,
+    "osm_type": "node",
+    "place_rank": 30,
+    "type": "motorway_junction"
+   },
+   {
+    "address": {},
+    "category": "landuse",
+    "display_name": "Rathcormac Community Field, Rathcormack, The Municipal District of Fermoy, County Cork, Munster, Éire / Ireland",
+    "lat": "52.079202800000004",
+    "lon": "-8.283689767407044",
+    "name": "Rathcormac Community Field",
+    "namedetails": {
+     "name": "Rathcormac Community Field"
+    },
+    "osm_id": 1245807490,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "recreation_ground"
+   },
+   {
+    "address": {},
+    "category": "landuse",
+    "display_name": "Rathcormac Tyres, Rathcormack, The Municipal District of Fermoy, County Cork, Munster, Éire / Ireland",
+    "lat": "52.0857631",
+    "lon": "-8.278219539036296",
+    "name": "Rathcormac Tyres",
+    "namedetails": {
+     "name": "Rathcormac Tyres"
+    },
+    "osm_id": 400823864,
+    "osm_type": "way",
+    "place_rank": 22,
+    "type": "industrial"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Rathcormac Parish, The Municipal District of Fermoy, County Cork, Munster, Éire / Ireland",
+    "lat": "52.06979855",
+    "lon": "-8.335665065007397",
+    "name": "Rathcormac Parish",
+    "namedetails": {
+     "alt_name": "Rathcormack Parish",
+     "name": "Rathcormac Parish"
+    },
+    "osm_id": 11053357,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "historic_parish"
+   },
+   {
+    "address": {
+     "road": "Rathcormac/Fermoy Bypass"
+    },
+    "category": "highway",
+    "display_name": "Rathcormac/Fermoy Bypass, Rathcormack, The Municipal District of Fermoy, County Cork, Munster, P61 HC83, Éire / Ireland",
+    "lat": "52.1021518",
+    "lon": "-8.2810161",
+    "name": "Rathcormac/Fermoy Bypass",
+    "namedetails": {
+     "int_ref": "E 201",
+     "name": "Rathcormac/Fermoy Bypass",
+     "ref": "M8"
+    },
+    "osm_id": 510974062,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "motorway"
+   },
+   {
+    "address": {
+     "road": "Rathcormac/Fermoy Bypass"
+    },
+    "category": "highway",
+    "display_name": "Rathcormac/Fermoy Bypass, Fermoy Rural, The Municipal District of Fermoy, County Cork, Munster, P61 HC83, Éire / Ireland",
+    "lat": "52.1217452",
+    "lon": "-8.2674889",
+    "name": "Rathcormac/Fermoy Bypass",
+    "namedetails": {
+     "int_ref": "E 201",
+     "name": "Rathcormac/Fermoy Bypass",
+     "ref": "M8"
+    },
+    "osm_id": 182161907,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "motorway"
+   },
+   {
+    "address": {
+     "road": "Rathcormac/Fermoy Bypass"
+    },
+    "category": "highway",
+    "display_name": "Rathcormac/Fermoy Bypass, Fermoy Rural, The Municipal District of Fermoy, County Cork, Munster, P61 C996, Éire / Ireland",
+    "lat": "52.1548667",
+    "lon": "-8.2661066",
+    "name": "Rathcormac/Fermoy Bypass",
+    "namedetails": {
+     "int_ref": "E 201",
+     "name": "Rathcormac/Fermoy Bypass",
+     "ref": "M8"
+    },
+    "osm_id": 35268073,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "motorway"
+   },
+   {
+    "address": {
+     "road": "Rathcormac/Fermoy Bypass"
+    },
+    "category": "highway",
+    "display_name": "Rathcormac/Fermoy Bypass, Fermoy Rural, The Municipal District of Fermoy, County Cork, Munster, P61 TX64, Éire / Ireland",
+    "lat": "52.1498614",
+    "lon": "-8.2662976",
+    "name": "Rathcormac/Fermoy Bypass",
+    "namedetails": {
+     "int_ref": "E 201",
+     "name": "Rathcormac/Fermoy Bypass",
+     "ref": "M8"
+    },
+    "osm_id": 17942518,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "motorway"
+   },
+   {
+    "address": {
+     "road": "Rathcormac/Fermoy Bypass"
+    },
+    "category": "highway",
+    "display_name": "Rathcormac/Fermoy Bypass, Watergrasshill, Municipal District of Cobh, County Cork, Munster, T56 YY29, Éire / Ireland",
+    "lat": "52.0218939",
+    "lon": "-8.3328002",
+    "name": "Rathcormac/Fermoy Bypass",
+    "namedetails": {
+     "int_ref": "E 201",
+     "name": "Rathcormac/Fermoy Bypass",
+     "ref": "M8"
+    },
+    "osm_id": 203420025,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "motorway"
+   },
+   {
+    "address": {
+     "road": "Rathcormac/Fermoy Bypass"
+    },
+    "category": "highway",
+    "display_name": "Rathcormac/Fermoy Bypass, Rathcormack, The Municipal District of Fermoy, County Cork, Munster, P61 TD96, Éire / Ireland",
+    "lat": "52.0675669",
+    "lon": "-8.3045493",
+    "name": "Rathcormac/Fermoy Bypass",
+    "namedetails": {
+     "int_ref": "E 201",
+     "name": "Rathcormac/Fermoy Bypass",
+     "ref": "M8"
+    },
+    "osm_id": 926032192,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "motorway"
+   }
+  ],
+  "The Bungalow, Fenit, Tralee|-10.720758700034814,52.632451962346735,-9.088874071260658,51.658313731422616": [],
+  "The Mall, Thurles|-8.510079096239288,53.19754723402875,-7.342060661815178,52.17196276463995": [
+   {
+    "address": {
+     "road": "The Mall"
+    },
+    "category": "highway",
+    "display_name": "The Mall, Templemore, The Municipal District of Thurles, County Tipperary, Munster, E41 VY86, Éire / Ireland",
+    "lat": "52.7942139",
+    "lon": "-7.8377336",
+    "name": "The Mall",
+    "namedetails": {
+     "name": "The Mall"
+    },
+    "osm_id": 365782674,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "residential"
+   },
+   {
+    "address": {
+     "road": "The Mall"
+    },
+    "category": "highway",
+    "display_name": "The Mall, Roscrea, The Municipal District of Thurles, County Tipperary, Munster, E53 RR88, Éire / Ireland",
+    "lat": "52.9539671",
+    "lon": "-7.7975719",
+    "name": "The Mall",
+    "namedetails": {
+     "name": "The Mall",
+     "name:en": "The Mall"
+    },
+    "osm_id": 358237582,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "tertiary"
+   },
+   {
+    "address": {
+     "road": "The Mall"
+    },
+    "category": "highway",
+    "display_name": "The Mall, Roscrea, The Municipal District of Thurles, County Tipperary, Munster, E53 X302, Éire / Ireland",
+    "lat": "52.954662",
+    "lon": "-7.7971534",
+    "name": "The Mall",
+    "namedetails": {
+     "name": "The Mall",
+     "name:en": "The Mall"
+    },
+    "osm_id": 23238293,
+    "osm_type": "way",
+    "place_rank": 26,
+    "type": "tertiary"
+   },
+   {
+    "address": {
+     "road": "Slievenamon Road"
+    },
+    "category": "shop",
+    "display_name": "The Mall Curios, Slievenamon Road, Thurles Urban, The Municipal District of Thurles, County Tipperary, Munster, E41 C580, Éire / Ireland",
+    "lat": "52.67789525",
+    "lon": "-7.813302262339147",
+    "name": "The Mall Curios",
+    "namedetails": {
+     "name": "The Mall Curios"
+    },
+    "osm_id": 571776265,
+    "osm_type": "way",
+    "place_rank": 30,
+    "type": "antiques"
+   }
+  ],
+  "Thurles|-8.510079096239288,53.19754723402875,-7.342060661815178,52.17196276463995": [
+   {
+    "address": {},
+    "category": "place",
+    "display_name": "Thurles, The Municipal District of Thurles, County Tipperary, Munster, Éire / Ireland",
+    "lat": "52.6801547",
+    "lon": "-7.8151008",
+    "name": "Thurles",
+    "namedetails": {
+     "name": "Thurles",
+     "name:en": "Thurles",
+     "name:ga": "Durlas",
+     "name:gd": "Durlas",
+     "name:ru": "Терлес"
+    },
+    "osm_id": 14579447,
+    "osm_type": "relation",
+    "place_rank": 18,
+    "type": "town"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Thurles Poor Law Union 1885, County Tipperary, Munster, Éire / Ireland",
+    "lat": "52.7175559",
+    "lon": "-7.8579866826903375",
+    "name": "Thurles Poor Law Union 1885",
+    "namedetails": {
+     "alt_name": "Thurles",
+     "name": "Thurles Poor Law Union 1885"
+    },
+    "osm_id": 10177838,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "poor_law_union"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Thurles, The Municipal District of Thurles, County Tipperary, Munster, Éire / Ireland",
+    "lat": "52.68838595",
+    "lon": "-7.8168818536607265",
+    "name": "Thurles",
+    "namedetails": {
+     "name": "Thurles",
+     "name:en": "Thurles",
+     "name:ga": "Durlas"
+    },
+    "osm_id": 6423649,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "civil_parish"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "The Municipal District of Thurles, County Tipperary, Munster, Éire / Ireland",
+    "lat": "52.7816239",
+    "lon": "-7.861256066069689",
+    "name": "The Municipal District of Thurles",
+    "namedetails": {
+     "name": "The Municipal District of Thurles"
+    },
+    "osm_id": 6855425,
+    "osm_type": "relation",
+    "place_rank": 16,
+    "type": "administrative"
+   }
+  ],
+  "Tralee|-10.720758700034814,52.632451962346735,-9.088874071260658,51.658313731422616": [
+   {
+    "address": {},
+    "category": "place",
+    "display_name": "Tralee, County Kerry, Munster, Éire / Ireland",
+    "lat": "52.2692116",
+    "lon": "-9.7057047",
+    "name": "Tralee",
+    "namedetails": {
+     "name": "Tralee",
+     "name:en": "Tralee",
+     "name:ga": "Trá Lí",
+     "name:gd": "Tráigh Lí",
+     "name:gv": "Traie Lee",
+     "name:ru": "Трали",
+     "old_name:ga": "Tráighlí"
+    },
+    "osm_id": 14613890,
+    "osm_type": "relation",
+    "place_rank": 18,
+    "type": "town"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Tralee, Tralee Urban ED, Tralee Municipal District, County Kerry, Munster, Éire / Ireland",
+    "lat": "52.268686849999995",
+    "lon": "-9.711100836940362",
+    "name": "Tralee",
+    "namedetails": {
+     "name": "Tralee",
+     "name:en": "Tralee",
+     "name:ga": "Trá Lí"
+    },
+    "osm_id": 6334675,
+    "osm_type": "relation",
+    "place_rank": 20,
+    "type": "administrative"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Tralee Poor Law Union, Éire / Ireland",
+    "lat": "52.285617599999995",
+    "lon": "-9.536288340078638",
+    "name": "Tralee Poor Law Union",
+    "namedetails": {
+     "alt_name": "Tralee",
+     "name": "Tralee Poor Law Union"
+    },
+    "osm_id": 11358075,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "poor_law_union"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Tralee, Tralee Municipal District, County Kerry, Munster, Éire / Ireland",
+    "lat": "52.28978755",
+    "lon": "-9.701217493447412",
+    "name": "Tralee",
+    "namedetails": {
+     "name": "Tralee",
+     "name:en": "Tralee",
+     "name:ga": "Trá Lí"
+    },
+    "osm_id": 6334753,
+    "osm_type": "relation",
+    "place_rank": 25,
+    "type": "civil_parish"
+   },
+   {
+    "address": {},
+    "category": "boundary",
+    "display_name": "Tralee Municipal District, County Kerry, Munster, Éire / Ireland",
+    "lat": "52.239686199999994",
+    "lon": "-9.563244829793486",
+    "name": "Tralee Municipal District",
+    "namedetails": {
+     "name": "Tralee Municipal District"
+    },
+    "osm_id": 9322865,
+    "osm_type": "relation",
+    "place_rank": 16,
+    "type": "administrative"
+   }
+  ]
+ }
+}
