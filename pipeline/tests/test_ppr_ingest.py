@@ -153,3 +153,13 @@ def test_bulk_rule(engine: sa.Engine) -> None:
         "30 CANNON COURT, BRIDE ST, DUBLIN 8",
         "33 MAGENTA HALL, SANTRY, DUBLIN",
     ]
+
+
+def test_bulk_rule_ignores_a_bare_trailing_county(engine: sa.Engine) -> None:
+    """The EUR 400,000 group again, with the Dublin 8 sale written "..., BRIDE ST, DUBLIN":
+    three addresses ending in the bare county name are in Swords, Bride St and Santry,
+    not all in a locality called "dublin", so the group is still a coincidence."""
+    data = (FIXTURES / "ppr_bulk_sample.csv").read_bytes()
+    data = data.replace(b"BRIDE ST, DUBLIN 8", b"BRIDE ST, DUBLIN")
+    run = ingest_ppr(engine, data, URL)
+    assert (run.stats["bulk_sales"], run.stats["bulk_groups"]) == (7, 2)

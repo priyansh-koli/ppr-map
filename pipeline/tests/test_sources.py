@@ -1,7 +1,10 @@
+from pathlib import Path
+
+import pytest
 from typer.testing import CliRunner
 
 from ppr_pipeline.cli import app
-from ppr_pipeline.sources import load_sources
+from ppr_pipeline.sources import REPO_CONFIG_DIR, load_sources
 
 runner = CliRunner()
 
@@ -36,3 +39,15 @@ def test_cli_lists_sources_and_refuses_blocked_ones() -> None:
 def test_unimplemented_steps_exit_with_code_2() -> None:
     result = runner.invoke(app, ["geocode"])
     assert result.exit_code == 2
+
+
+def test_config_dir_can_be_set_for_installed_packages(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The Docker image installs the pipeline into site-packages and sets PPR_CONFIG_DIR."""
+    (tmp_path / "sources.yaml").write_text((REPO_CONFIG_DIR / "sources.yaml").read_text())
+    monkeypatch.setenv("PPR_CONFIG_DIR", str(tmp_path))
+    assert "ppr" in load_sources()
+    monkeypatch.setenv("PPR_CONFIG_DIR", str(tmp_path / "missing"))
+    with pytest.raises(FileNotFoundError):
+        load_sources()

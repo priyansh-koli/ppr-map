@@ -47,7 +47,9 @@ ABBREVIATIONS = {
     "apts": "apartments",
     "blk": "block",
 }
-# `st` directly before one of these means "Street" ("Main St Lower"), not "Saint".
+# `st` means "Saint" only where a name starts: first in its part or after a house number
+# ("St John's Road", "5 St John's Road"). After a word ("5 Main St Naas") or directly before
+# one of these ("Main St Lower") it means "Street".
 STREET_QUALIFIERS = {"lower", "upper", "north", "south", "east", "west", "little", "great"}
 
 UNIT_WORDS = {"apartment", "flat", "unit", "suite"}
@@ -123,13 +125,16 @@ def _expand_part(part: str) -> list[str]:
     tokens = [t for t in tokens if t]
     out: list[str] = []
     for i, tok in enumerate(tokens):
+        prev = tokens[i - 1] if i > 0 else None
         nxt = tokens[i + 1] if i + 1 < len(tokens) else None
         if tok in ("no", "number") and nxt and nxt[0].isdigit():
             continue  # "No. 5 Main St" -> "5 main street"
         if tok == "county" and nxt in COUNTIES:
             out.append("co")  # "County Cork" and "Co. Cork" compare equal
         elif tok == "st":
-            out.append("saint" if nxt and nxt not in STREET_QUALIFIERS else "street")
+            starts_name = prev is None or HOUSE_NUMBER.match(prev)
+            saint = starts_name and nxt is not None and nxt not in STREET_QUALIFIERS
+            out.append("saint" if saint else "street")
         else:
             out.append(ABBREVIATIONS.get(tok, tok))
     return out

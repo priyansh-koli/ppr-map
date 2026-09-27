@@ -44,6 +44,22 @@ def test_saint_versus_street() -> None:
     assert normalise_address("5 MAIN ST LOWER, NAAS", "kildare").normalised.startswith(
         "5 main street lower"
     )
+    assert normalise_address("5 St John's Road, Naas", "kildare").normalised.startswith(
+        "5 saint john's road"
+    )
+
+
+def test_street_before_the_town_in_one_part() -> None:
+    """The PPR often leaves out the comma: `st` after a street name is Street, and the
+    same house keys the same either way."""
+    assert normalise_address("5 MAIN ST NAAS", "kildare").normalised == "5 main street naas"
+    assert normalise_address("12 BRIDE ST DUBLIN 8", "dublin").normalised == (
+        "12 bride street dublin 8"
+    )
+    assert (
+        normalise_address("5 MAIN ST NAAS", "kildare").key
+        == normalise_address("5 Main Street, Naas", "kildare").key
+    )
 
 
 def test_county_suffix_variants_share_one_key() -> None:

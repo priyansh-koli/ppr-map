@@ -11,7 +11,7 @@ from ppr_pipeline.db import get_engine
 from ppr_pipeline.ppr import ingest as ppr_ingest
 from ppr_pipeline.sources import load_sources
 
-DATA_DIR = Path(os.environ.get("DATA_DIR", "data"))
+DATA_DIR = Path(os.environ.get("DATA_DIR") or "data")
 
 app = typer.Typer(no_args_is_help=True, help="PPR Map data pipeline.")
 

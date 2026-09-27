@@ -1,12 +1,15 @@
 """Boundary names, slugs, and loading real Tailte Éireann / CSO features."""
 
+import shutil
+import sqlite3
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 import sqlalchemy as sa
 from app.models.enums import AreaKind
 
-from ppr_pipeline.boundaries import LAYERS, area_name, area_slug, load_boundaries
+from ppr_pipeline.boundaries import LAYERS, area_name, area_slug, load_boundaries, read_layer
 from ppr_pipeline.sources import load_sources
 from tests.conftest import FIXTURES
 
@@ -35,6 +38,33 @@ def test_every_layer_has_a_pinned_url() -> None:
     assert datasets is not None
     assert {layer.kind.value for layer in LAYERS} == set(datasets)
     assert all(url.startswith("https://data-osi.opendata.arcgis.com/") for url in datasets.values())
+
+
+def _ed_fixture_with(tmp_path: Path, sql: str) -> str:
+    path = tmp_path / "ed.gpkg"
+    shutil.copy(FIXTURES / "boundaries" / "electoral_division_2022.gpkg", path)
+    with sqlite3.connect(path) as db:
+        # The R-tree triggers call SpatiaLite functions that plain sqlite3 lacks.
+        triggers = db.execute("SELECT name FROM sqlite_master WHERE type = 'trigger'").fetchall()
+        for (name,) in triggers:
+            db.execute(f'DROP TRIGGER "{name}"')
+        db.execute(sql)
+    return str(path)
+
+
+def test_null_attributes_stay_null(tmp_path: Path) -> None:
+    ed = next(la for la in LAYERS if la.kind is AreaKind.ELECTORAL_DIVISION)
+    path = _ed_fixture_with(tmp_path, "UPDATE electoral_division_2022 SET ED_GAEILGE = NULL")
+    ((code, name, name_ga, _parent, _wkb),) = read_layer(path, ed)
+    assert (name, name_ga) == ("CARLOW RURAL", None)
+    assert code and code != "None"
+
+
+def test_a_feature_without_a_code_is_an_error(tmp_path: Path) -> None:
+    ed = next(la for la in LAYERS if la.kind is AreaKind.ELECTORAL_DIVISION)
+    path = _ed_fixture_with(tmp_path, "UPDATE electoral_division_2022 SET ED_GUID = NULL")
+    with pytest.raises(ValueError, match="no code or name"):
+        list(read_layer(path, ed))
 
 
 @pytest.mark.db

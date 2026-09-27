@@ -1,5 +1,6 @@
 """Load and validate config/sources.yaml (D-016, D-022)."""
 
+import os
 from datetime import date
 from pathlib import Path
 from typing import Self
@@ -7,7 +8,13 @@ from typing import Self
 import yaml
 from pydantic import BaseModel, model_validator
 
-DEFAULT_PATH = Path(__file__).resolve().parents[3] / "config" / "sources.yaml"
+# The repo's config/ is found relative to the source in the editable dev install; an installed
+# package (the Docker image) lives in site-packages, so it sets PPR_CONFIG_DIR instead.
+REPO_CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
+
+
+def default_path() -> Path:
+    return Path(os.environ.get("PPR_CONFIG_DIR") or REPO_CONFIG_DIR) / "sources.yaml"
 
 
 class Source(BaseModel):
@@ -44,5 +51,6 @@ class SourcesFile(BaseModel):
     sources: dict[str, Source]
 
 
-def load_sources(path: Path = DEFAULT_PATH) -> dict[str, Source]:
+def load_sources(path: Path | None = None) -> dict[str, Source]:
+    path = path or default_path()
     return SourcesFile.model_validate(yaml.safe_load(path.read_text())).sources

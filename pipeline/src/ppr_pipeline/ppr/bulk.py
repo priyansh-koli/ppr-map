@@ -8,8 +8,9 @@ A group is sales on the same date at the same price, and it is flagged when:
 - the price is above EUR 5M and at least 2 properties share it, in any county; or
 - at least 3 properties in one county share it, and either the price is not a whole
   EUR 1,000 (apportioned prices do not happen by chance) or at least 3 of them are in
-  the same locality (the last address part). Three unrelated homes in different parts of
-  Dublin selling for EUR 400,000 on one busy day is a coincidence, not a portfolio.
+  the same locality (the last address part, skipping a trailing "Co X" or bare county
+  name, so "Portlaoise, Laois" is in Portlaoise). Three unrelated homes in different parts
+  of Dublin selling for EUR 400,000 on one busy day is a coincidence, not a portfolio.
 """
 
 import sqlalchemy as sa
@@ -26,7 +27,8 @@ FIND_MEMBERS = """
 INSERT INTO bulk_member (id, group_id, group_size)
 WITH a AS (
     SELECT s.id, s.sale_date, s.price_eur, p.county::text AS county, s.property_id,
-           CASE WHEN x.parts[y.n] LIKE 'co %' AND y.n > 1 THEN x.parts[y.n - 1]
+           CASE WHEN (x.parts[y.n] LIKE 'co %' OR x.parts[y.n] = p.county::text) AND y.n > 1
+                THEN x.parts[y.n - 1]
                 ELSE x.parts[y.n] END AS locality
     FROM sale s
     JOIN property p ON p.id = s.property_id
@@ -62,8 +64,8 @@ members AS (
                       WHERE b.sale_date = a.sale_date AND b.price_eur = a.price_eur)
 )
 SELECT id,
-       ('x' || left(md5(sale_date::text || '|' || price_eur::text || '|' || scope), 15))
-           ::bit(60)::bigint AS group_id,
+       ('x' || left(md5(to_char(sale_date, 'YYYY-MM-DD') || '|' || price_eur::text
+                        || '|' || scope), 15))::bit(60)::bigint AS group_id,
        count(*) OVER (PARTITION BY sale_date, price_eur, scope)::int AS group_size
 FROM members
 """

@@ -44,7 +44,7 @@ def test_planning_application_never_models_applicant_fields() -> None:
 
 
 def test_no_table_stores_owner_names() -> None:
-    suspicious = re.compile(r"owner|surname|forename|vendor|purchaser")
+    suspicious = re.compile(r"owner|surname|forename|vendor|purchaser|buyer|applicant")
     for table in TABLES:
         for col in table.columns:
             assert not suspicious.search(col.name), f"{table.name}.{col.name}"

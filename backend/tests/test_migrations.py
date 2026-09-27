@@ -37,6 +37,12 @@ def test_upgrade_renders_every_model_table_offline(monkeypatch: pytest.MonkeyPat
     assert "audit_log_append_only" in sql
 
 
+def test_url_encoded_passwords_work(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`%` in DATABASE_URL must not trip configparser interpolation (p@ss -> p%40ss)."""
+    url = "postgresql+psycopg://offline:p%40ss@localhost/offline"
+    command.upgrade(_alembic_config(url, monkeypatch, io.StringIO()), "head", sql=True)
+
+
 def test_downgrade_renders_every_drop_offline(monkeypatch: pytest.MonkeyPatch) -> None:
     buffer = io.StringIO()
     command.downgrade(_alembic_config(OFFLINE_URL, monkeypatch, buffer), "head:base", sql=True)

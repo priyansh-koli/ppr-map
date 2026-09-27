@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app.main import create_app
 from tests.conftest import make_client
 
 
@@ -33,3 +34,25 @@ def test_openapi_is_served_under_v1(client: TestClient) -> None:
     assert "/api/v1/health" in spec["paths"]
     assert "Property Services Regulatory Authority" in spec["info"]["description"]
     assert client.get("/api/v1/docs").status_code == 200
+
+
+def test_problem_json_keeps_headers(client: TestClient) -> None:
+    res = client.post("/api/v1/health")
+    assert res.status_code == 405
+    assert res.headers["content-type"] == "application/problem+json"
+    assert res.headers["allow"] == "GET"
+    assert res.json()["title"] == "Method Not Allowed"
+
+
+def test_unhandled_errors_are_problem_json() -> None:
+    app = create_app()
+
+    @app.get("/api/v1/boom")
+    async def boom() -> None:
+        raise RuntimeError("boom")
+
+    with TestClient(app, raise_server_exceptions=False) as c:
+        res = c.get("/api/v1/boom")
+    assert res.status_code == 500
+    assert res.headers["content-type"] == "application/problem+json"
+    assert res.json() == {"type": "about:blank", "title": "Internal Server Error", "status": 500}

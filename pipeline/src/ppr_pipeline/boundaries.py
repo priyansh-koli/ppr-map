@@ -20,6 +20,7 @@ import sqlalchemy as sa
 from app.models.data import IngestRun
 from app.models.enums import AreaKind, County, IngestKind, IngestStatus
 
+from ppr_pipeline.ppr.ingest import USER_AGENT
 from ppr_pipeline.sources import Source
 
 SOURCE = "Tailte Éireann"
@@ -121,14 +122,18 @@ def read_layer(path: str, layer: Layer) -> Iterator[tuple[str, str, str | None, 
     fields = list(dict.fromkeys(fields))
     meta, _fids, geometries, values = pyogrio.raw.read(path, columns=fields)
     col = dict(zip(meta["fields"], values, strict=True))
+
+    def value(field: str | None, i: int) -> str | None:
+        raw = col[field][i] if field else None
+        return (str(raw).strip() or None) if raw is not None else None
+
     for i, wkb in enumerate(geometries):
         if wkb is None:
             continue
-        code = str(col[layer.code][i]).strip()
-        name = str(col[layer.name][i]).strip()
-        name_ga = str(col[layer.name_ga][i]).strip() if layer.name_ga else None
-        parent = str(col[layer.parent_code][i]).strip() if layer.parent_code else None
-        yield code, name, name_ga or None, parent, bytes(wkb)
+        code, name = value(layer.code, i), value(layer.name, i)
+        if code is None or name is None:
+            raise ValueError(f"{layer.kind.value} feature {i} has no code or name in {path}")
+        yield code, name, value(layer.name_ga, i), value(layer.parent_code, i), bytes(wkb)
 
 
 CREATE_STAGE = """
@@ -285,11 +290,14 @@ def download(source: Source, directory: Path, *, refresh: bool = False) -> None:
         if dest.exists() and not refresh:
             continue
         url = source.datasets[layer.kind.value]
-        with httpx.stream("GET", url, follow_redirects=True, timeout=600) as resp:
+        part = dest.with_name(dest.name + ".part")
+        headers = {"User-Agent": USER_AGENT}
+        with httpx.stream("GET", url, follow_redirects=True, timeout=600, headers=headers) as resp:
             resp.raise_for_status()
-            with dest.open("wb") as fh:
+            with part.open("wb") as fh:
                 for chunk in resp.iter_bytes():
                     fh.write(chunk)
+        part.replace(dest)  # only a complete download gets the name that skips it next time
 
 
 def ingest_boundaries(engine: sa.Engine, directory: Path, source_url: str) -> dict[str, int]:
