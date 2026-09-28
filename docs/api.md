@@ -27,8 +27,14 @@
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/health` | liveness: DB and Redis ping |
-| GET | `/meta` | **Built (Phase 3).** `{dataVersion, pprMaxSaleDate, provisionalFrom, lastIngestAt}`, used by the freshness banner |
+| GET | `/meta` | **Built (Phase 3).** `{dataVersion, pprMaxSaleDate, provisionalFrom, lastIngestAt}`, used by the status pill in the header |
 | GET | `/sources` | licences and attributions for each data source |
+
+## Stats
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/stats/overview` | the home page's national overview (D-043): `totalSales`, `totalProperties`, `firstSaleDate`; `monthly` (the last 24 months of market sales, with `provisional`); `counties` (each county's latest complete 12 months, `windowStart` to `windowEnd`: `sales` and `medianPriceEur`, null when n < 5, plus a point inside the county for the map). From `area_stats`; held in memory per data version. |
 
 ## Auth
 

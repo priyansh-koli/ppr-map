@@ -456,8 +456,8 @@ export function MapExplorer() {
       : undefined;
 
   return (
-    <div className="flex h-[calc(100vh-7.5rem)] min-h-[32rem] flex-col md:flex-row">
-      <aside className="order-2 max-h-[45vh] w-full shrink-0 overflow-y-auto border-t border-line bg-surface p-4 md:order-1 md:max-h-none md:w-80 md:border-r md:border-t-0">
+    <div className="flex h-[calc(100dvh-3.5rem)] min-h-[32rem] flex-col md:flex-row md:gap-3 md:p-3">
+      <aside className="order-2 max-h-[45vh] w-full shrink-0 overflow-y-auto border-t border-line bg-surface p-4 md:order-1 md:max-h-none md:w-80 md:rounded-[14px] md:border-t-0 md:shadow-window md:outline md:outline-1 md:-outline-offset-1 md:outline-line">
         <div className="space-y-6">
           <FilterPanel
             filters={filters}
@@ -479,7 +479,7 @@ export function MapExplorer() {
           />
         </div>
       </aside>
-      <div className="relative order-1 min-h-[20rem] flex-1 md:order-2">
+      <div className="relative order-1 min-h-[20rem] flex-1 overflow-hidden md:order-2 md:rounded-[14px] md:shadow-window md:outline md:outline-1 md:-outline-offset-1 md:outline-line">
         <div
           ref={container}
           className="h-full w-full"
@@ -490,14 +490,14 @@ export function MapExplorer() {
           type="button"
           onClick={locate}
           disabled={locating}
-          className="absolute left-3 top-3 rounded border border-line bg-surface px-3 py-1.5 text-sm font-medium text-ink shadow"
+          className="btn btn-secondary btn-sm absolute left-3 top-3 shadow-window"
         >
           {locating ? "Finding you…" : "Near me"}
         </button>
         {mapError ? (
           <p
             role="alert"
-            className="absolute left-3 top-14 max-w-xs rounded bg-surface px-3 py-2 text-sm text-ink shadow"
+            className="window absolute left-3 top-14 max-w-xs px-3 py-2 text-sm text-ink"
           >
             {mapError}
           </p>

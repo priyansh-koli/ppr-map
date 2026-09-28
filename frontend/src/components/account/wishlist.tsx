@@ -109,10 +109,7 @@ export function Wishlist() {
       </p>
       <FormMessage error={removeError} />
       {selected.length >= 2 ? (
-        <Link
-          className="inline-block rounded-md bg-accent px-4 py-2 font-medium text-surface"
-          href={`${ROUTES.compare.path}?ids=${selected.join(",")}`}
-        >
+        <Link className="btn btn-primary" href={`${ROUTES.compare.path}?ids=${selected.join(",")}`}>
           Compare {selected.length}
         </Link>
       ) : null}

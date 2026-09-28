@@ -6,6 +6,9 @@ import { RecordView } from "@/components/auth/record-view";
 import { SaveButton } from "@/components/auth/save-button";
 import { PlaceholderPage, pageMetadata } from "@/components/placeholder-page";
 import { AreaTrend } from "@/components/property/area-trend";
+import { ConfidenceChip } from "@/components/ui/confidence-chip";
+import { PageHeader } from "@/components/ui/page-header";
+import { Window } from "@/components/ui/window";
 import { api, ApiError, type PropertyDetail, STATIC_PREVIEW } from "@/lib/api/client";
 import {
   CONFIDENCE_LABEL,
@@ -60,6 +63,23 @@ function SaleFlags({ sale }: { sale: PropertyDetail["sales"][number] }) {
   return <>{flags.join(", ")}</>;
 }
 
+const pct = new Intl.NumberFormat("en-IE", {
+  style: "percent",
+  maximumFractionDigits: 0,
+  signDisplay: "exceptZero",
+});
+
+type SaleRow = PropertyDetail["sales"][number];
+
+/** Change against the previous sale, only between two plain market sales. */
+function changeSince(sale: SaleRow, previous: SaleRow | undefined): string | null {
+  const plain = (s: SaleRow) =>
+    !s.vatExclusive && !s.notFullMarketPrice && !s.bulkGroupSize && !s.possibleDuplicate;
+  if (!previous || !plain(sale) || !plain(previous)) return null;
+  const before = Number(previous.priceEur);
+  return before > 0 ? pct.format(Number(sale.priceEur) / before - 1) : null;
+}
+
 function Sourced({
   label,
   value,
@@ -72,11 +92,11 @@ function Sourced({
   asOf?: string | null;
 }) {
   return (
-    <div>
+    <div className="rounded-[10px] bg-surface-2 px-4 py-3">
       <dt className="text-muted">{label}</dt>
-      <dd className="text-ink">
+      <dd className="mt-0.5 font-medium text-ink">
         {value}
-        <span className="block text-xs text-muted">
+        <span className="mt-1 block font-mono text-[0.7rem] font-normal text-muted">
           {source}
           {asOf ? `, ${asOf}` : ""}
         </span>
@@ -92,8 +112,8 @@ export default async function Page({ params }: Props) {
   if (data === null) notFound();
   if (data === "unavailable") {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">{ROUTES.property.title}</h1>
+      <div className="mx-auto max-w-3xl px-4 py-12">
+        <PageHeader title={ROUTES.property.title} />
         <p className="mt-4 text-muted">
           This property could not be loaded right now. Please try again shortly.
         </p>
@@ -102,68 +122,119 @@ export default async function Page({ params }: Props) {
   }
   const v = data.vicinity;
   const loc = data.location;
+  const county = data.county.charAt(0).toUpperCase() + data.county.slice(1);
+  const latest = data.sales[0];
+  const hasNearby = Boolean(
+    v.nearestStop || v.nearestPrimarySchool || v.shopsWithin1km || v.deprivation,
+  );
   return (
-    <article className="mx-auto max-w-3xl space-y-8 px-4 py-10">
-      <header className="space-y-2">
-        <p className="text-sm text-muted">
-          {ROUTES.property.title} · County{" "}
-          {data.county.charAt(0).toUpperCase() + data.county.slice(1)}
+    <article className="mx-auto max-w-4xl space-y-6 px-4 py-12">
+      <header>
+        <p className="eyebrow">
+          register · county {county}
           {data.routingKey ? ` · Eircode area ${data.routingKey}` : ""}
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">{data.address}</h1>
+        <h1 className="mt-2 font-display text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-ink sm:text-5xl">
+          {data.address}
+        </h1>
         <RecordView propertyId={data.id} />
-        <SaveButton propertyId={data.id} />
-        <p className="text-sm">
-          <span className="font-medium text-ink">
-            Location: {CONFIDENCE_LABEL[loc.confidence]}.
-          </span>{" "}
-          <span className="text-muted">{CONFIDENCE_NOTE[loc.confidence]}</span>{" "}
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <ConfidenceChip confidence={loc.confidence} />
           <Link
-            className="text-accent underline"
+            className="btn btn-secondary btn-sm"
             href={`${ROUTES.map.path}?lat=${loc.lat.toFixed(5)}&lng=${loc.lng.toFixed(5)}&z=${loc.confidence === "exact" || loc.confidence === "street" ? 17 : 14}`}
           >
             Show on the map
           </Link>
+          <SaveButton propertyId={data.id} />
+        </div>
+        <p className="mt-3 text-sm">
+          <span className="font-medium text-ink">
+            Location: {CONFIDENCE_LABEL[loc.confidence]}.
+          </span>{" "}
+          <span className="text-muted">{CONFIDENCE_NOTE[loc.confidence]}</span>
         </p>
       </header>
 
-      <section aria-labelledby="sales-heading">
-        <h2 id="sales-heading" className="text-xl font-semibold text-ink">
+      <Window
+        title={`register · ${data.sales.length} ${data.sales.length === 1 ? "sale" : "sales"}`}
+        labelledBy="sales-heading"
+        bodyClassName="p-5 sm:p-7"
+      >
+        <h2 id="sales-heading" className="sr-only">
           Sales
         </h2>
-        <table className="mt-3 w-full text-left text-sm">
-          <caption className="sr-only">Every sale of this property on the register</caption>
-          <thead>
-            <tr className="text-muted">
-              <th className="py-2 font-medium">Date</th>
-              <th className="py-2 font-medium">Price</th>
-              <th className="py-2 font-medium">Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Repeat filings share a date and price, so the row's position is part of its key. */}
-            {data.sales.map((sale, i) => (
-              <tr
-                key={`${i}-${sale.date}-${sale.priceEur}`}
-                className="border-t border-line align-top"
-              >
-                <td className="py-2">{formatDate(sale.date)}</td>
-                <td className="py-2 font-medium text-ink">{formatEur(sale.priceEur)}</td>
-                <td className="py-2 text-muted">
-                  <SaleFlags sale={sale} />
-                </td>
+        {latest ? (
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-ink-2">
+                Latest sale, {formatDate(latest.date)}
+              </p>
+              <p className="font-display text-5xl font-extrabold tracking-[-0.03em] text-ink">
+                {formatEur(latest.priceEur)}
+              </p>
+            </div>
+          </div>
+        ) : null}
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[28rem] text-left text-sm">
+            <caption className="sr-only">Every sale of this property on the register</caption>
+            <thead>
+              <tr className="text-muted">
+                <th scope="col" className="py-2 pr-4 font-medium">
+                  Date
+                </th>
+                <th scope="col" className="py-2 pr-4 text-right font-medium">
+                  Price
+                </th>
+                <th scope="col" className="py-2 pr-4 text-right font-medium">
+                  Change
+                </th>
+                <th scope="col" className="py-2 font-medium">
+                  Details
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {/* Repeat filings share a date and price, so the row's position is part of its key. */}
+              {data.sales.map((sale, i) => {
+                const change = changeSince(sale, data.sales[i + 1]);
+                return (
+                  <tr
+                    key={`${i}-${sale.date}-${sale.priceEur}`}
+                    className="border-t border-line align-top"
+                  >
+                    <td className="py-2.5 pr-4">{formatDate(sale.date)}</td>
+                    <td className="py-2.5 pr-4 text-right font-semibold text-ink">
+                      {formatEur(sale.priceEur)}
+                    </td>
+                    <td className="py-2.5 pr-4 text-right text-ink-2">{change ?? "–"}</td>
+                    <td className="py-2.5 text-muted">
+                      <SaleFlags sale={sale} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {data.sales.length > 1 ? (
+          <p className="mt-3 text-xs text-muted">
+            Change is against the sale below it, in the prices as filed: not adjusted for inflation
+            or for work done. It is left out where either sale is not a plain market sale.
+          </p>
+        ) : null}
+      </Window>
 
       {data.caveats.length ? (
-        <section aria-labelledby="caveats-heading" className="rounded-lg bg-surface-2 p-4 text-sm">
-          <h2 id="caveats-heading" className="font-semibold text-ink">
+        <section
+          aria-labelledby="caveats-heading"
+          className="rounded-[14px] bg-[color-mix(in_oklab,var(--color-marker)_24%,var(--color-surface))] p-5 text-sm text-ink shadow-window"
+        >
+          <h2 id="caveats-heading" className="font-hand text-2xl leading-none">
             Worth knowing
           </h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
+          <ul className="mt-3 list-disc space-y-1 pl-5">
             {data.caveats.map((c) => (
               <li key={c}>{c}</li>
             ))}
@@ -171,13 +242,17 @@ export default async function Page({ params }: Props) {
         </section>
       ) : null}
 
-      <section aria-labelledby="vicinity-heading">
-        <h2 id="vicinity-heading" className="text-xl font-semibold text-ink">
+      <Window
+        title="nearby · with sources"
+        labelledBy="vicinity-heading"
+        bodyClassName="p-5 sm:p-7"
+      >
+        <h2 id="vicinity-heading" className="font-display text-2xl font-bold text-ink">
           Nearby
         </h2>
-        {v.nearestStop || v.nearestPrimarySchool || v.shopsWithin1km || v.deprivation ? (
+        {hasNearby ? (
           <>
-            <dl className="mt-3 grid gap-4 text-sm sm:grid-cols-2">
+            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
               {v.nearestStop ? (
                 <Sourced
                   label="Nearest public transport stop"
@@ -219,7 +294,7 @@ export default async function Page({ params }: Props) {
                 />
               ) : null}
             </dl>
-            <p className="mt-3 text-xs text-muted">
+            <p className="mt-4 text-xs text-muted">
               Distances are straight lines, not walking routes. Schools come from OpenStreetMap and
               may be incomplete.
             </p>
@@ -229,39 +304,44 @@ export default async function Page({ params }: Props) {
             Nearby places are only shown when the address itself or its street was found.
           </p>
         )}
-        <p className="mt-3 text-sm">
+        <p className="mt-4 text-sm">
           Flood risk:{" "}
-          <a className="text-accent underline" href={v.flood.link}>
+          <a className="prose-link" href={v.flood.link}>
             {v.flood.note}
           </a>
           .
         </p>
-      </section>
+      </Window>
 
       {data.areaSeries ? (
-        <section aria-labelledby="trend-heading">
-          <h2 id="trend-heading" className="text-xl font-semibold text-ink">
+        <Window title="area · median price" labelledBy="trend-heading" bodyClassName="p-5 sm:p-7">
+          <h2 id="trend-heading" className="font-display text-2xl font-bold text-ink">
             Prices in {data.areaSeries.area.name}
           </h2>
-          <div className="mt-3">
+          <div className="mt-4">
             <AreaTrend series={data.areaSeries} />
           </div>
-        </section>
+        </Window>
       ) : null}
 
-      <section aria-labelledby="areas-heading" className="text-sm">
-        <h2 id="areas-heading" className="text-xl font-semibold text-ink">
+      <Window
+        title="areas · this address is in"
+        labelledBy="areas-heading"
+        bodyClassName="p-5 sm:p-7"
+      >
+        <h2 id="areas-heading" className="sr-only">
           Areas
         </h2>
-        <ul className="mt-2 space-y-1">
+        <ul className="grid gap-2 text-sm sm:grid-cols-2">
           {data.areas.map((a) => (
-            <li key={`${a.kind}-${a.slug}`}>
-              <span className="text-muted">{KIND_LABEL[a.kind] ?? a.kind}:</span> {a.name}
+            <li key={`${a.kind}-${a.slug}`} className="rounded-[10px] bg-surface-2 px-3 py-2">
+              <span className="block text-xs text-muted">{KIND_LABEL[a.kind] ?? a.kind}</span>
+              {a.name}
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-muted">Data version {data.dataVersion}.</p>
-      </section>
+        <p className="mt-4 font-mono text-xs text-muted">data version {data.dataVersion}</p>
+      </Window>
     </article>
   );
 }

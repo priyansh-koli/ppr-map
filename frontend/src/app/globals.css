@@ -1,36 +1,332 @@
 @import "tailwindcss";
 
-/* Design tokens. Price-band colours (colour-blind-safe sequential scale) arrive with the map in Phase 3. */
+/*
+ * Design tokens (D-043). A limestone "plan paper" desk with a faint survey grid, white record
+ * windows on it, a deep green for the brand and actions, and a highlighter yellow for the one
+ * word that matters. Blue is kept for data: the map's price scale (legend.tsx) owns it.
+ *
+ * The theme follows the system unless the visitor picks one (theme-toggle.tsx sets
+ * html[data-theme]); dark values are chosen for dark, not inverted.
+ */
 :root {
+  --color-desk: #efeee9;
+  --color-desk-grid: rgb(22 24 29 / 0.055);
   --color-surface: #ffffff;
-  --color-surface-2: #f4f5f7;
+  --color-surface-2: #f6f6f2;
+  --color-fill: #ebeae4;
   --color-ink: #16181d;
-  --color-muted: #555b66;
-  --color-line: #dde0e5;
-  --color-accent: #0b5cad;
+  --color-ink-2: #3c4048;
+  --color-muted: #555a62;
+  --color-line: #dfddd5;
+  --color-line-strong: #c7c4ba;
+  /* Form control borders need 3:1 against the field (WCAG 1.4.11). */
+  --color-control: #8a877e;
+  --color-accent: #0f6b44;
+  --color-accent-strong: #0b5234;
+  --color-accent-wash: #e2f1e8;
+  --color-on-accent: #ffffff;
+  --color-marker: #ffd23f;
+  --color-sign: #c9302a;
+  --color-live: #1f9d55;
+  --color-glass: rgb(239 238 233 / 0.82);
+  --color-band: #16181d;
+  --color-on-band: #efeee9;
+  --shadow-window: 0 1px 2px rgb(22 24 29 / 0.06), 0 14px 34px -14px rgb(22 24 29 / 0.24);
+  --shadow-lift: 0 2px 4px rgb(22 24 29 / 0.08), 0 30px 60px -20px rgb(22 24 29 / 0.36);
+  --shadow-button:
+    inset 0 1px 0 rgb(255 255 255 / 0.28), 0 1px 2px rgb(11 82 52 / 0.35),
+    0 8px 18px -8px rgb(11 82 52 / 0.55);
+  color-scheme: light;
 }
 
+/* Dark: the same list twice, for the system setting and for an explicit choice. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --color-surface: #121418;
-    --color-surface-2: #1c1f25;
-    --color-ink: #eceef2;
-    --color-muted: #a3a9b4;
-    --color-line: #2c3038;
-    --color-accent: #7db4f0;
+  :root:not([data-theme="light"]) {
+    --color-desk: #0f1112;
+    --color-desk-grid: rgb(255 255 255 / 0.04);
+    --color-surface: #191c1e;
+    --color-surface-2: #202426;
+    --color-fill: #292e30;
+    --color-ink: #ecede8;
+    --color-ink-2: #c5c9c4;
+    --color-muted: #a3a9a4;
+    --color-line: #2c3134;
+    --color-line-strong: #3e4448;
+    --color-control: #737980;
+    --color-accent: #4ccb8a;
+    --color-accent-strong: #7fdcab;
+    --color-accent-wash: #16301f;
+    --color-on-accent: #07170e;
+    --color-marker: rgb(255 210 63 / 0.42);
+    --color-sign: #bb342c;
+    --color-live: #47c983;
+    --color-glass: rgb(15 17 18 / 0.8);
+    --color-band: #1d2123;
+    --color-on-band: #ecede8;
+    --shadow-window: 0 1px 2px rgb(0 0 0 / 0.5), 0 14px 34px -14px rgb(0 0 0 / 0.7);
+    --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.5), 0 30px 60px -20px rgb(0 0 0 / 0.8);
+    --shadow-button: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 8px 18px -8px rgb(0 0 0 / 0.8);
+    color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --color-desk: #0f1112;
+  --color-desk-grid: rgb(255 255 255 / 0.04);
+  --color-surface: #191c1e;
+  --color-surface-2: #202426;
+  --color-fill: #292e30;
+  --color-ink: #ecede8;
+  --color-ink-2: #c5c9c4;
+  --color-muted: #a3a9a4;
+  --color-line: #2c3134;
+  --color-line-strong: #3e4448;
+  --color-control: #737980;
+  --color-accent: #4ccb8a;
+  --color-accent-strong: #7fdcab;
+  --color-accent-wash: #16301f;
+  --color-on-accent: #07170e;
+  --color-marker: rgb(255 210 63 / 0.42);
+  --color-sign: #bb342c;
+  --color-live: #47c983;
+  --color-glass: rgb(15 17 18 / 0.8);
+  --color-band: #1d2123;
+  --color-on-band: #ecede8;
+  --shadow-window: 0 1px 2px rgb(0 0 0 / 0.5), 0 14px 34px -14px rgb(0 0 0 / 0.7);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.5), 0 30px 60px -20px rgb(0 0 0 / 0.8);
+  --shadow-button: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 8px 18px -8px rgb(0 0 0 / 0.8);
+  color-scheme: dark;
 }
 
 @theme inline {
+  --color-desk: var(--color-desk);
   --color-surface: var(--color-surface);
   --color-surface-2: var(--color-surface-2);
+  --color-fill: var(--color-fill);
   --color-ink: var(--color-ink);
+  --color-ink-2: var(--color-ink-2);
   --color-muted: var(--color-muted);
   --color-line: var(--color-line);
+  --color-line-strong: var(--color-line-strong);
+  --color-control: var(--color-control);
   --color-accent: var(--color-accent);
+  --color-accent-strong: var(--color-accent-strong);
+  --color-accent-wash: var(--color-accent-wash);
+  --color-on-accent: var(--color-on-accent);
+  --color-marker: var(--color-marker);
+  --color-sign: var(--color-sign);
+  --color-live: var(--color-live);
+  --color-band: var(--color-band);
+  --color-on-band: var(--color-on-band);
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-heading), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-hand: var(--font-note), "Comic Sans MS", cursive;
+  --shadow-window: var(--shadow-window);
+  --shadow-lift: var(--shadow-lift);
+  --radius-window: 14px;
+  --radius-control: 10px;
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-desk);
+    /* A surveyor's plan grid: fine lines every 24px, a stronger one every 120px. */
+    background-image:
+      linear-gradient(var(--color-desk-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-desk-grid) 1px, transparent 1px),
+      linear-gradient(var(--color-desk-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-desk-grid) 1px, transparent 1px);
+    background-size:
+      24px 24px,
+      24px 24px,
+      120px 120px,
+      120px 120px;
+    background-position: -1px -1px;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+  }
+
+  input:not([type="checkbox"], [type="radio"], [type="range"]),
+  select,
+  textarea {
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-control);
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    transition:
+      border-color 150ms,
+      box-shadow 150ms;
+  }
+  input:not([type="checkbox"], [type="radio"], [type="range"]):hover,
+  select:hover,
+  textarea:hover {
+    border-color: var(--color-muted);
+  }
+  input[aria-invalid="true"] {
+    border-color: var(--color-sign);
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--color-accent);
+    width: 1rem;
+    height: 1rem;
+  }
+
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: var(--color-marker);
+    color: var(--color-ink);
+  }
+}
+
+@layer components {
+  /* A record window: white card, a title bar in the mono face, a soft drop shadow. */
+  .window {
+    border-radius: var(--radius-window);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-window);
+    outline: 1px solid var(--color-line);
+    outline-offset: -1px;
+    overflow: hidden;
+  }
+  .window-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.25rem;
+    padding: 0.375rem 0.875rem;
+    border-bottom: 1px solid var(--color-line);
+    background: linear-gradient(var(--color-surface-2), var(--color-fill));
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-muted);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    font-weight: 600;
+    line-height: 1.2;
+    transition:
+      transform 150ms var(--ease-out-soft),
+      box-shadow 150ms,
+      background-color 150ms;
+    cursor: pointer;
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.99);
+  }
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    color: var(--color-on-accent);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-accent) 90%, white) 0%,
+      var(--color-accent) 55%,
+      var(--color-accent-strong) 100%
+    );
+    box-shadow: var(--shadow-button);
+  }
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.08) saturate(1.05);
+  }
+  .btn-secondary {
+    color: var(--color-ink);
+    background: var(--color-surface);
+    box-shadow:
+      inset 0 0 0 1px var(--color-line-strong),
+      0 1px 2px rgb(22 24 29 / 0.06);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--color-surface-2);
+  }
+  .btn-sm {
+    min-height: 2.25rem;
+    padding: 0.25rem 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 999px;
+    padding: 0.125rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--color-fill);
+    color: var(--color-ink-2);
+  }
+
+  /* The highlighter stroke under the one word that matters. */
+  .marker {
+    background-image: linear-gradient(
+      100deg,
+      transparent 0.2em,
+      var(--color-marker) 0.3em,
+      var(--color-marker) calc(100% - 0.25em),
+      transparent calc(100% - 0.1em)
+    );
+    background-size: 100% 0.42em;
+    background-position: 0 88%;
+    background-repeat: no-repeat;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding-inline: 0.06em;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+  }
+
+  .prose-link {
+    color: var(--color-accent);
+    text-decoration-line: underline;
+  }
 }
 
 :focus-visible {
   outline: 3px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

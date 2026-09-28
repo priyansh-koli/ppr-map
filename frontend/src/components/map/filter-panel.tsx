@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 
 import type { Filters, MinConfidence, SaleType } from "@/lib/filters";
 
-const input = "w-full rounded border border-line bg-surface px-2 py-1 text-ink";
+// Borders, radius and colours come from the base form styles (globals.css).
+const input = "mt-0.5 w-full px-2.5 py-1.5";
 
 /** Number fields apply after a short pause so every keystroke is not a new set of tiles. */
 function PriceInput({
@@ -68,7 +69,9 @@ export function FilterPanel({
       onSubmit={(e) => e.preventDefault()}
     >
       <fieldset className="space-y-1">
-        <legend className="font-semibold text-ink">Layer</legend>
+        <legend className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+          Layer
+        </legend>
         <label className="flex items-center gap-2">
           <input
             type="radio"
@@ -84,7 +87,9 @@ export function FilterPanel({
         </label>
       </fieldset>
       <fieldset className="space-y-2" disabled={showHexes}>
-        <legend className="font-semibold text-ink">Sales</legend>
+        <legend className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+          Sales
+        </legend>
         <div className="grid grid-cols-2 gap-2">
           <PriceInput
             label="Price from (€)"

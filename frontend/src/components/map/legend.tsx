@@ -3,7 +3,10 @@ import { PRICE_BANDS, SUPPRESSED_COLOR } from "@/lib/price-bands";
 export function Legend({ showHexes }: { showHexes: boolean }) {
   return (
     <section aria-labelledby="legend-heading" className="space-y-3 text-sm">
-      <h2 id="legend-heading" className="font-semibold text-ink">
+      <h2
+        id="legend-heading"
+        className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted"
+      >
         Key
       </h2>
       <div>

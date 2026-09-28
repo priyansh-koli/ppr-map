@@ -4,7 +4,9 @@ import type { ReactNode } from "react";
 import { SessionProvider } from "@/components/auth/session";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { THEME_SCRIPT } from "@/components/ui/theme-toggle";
 
+import { fontVariables } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,15 +18,23 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#efeee9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1112" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-IE">
-      <body className="flex min-h-screen flex-col bg-surface text-ink antialiased">
+    // The theme script sets data-theme before React hydrates, hence the warning suppression.
+    <html lang="en-IE" className={fontVariables} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
+      <body className="flex min-h-screen flex-col font-sans text-ink antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:rounded focus:bg-surface focus:px-3 focus:py-2"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:shadow-window"
         >
           Skip to content
         </a>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SaveButton } from "@/components/auth/save-button";
+import { Window } from "@/components/ui/window";
 
 import type { PropertySummary } from "@/lib/api/client";
 import {
@@ -45,10 +46,12 @@ function PropertyCard({
   const v = summary.vicinity;
   return (
     <div className="space-y-2">
-      <p className="font-semibold text-ink">{summary.address}</p>
+      <p className="font-semibold leading-snug text-ink">{summary.address}</p>
       {sale ? (
         <div>
-          <p className="text-lg font-semibold text-ink">{formatEur(sale.priceEur)}</p>
+          <p className="font-display text-2xl font-bold tracking-tight text-ink">
+            {formatEur(sale.priceEur)}
+          </p>
           <p className="text-sm text-muted">Sold {formatDate(sale.date)}</p>
           <Flags sale={sale} />
         </div>
@@ -102,17 +105,25 @@ function PropertyCard({
 
 export function HoverCard({ content, onClose }: { content: CardContent; onClose?: () => void }) {
   return (
-    <div className="w-72 rounded-lg border border-line bg-surface p-3 text-sm text-ink shadow-lg">
-      {onClose ? (
-        <button
-          type="button"
-          onClick={onClose}
-          className="float-right -mr-1 -mt-1 rounded px-2 text-muted hover:text-ink"
-          aria-label="Close details"
-        >
-          ×
-        </button>
-      ) : null}
+    <Window
+      as="div"
+      lift
+      className="w-72 text-sm text-ink"
+      bodyClassName="p-3.5"
+      title={content.kind === "property" ? "sale · details" : "sales · grouped"}
+      meta={
+        onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="-mr-1.5 grid h-6 w-6 place-items-center rounded-full text-base leading-none text-muted hover:bg-surface hover:text-ink"
+            aria-label="Close details"
+          >
+            ×
+          </button>
+        ) : null
+      }
+    >
       {content.kind === "property" ? (
         <PropertyCard id={content.id} summary={content.summary} error={content.error} />
       ) : content.kind === "stack" ? (
@@ -134,6 +145,6 @@ export function HoverCard({ content, onClose }: { content: CardContent; onClose?
           <p className="text-xs text-muted">Zoom in to see individual sales.</p>
         </div>
       )}
-    </div>
+    </Window>
   );
 }

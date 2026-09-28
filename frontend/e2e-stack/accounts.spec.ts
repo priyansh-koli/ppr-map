@@ -25,6 +25,12 @@ async function linkFromEmail(page: Page, to: string, path: string): Promise<stri
   throw new Error(`no ${path} email for ${to}`);
 }
 
+/** On phones the account links sit in the header's menu sheet. */
+async function openMenuOnPhones(page: Page) {
+  const menu = page.getByRole("button", { name: "Menu" });
+  if (await menu.isVisible()) await menu.click();
+}
+
 test("register, confirm, sign in, save, compare, history, sign out", async ({ page }, info) => {
   const email = `e2e-${info.project.name}-${Date.now()}@example.ie`;
 
@@ -73,7 +79,10 @@ test("register, confirm, sign in, save, compare, history, sign out", async ({ pa
     await expect(page.getByRole("link", { name: item.address })).toBeVisible();
   }
 
+  await openMenuOnPhones(page);
   await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/$/); // signing out goes home, which closes the menu
+  await openMenuOnPhones(page);
   await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
   await page.goto("./account/wishlist");
   await expect(page.getByText("to continue.")).toBeVisible();
@@ -106,5 +115,7 @@ test("password reset by email", async ({ page }, info) => {
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(fresh);
   await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await openMenuOnPhones(page);
   await expect(page.getByRole("link", { name: "Account" })).toBeVisible();
 });

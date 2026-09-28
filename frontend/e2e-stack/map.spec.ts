@@ -6,6 +6,10 @@ import { expect, test } from "@playwright/test";
 
 test("the banner shows how recent the register is", async ({ page }) => {
   await page.goto("./");
+  // The header pill (only its dot on phones) opens the full sentence.
+  const pill = page.locator("summary", { hasText: /Data to \d+ \w+ \d{4}/ });
+  await expect(pill).toBeVisible();
+  await pill.click();
   await expect(page.getByText(/Property Price Register data up to \d+ \w+ \d{4}/)).toBeVisible();
 });
 

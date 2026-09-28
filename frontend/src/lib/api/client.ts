@@ -18,6 +18,8 @@ export type RegisterIn = components["schemas"]["RegisterIn"];
 export type WishlistItem = components["schemas"]["WishlistItemOut"];
 export type View = components["schemas"]["ViewOut"];
 export type MePatch = components["schemas"]["MePatch"];
+export type Overview = components["schemas"]["Overview"];
+export type CountyStat = components["schemas"]["CountyStat"];
 
 /** The GitHub Pages preview (D-034) is static: there is no API or tile server behind it. */
 export const STATIC_PREVIEW = process.env.NEXT_PUBLIC_STATIC_PREVIEW === "1";
@@ -120,6 +122,7 @@ type Accepted = components["schemas"]["Accepted"];
 
 export const api = {
   meta: (init?: RequestInit) => get<Meta>("/meta", init),
+  overview: (init?: RequestInit) => get<Overview>("/stats/overview", init),
   summary: (id: string, init?: RequestInit) =>
     get<PropertySummary>(`/properties/${encodeURIComponent(id)}/summary`, init),
   list: (query: URLSearchParams, init?: RequestInit) =>

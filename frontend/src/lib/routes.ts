@@ -20,7 +20,8 @@ export const ROUTES = {
   home: {
     path: "/",
     samplePath: "/",
-    title: "Irish property prices, made usable",
+    // The hero splits it to highlight "on one map." (components/home/hero.tsx).
+    title: "Every home sold in Ireland, on one map.",
     summary:
       "Every residential sale on the Property Price Register since 2010, on a map, with honest locations, sale history and neighbourhood context.",
     phase: 3,

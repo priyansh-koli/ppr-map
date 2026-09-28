@@ -10,8 +10,7 @@ import { messageOf } from "./form";
 import { useSession } from "./session";
 import { SignInLink } from "./sign-in-link";
 
-const buttonClass =
-  "rounded border border-line px-3 py-1 text-sm font-medium text-ink hover:bg-surface-2 disabled:opacity-60";
+const buttonClass = "btn btn-secondary btn-sm";
 
 /** Save a property to the wishlist; signed-out users get a way to sign in first. */
 export function SaveButton({ propertyId }: { propertyId: string }) {

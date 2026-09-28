@@ -427,6 +427,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/stats/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Overview
+         * @description Sales per month nationally, and each county's latest complete 12 months.
+         */
+        get: operations["overview_api_v1_stats_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -486,6 +506,30 @@ export interface components {
          * @enum {string}
          */
         County: "carlow" | "cavan" | "clare" | "cork" | "donegal" | "dublin" | "galway" | "kerry" | "kildare" | "kilkenny" | "laois" | "leitrim" | "limerick" | "longford" | "louth" | "mayo" | "meath" | "monaghan" | "offaly" | "roscommon" | "sligo" | "tipperary" | "waterford" | "westmeath" | "wexford" | "wicklow";
+        /** CountyStat */
+        CountyStat: {
+            /**
+             * Lat
+             * @description A point inside the county, for centring the map.
+             */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /**
+             * Medianpriceeur
+             * @description None when fewer than 5 sales.
+             */
+            medianPriceEur: number | null;
+            /** Name */
+            name: string;
+            /**
+             * Sales
+             * @description Market sales in the 12 months to `Overview.windowEnd`.
+             */
+            sales: number;
+            /** Slug */
+            slug: string;
+        };
         /** EmailIn */
         EmailIn: {
             /**
@@ -620,6 +664,64 @@ export interface components {
              * @description Sales on or after this date are provisional.
              */
             provisionalFrom: string;
+        };
+        /** MonthCount */
+        MonthCount: {
+            /**
+             * Month
+             * Format: date
+             * @description First day of the month.
+             */
+            month: string;
+            /**
+             * Provisional
+             * @description Late filings still arrive for this month.
+             */
+            provisional: boolean;
+            /**
+             * Sales
+             * @description Market sales filed for this month, all counties.
+             */
+            sales: number;
+        };
+        /** Overview */
+        Overview: {
+            /**
+             * Counties
+             * @description Most sales first.
+             */
+            counties: components["schemas"]["CountyStat"][];
+            /** Dataversion */
+            dataVersion: string;
+            /**
+             * Firstsaledate
+             * Format: date
+             */
+            firstSaleDate: string;
+            /**
+             * Monthly
+             * @description The last 24 months, oldest first.
+             */
+            monthly: components["schemas"]["MonthCount"][];
+            /** Totalproperties */
+            totalProperties: number;
+            /**
+             * Totalsales
+             * @description Every sale on the register, market or not.
+             */
+            totalSales: number;
+            /**
+             * Windowend
+             * Format: date
+             * @description Last month of that window: the latest complete one.
+             */
+            windowEnd: string;
+            /**
+             * Windowstart
+             * Format: date
+             * @description First month of the counties' 12-month window.
+             */
+            windowStart: string;
         };
         /** PasswordChangeIn */
         PasswordChangeIn: {
@@ -1765,6 +1867,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overview_api_v1_stats_overview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Overview"];
                 };
             };
         };

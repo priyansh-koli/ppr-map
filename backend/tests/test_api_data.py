@@ -147,3 +147,18 @@ def test_impossible_dates_fall_back_to_the_default(db: sa.Engine) -> None:
             return bytes(conn.execute(sql, {"p": params}).scalar_one())
 
         assert tile('{"dateFrom": "2025-02-30"}') == tile("{}")
+
+
+def test_overview(api: TestClient) -> None:
+    from app.api.v1 import stats
+
+    stats._Shared.overview = None
+    data = api.get("/api/v1/stats/overview").json()
+    assert data["totalSales"] > 0 and data["totalProperties"] > 0
+    months = [m["month"] for m in data["monthly"]]
+    assert months == sorted(months) and len(months) <= 24
+    assert data["monthly"][-1]["provisional"] is True  # the latest month is never complete
+    carlow = next(c for c in data["counties"] if c["slug"] == "carlow")
+    assert carlow["sales"] >= 0 and 52 < carlow["lat"] < 53 and -7.2 < carlow["lng"] < -6.5
+    # The counties' window ends before the provisional months start.
+    assert data["windowEnd"] < api.get("/api/v1/meta").json()["provisionalFrom"]

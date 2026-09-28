@@ -152,6 +152,54 @@
         "title": "County",
         "type": "string"
       },
+      "CountyStat": {
+        "properties": {
+          "lat": {
+            "description": "A point inside the county, for centring the map.",
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "medianPriceEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None when fewer than 5 sales.",
+            "title": "Medianpriceeur"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sales": {
+            "description": "Market sales in the 12 months to `Overview.windowEnd`.",
+            "title": "Sales",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "sales",
+          "medianPriceEur",
+          "lat",
+          "lng"
+        ],
+        "title": "CountyStat",
+        "type": "object"
+      },
       "EmailIn": {
         "properties": {
           "email": {
@@ -493,6 +541,95 @@
           "lastIngestAt"
         ],
         "title": "Meta",
+        "type": "object"
+      },
+      "MonthCount": {
+        "properties": {
+          "month": {
+            "description": "First day of the month.",
+            "format": "date",
+            "title": "Month",
+            "type": "string"
+          },
+          "provisional": {
+            "description": "Late filings still arrive for this month.",
+            "title": "Provisional",
+            "type": "boolean"
+          },
+          "sales": {
+            "description": "Market sales filed for this month, all counties.",
+            "title": "Sales",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "sales",
+          "provisional"
+        ],
+        "title": "MonthCount",
+        "type": "object"
+      },
+      "Overview": {
+        "properties": {
+          "counties": {
+            "description": "Most sales first.",
+            "items": {
+              "$ref": "#/components/schemas/CountyStat"
+            },
+            "title": "Counties",
+            "type": "array"
+          },
+          "dataVersion": {
+            "title": "Dataversion",
+            "type": "string"
+          },
+          "firstSaleDate": {
+            "format": "date",
+            "title": "Firstsaledate",
+            "type": "string"
+          },
+          "monthly": {
+            "description": "The last 24 months, oldest first.",
+            "items": {
+              "$ref": "#/components/schemas/MonthCount"
+            },
+            "title": "Monthly",
+            "type": "array"
+          },
+          "totalProperties": {
+            "title": "Totalproperties",
+            "type": "integer"
+          },
+          "totalSales": {
+            "description": "Every sale on the register, market or not.",
+            "title": "Totalsales",
+            "type": "integer"
+          },
+          "windowEnd": {
+            "description": "Last month of that window: the latest complete one.",
+            "format": "date",
+            "title": "Windowend",
+            "type": "string"
+          },
+          "windowStart": {
+            "description": "First month of the counties' 12-month window.",
+            "format": "date",
+            "title": "Windowstart",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataVersion",
+          "totalSales",
+          "totalProperties",
+          "firstSaleDate",
+          "monthly",
+          "windowStart",
+          "windowEnd",
+          "counties"
+        ],
+        "title": "Overview",
         "type": "object"
       },
       "PasswordChangeIn": {
@@ -2748,6 +2885,28 @@
         "summary": "Summary",
         "tags": [
           "properties"
+        ]
+      }
+    },
+    "/api/v1/stats/overview": {
+      "get": {
+        "description": "Sales per month nationally, and each county's latest complete 12 months.",
+        "operationId": "overview_api_v1_stats_overview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Overview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "stats"
         ]
       }
     }

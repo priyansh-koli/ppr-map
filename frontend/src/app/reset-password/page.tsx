@@ -1,20 +1,21 @@
 import { Suspense } from "react";
-
 import { ResetPasswordForm } from "@/components/account/auth-forms";
 import { pageMetadata } from "@/components/placeholder-page";
 import { ROUTES } from "@/lib/routes";
+import { AuthShell } from "@/components/ui/page-header";
 
 export const metadata = pageMetadata("resetPassword");
 
 export default function Page() {
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-10">
-      <h1 className="text-3xl font-semibold tracking-tight text-ink">
-        {ROUTES.resetPassword.title}
-      </h1>
+    <AuthShell
+      title={ROUTES.resetPassword.title}
+      lead="Choose a new password. Every other device is signed out."
+      windowTitle="account · new password"
+    >
       <Suspense fallback={<p aria-busy>Loading…</p>}>
         <ResetPasswordForm />
       </Suspense>
-    </div>
+    </AuthShell>
   );
 }

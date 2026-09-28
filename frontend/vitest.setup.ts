@@ -9,3 +9,6 @@ vi.mock("next/navigation", () => ({
     throw new Error("notFound");
   },
 }));
+
+// next/font runs only in the Next.js compiler; tests need just the class names.
+vi.mock("@/app/fonts", () => ({ fontVariables: "" }));

@@ -9,29 +9,32 @@ import { ROUTES } from "@/lib/routes";
 import { messageOf } from "./form";
 import { useSession } from "./session";
 
-export function AccountMenu() {
+const link = "rounded-full px-3 py-1.5 text-sm font-medium text-ink-2 hover:bg-fill hover:text-ink";
+
+/** `stacked` lays the links out as a column, for the mobile menu. */
+export function AccountMenu({ stacked = false }: { stacked?: boolean }) {
   const { me, signOut } = useSession();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   if (!me) {
     return (
-      <Link className="font-medium text-accent hover:underline" href={ROUTES.login.path}>
+      <Link className="btn btn-secondary btn-sm" href={ROUTES.login.path}>
         Sign in
       </Link>
     );
   }
   return (
-    <span className="flex flex-wrap gap-4">
-      <Link className="text-ink hover:underline" href={ROUTES.wishlist.path}>
+    <span className={stacked ? "grid gap-1" : "flex items-center gap-1"}>
+      <Link className={link} href={ROUTES.wishlist.path}>
         {ROUTES.wishlist.title}
       </Link>
-      <Link className="text-ink hover:underline" href={ROUTES.account.path}>
+      <Link className={link} href={ROUTES.account.path}>
         Account
       </Link>
       <button
         type="button"
-        className="font-medium text-accent hover:underline disabled:opacity-60"
+        className={`${link} text-left disabled:opacity-60`}
         disabled={busy}
         onClick={async () => {
           setBusy(true);

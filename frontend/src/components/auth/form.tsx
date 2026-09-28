@@ -10,9 +10,9 @@ import {
 
 import { ApiError } from "@/lib/api/client";
 
-export const inputClass = "mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink";
-export const buttonClass =
-  "rounded-md bg-accent px-4 py-2 font-medium text-surface hover:opacity-90 disabled:opacity-60";
+// Borders, radius and colours come from the base form styles (globals.css).
+export const inputClass = "mt-1 w-full px-3 py-2.5";
+export const buttonClass = "btn btn-primary";
 
 export function Field({
   label,
@@ -71,7 +71,7 @@ export function FormMessage({
       role="status"
       aria-live={error ? "assertive" : "polite"}
       aria-atomic="true"
-      className="rounded bg-surface-2 px-3 py-2 text-sm text-ink empty:sr-only"
+      className="rounded-[10px] bg-surface-2 px-3 py-2 text-sm text-ink outline outline-1 -outline-offset-1 outline-line empty:sr-only"
     >
       {error || success || ""}
     </p>

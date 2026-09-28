@@ -17,7 +17,10 @@ export function SalesList({
 }) {
   return (
     <section aria-labelledby="list-heading" className="text-sm">
-      <h2 id="list-heading" className="font-semibold text-ink">
+      <h2
+        id="list-heading"
+        className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted"
+      >
         Sales in view
       </h2>
       <div aria-live="polite" className="mt-1 text-muted">
@@ -37,7 +40,7 @@ export function SalesList({
             <li key={item.id}>
               <button
                 type="button"
-                className="w-full py-2 text-left hover:bg-surface-2"
+                className="-mx-2 w-[calc(100%+1rem)] rounded-[10px] px-2 py-2 text-left hover:bg-surface-2"
                 onMouseEnter={() => onFocusItem(item.id)}
                 onFocus={() => onFocusItem(item.id)}
                 onBlur={() => onFocusItem(null)}
