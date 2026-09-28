@@ -32,4 +32,22 @@ describe("SalesList", () => {
     fireEvent.click(first);
     expect(onOpenItem).toHaveBeenCalledWith(item.id);
   });
+
+  it("marks the sale selected on the map", () => {
+    const [, second] = list.items;
+    if (!second) throw new Error("fixture has too few items");
+    render(
+      <SalesList
+        state={{ status: "ok", data: list as PropertyList }}
+        selectedId={second.id}
+        onFocusItem={() => {}}
+        onOpenItem={() => {}}
+      />,
+    );
+    const current = screen
+      .getAllByRole("button")
+      .filter((b) => b.getAttribute("aria-current") === "true");
+    expect(current).toHaveLength(1);
+    expect(current[0]).toHaveTextContent(second.address);
+  });
 });

@@ -3,148 +3,49 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import type {
-  ExpressionSpecification,
   Map as MapLibreMap,
-  MapLayerMouseEvent,
+  MapGeoJSONFeature,
+  MapMouseEvent,
   VectorTileSource,
 } from "maplibre-gl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api, ApiError, STATIC_PREVIEW, type PropertyList } from "@/lib/api/client";
 import { DEFAULT_FILTERS, type Filters, filtersToParams, parseFilters } from "@/lib/filters";
-import { bandExpression, SUPPRESSED_COLOR } from "@/lib/price-bands";
 
 import { basemapStyle, IRELAND_BOUNDS, IRELAND_CENTER } from "./basemap";
+import { placeCard } from "./card-position";
 import { FilterPanel } from "./filter-panel";
 import { type CardContent, HoverCard } from "./hover-card";
+import {
+  addDataLayers,
+  distinctSales,
+  INTERACTIVE_LAYERS,
+  POINT_ZOOM,
+  type SalePoint,
+  type Selection,
+  setLayerVisibility,
+  showSelection,
+  tileUrl,
+} from "./layers";
 import { Legend } from "./legend";
 import { SalesList } from "./sales-list";
 
-const TILES = "/api/v1/tiles";
-// Points are drawn from z14 (migration 0004); the list needs a box the API accepts.
-const POINT_ZOOM = 14;
 const LIST_ZOOM = 12;
 const HOVER_DELAY_MS = 150;
+// Pixels round the pointer that count as on a marker: small dots stay easy to hit.
+const HOVER_SLOP = 3;
+const CLICK_SLOP = 6;
 // The API's answer for a box too large to list (/api/v1/properties).
 const ZOOM_IN = "Zoom in to list sales";
 
-type Card = { content: CardContent; x?: number; y?: number; pinned: boolean } | null;
+/** The card, and the point on the map it belongs to (it follows that point as the map moves). */
+type Card = { content: CardContent; anchor?: [number, number]; pinned: boolean } | null;
 export type ListState =
   | { status: "zoom" }
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ok"; data: PropertyList };
-
-/** `v` is the data version: Martin caches tiles by URL, so a new monthly run gets new URLs. */
-function tileUrl(source: "sales" | "price-hex", query: URLSearchParams, version: string): string {
-  const q = new URLSearchParams(query);
-  if (version) q.set("v", version);
-  const qs = q.toString();
-  return `${window.location.origin}${TILES}/${source}/{z}/{x}/{y}${qs ? `?${qs}` : ""}`;
-}
-
-function addDataLayers(map: MapLibreMap, filters: Filters, version: string) {
-  const price = (p: string) => bandExpression(p) as ExpressionSpecification;
-  map.addSource("sales", {
-    type: "vector",
-    tiles: [tileUrl("sales", filtersToParams(filters), version)],
-    minzoom: 5,
-    maxzoom: 16,
-    promoteId: { sales: "id" },
-    attribution: "Property Price Register © PSRA",
-  });
-  map.addSource("price-hex", {
-    type: "vector",
-    tiles: [tileUrl("price-hex", new URLSearchParams(), version)],
-    minzoom: 5,
-    maxzoom: 14,
-  });
-  map.addLayer({
-    id: "hexes",
-    type: "fill",
-    source: "price-hex",
-    "source-layer": "hexes",
-    layout: { visibility: "none" },
-    paint: {
-      "fill-color": [
-        "case",
-        ["get", "suppressed"],
-        SUPPRESSED_COLOR,
-        price("median"),
-      ] as ExpressionSpecification,
-      "fill-opacity": ["case", ["get", "suppressed"], 0.3, 0.65],
-      "fill-outline-color": "#ffffff",
-    },
-  });
-  map.addLayer({
-    id: "cells",
-    type: "circle",
-    source: "sales",
-    "source-layer": "cells",
-    maxzoom: POINT_ZOOM,
-    paint: {
-      "circle-color": price("median"),
-      "circle-opacity": 0.85,
-      // Sized by count, small enough that neighbouring cells stay apart at the national view.
-      "circle-radius": [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        5,
-        ["interpolate", ["linear"], ["ln", ["get", "n"]], 0, 1.5, 8, 5],
-        13,
-        ["interpolate", ["linear"], ["ln", ["get", "n"]], 0, 3, 6, 12],
-      ],
-      "circle-stroke-color": "#ffffff",
-      "circle-stroke-width": 0.5,
-    },
-  });
-  map.addLayer({
-    id: "stacks",
-    type: "circle",
-    source: "sales",
-    "source-layer": "stacks",
-    minzoom: POINT_ZOOM,
-    paint: {
-      "circle-color": "#ffffff",
-      "circle-radius": ["interpolate", ["linear"], ["ln", ["get", "n"]], 0, 8, 6, 18],
-      "circle-stroke-color": price("median"),
-      "circle-stroke-width": 3,
-    },
-  });
-  map.addLayer({
-    id: "stack-counts",
-    type: "symbol",
-    source: "sales",
-    "source-layer": "stacks",
-    minzoom: POINT_ZOOM,
-    layout: {
-      "text-field": ["to-string", ["get", "n"]],
-      "text-font": ["Noto Sans Medium"],
-      "text-size": 11,
-      "text-allow-overlap": true,
-    },
-    paint: { "text-color": "#16181d" },
-  });
-  map.addLayer({
-    id: "sales",
-    type: "circle",
-    source: "sales",
-    "source-layer": "sales",
-    minzoom: POINT_ZOOM,
-    paint: {
-      "circle-color": price("price"),
-      "circle-radius": ["case", ["boolean", ["feature-state", "highlight"], false], 9, 6],
-      "circle-stroke-color": [
-        "case",
-        ["boolean", ["feature-state", "highlight"], false],
-        "#16181d",
-        "#ffffff",
-      ],
-      "circle-stroke-width": 2,
-    },
-  });
-}
 
 function readView(): { center: [number, number]; zoom: number } {
   const p = new URLSearchParams(window.location.search);
@@ -175,6 +76,31 @@ function writeUrl(map: MapLibreMap, filters: Filters, hexes: boolean) {
   );
 }
 
+const pointOf = (f: MapGeoJSONFeature): [number, number] | undefined =>
+  f.geometry.type === "Point" ? (f.geometry.coordinates as [number, number]) : undefined;
+
+function groupCard(f: MapGeoJSONFeature): CardContent {
+  const p = f.properties;
+  return f.layer.id === "stacks"
+    ? { kind: "stack", n: Number(p.n), median: Number(p.median), confidence: String(p.confidence) }
+    : { kind: "cell", n: Number(p.n), median: Number(p.median) };
+}
+
+/** What is under the pointer: sales win over the groups drawn at the same zoom. */
+function hitsAt(map: MapLibreMap, e: MapMouseEvent, slop: number) {
+  const { x, y } = e.point;
+  const features = map.queryRenderedFeatures(
+    [
+      [x - slop, y - slop],
+      [x + slop, y + slop],
+    ],
+    { layers: INTERACTIVE_LAYERS },
+  );
+  const sales = distinctSales(features);
+  const group = features.find((f) => f.layer.id === "stacks" || f.layer.id === "cells");
+  return { sales, group };
+}
+
 export function MapExplorer() {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -182,61 +108,122 @@ export function MapExplorer() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [showHexes, setShowHexes] = useState(false);
   const [card, setCard] = useState<Card>(null);
+  const [anchorPx, setAnchorPx] = useState<{ x: number; y: number } | null>(null);
+  const [selected, setSelected] = useState<Selection | null>(null);
   const [list, setList] = useState<ListState>({ status: "zoom" });
   const [mapError, setMapError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const highlighted = useRef<string | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // What the pointer was last over, so the card only changes when that does.
+  const hoverKey = useRef("");
   const pinned = useRef(false);
+  const anchor = useRef<[number, number] | undefined>(undefined);
   const version = useRef("");
   const listRequest = useRef<AbortController | null>(null);
+  const spotRequest = useRef<AbortController | null>(null);
   // Map event handlers are registered once; they read the current filters from here.
   const state = useRef({ filters, showHexes });
   useEffect(() => {
     state.current = { filters, showHexes };
   }, [filters, showHexes]);
 
-  const openProperty = useCallback((id: string, x?: number, y?: number, pin = false) => {
-    pinned.current = pin || pinned.current;
-    setCard({ content: { kind: "property", id, summary: null }, x, y, pinned: pinned.current });
-    api
-      .summary(id)
-      .then((summary) =>
-        setCard((c) =>
-          c?.content.kind === "property" && c.content.id === id
-            ? { ...c, content: { kind: "property", id, summary } }
-            : c,
-        ),
-      )
-      .catch((e: unknown) =>
-        setCard((c) =>
-          c?.content.kind === "property" && c.content.id === id
-            ? {
-                ...c,
-                content: {
-                  kind: "property",
-                  id,
-                  summary: null,
-                  error:
-                    e instanceof ApiError && e.status === 404
-                      ? "No details for this sale."
-                      : "Details could not be loaded.",
-                },
-              }
-            : c,
-        ),
-      );
+  const showCard = useCallback((next: Card) => {
+    anchor.current = next?.anchor;
+    const map = mapRef.current;
+    setAnchorPx(map && next?.anchor ? map.project(next.anchor) : null);
+    setCard(next);
   }, []);
+
+  /** Opens a property's details; pinning it also selects it on the map and in the list. */
+  const openProperty = useCallback(
+    (id: string, at?: [number, number], pin = false, price?: number) => {
+      pinned.current = pin || pinned.current;
+      if (pin && at) setSelected({ id, lngLat: at, price });
+      showCard({
+        content: { kind: "property", id, summary: null },
+        anchor: at,
+        pinned: pinned.current,
+      });
+      const settle = (content: CardContent) =>
+        setCard((c) =>
+          c?.content.kind === "property" && c.content.id === id ? { ...c, content } : c,
+        );
+      api
+        .summary(id)
+        .then((summary) => settle({ kind: "property", id, summary }))
+        .catch((e: unknown) =>
+          settle({
+            kind: "property",
+            id,
+            summary: null,
+            error:
+              e instanceof ApiError && e.status === 404
+                ? "No details for this sale."
+                : "Details could not be loaded.",
+          }),
+        );
+    },
+    [showCard],
+  );
+
+  /** Several sales on one spot: pin a chooser and look up their addresses in the list API. */
+  const openSpot = useCallback(
+    (sales: SalePoint[]) => {
+      pinned.current = true;
+      setSelected(null);
+      showCard({
+        content: { kind: "spot", sales, addresses: null },
+        anchor: sales[0]?.lngLat,
+        pinned: true,
+      });
+      const lngs = sales.map((s) => s.lngLat[0]);
+      const lats = sales.map((s) => s.lngLat[1]);
+      const pad = 0.0003; // about 25 m: the dots overlap on screen, not always on the ground
+      const query = filtersToParams(state.current.filters);
+      query.set(
+        "bbox",
+        [
+          Math.min(...lngs) - pad,
+          Math.min(...lats) - pad,
+          Math.max(...lngs) + pad,
+          Math.max(...lats) + pad,
+        ]
+          .map((v) => v.toFixed(5))
+          .join(","),
+      );
+      query.set("pageSize", "100");
+      spotRequest.current?.abort();
+      const request = new AbortController();
+      spotRequest.current = request;
+      const settle = (addresses: Record<string, string>) =>
+        setCard((c) =>
+          c?.content.kind === "spot" && c.content.sales === sales
+            ? { ...c, content: { ...c.content, addresses } }
+            : c,
+        );
+      api
+        .list(query, { signal: request.signal })
+        .then((data) => settle(Object.fromEntries(data.items.map((i) => [i.id, i.address]))))
+        .catch(() => {
+          if (!request.signal.aborted) settle({});
+        });
+    },
+    [showCard],
+  );
 
   const closeCard = useCallback(() => {
     pinned.current = false;
-    setCard(null);
-  }, []);
+    hoverKey.current = "";
+    spotRequest.current?.abort();
+    setSelected(null);
+    showCard(null);
+  }, [showCard]);
 
   const highlight = useCallback((id: string | null) => {
     const map = mapRef.current;
-    if (!map || !map.getSource("sales")) return;
+    if (!map || !map.getSource("sales") || highlighted.current === id) return;
     if (highlighted.current) {
       map.setFeatureState(
         { source: "sales", sourceLayer: "sales", id: highlighted.current },
@@ -323,14 +310,14 @@ export function MapExplorer() {
       map.on("load", () => {
         if (!map) return;
         measure();
-        addDataLayers(map, initial, version.current);
-        if (hexesInitially) {
-          map.setLayoutProperty("hexes", "visibility", "visible");
-          for (const id of ["cells", "stacks", "stack-counts", "sales"])
-            map.setLayoutProperty(id, "visibility", "none");
-        }
+        addDataLayers(map, filtersToParams(initial), version.current);
+        setLayerVisibility(map, hexesInitially);
         setReady(true);
         refreshList();
+      });
+      // The card follows its point while the map pans and zooms.
+      map.on("move", () => {
+        if (map && anchor.current) setAnchorPx(map.project(anchor.current));
       });
       map.on("moveend", () => {
         if (!map) return;
@@ -338,62 +325,78 @@ export function MapExplorer() {
         refreshList();
       });
 
-      const hover = (e: MapLayerMouseEvent, show: () => void) => {
+      map.on("mousemove", (e) => {
         if (!map) return;
-        map.getCanvas().style.cursor = "pointer";
+        const { sales, group } = hitsAt(map, e, HOVER_SLOP);
+        map.getCanvas().style.cursor = sales.length || group ? "pointer" : "";
+        const key = sales.length
+          ? `sales:${sales.map((s) => s.id).join()}`
+          : group
+            ? `${group.layer.id}:${pointOf(group)?.join()}`
+            : "";
+        if (key === hoverKey.current) return;
+        hoverKey.current = key;
+        highlight(sales[0]?.id ?? null);
+        clearTimeout(hoverTimer.current);
         if (pinned.current) return;
+        if (!key) {
+          showCard(null);
+          return;
+        }
+        const [first] = sales;
+        hoverTimer.current = setTimeout(() => {
+          if (first && sales.length === 1) openProperty(first.id, first.lngLat);
+          else if (first)
+            showCard({
+              content: { kind: "spot", sales, addresses: null },
+              anchor: first.lngLat,
+              pinned: false,
+            });
+          else if (group)
+            showCard({ content: groupCard(group), anchor: pointOf(group), pinned: false });
+        }, HOVER_DELAY_MS);
+      });
+      map.on("mouseout", () => {
         clearTimeout(hoverTimer.current);
-        hoverTimer.current = setTimeout(show, HOVER_DELAY_MS);
-      };
-      const leave = () => {
+        hoverKey.current = "";
+        highlight(null);
+        if (!pinned.current) showCard(null);
+      });
+
+      map.on("click", (e) => {
         if (!map) return;
-        map.getCanvas().style.cursor = "";
         clearTimeout(hoverTimer.current);
-        if (!pinned.current) setCard(null);
-      };
-      const propertyAt = (e: MapLayerMouseEvent) => String(e.features?.[0]?.properties?.id ?? "");
-      map.on("mousemove", "sales", (e) => {
-        const id = propertyAt(e);
-        hover(e, () => openProperty(id, e.point.x, e.point.y));
-      });
-      map.on("click", "sales", (e) => {
-        clearTimeout(hoverTimer.current);
-        pinned.current = true;
-        openProperty(propertyAt(e), e.point.x, e.point.y, true);
-      });
-      const groupCard = (e: MapLayerMouseEvent, kind: "stack" | "cell"): CardContent => {
-        const p = e.features?.[0]?.properties ?? {};
-        return kind === "stack"
-          ? { kind, n: Number(p.n), median: Number(p.median), confidence: String(p.confidence) }
-          : { kind, n: Number(p.n), median: Number(p.median) };
-      };
-      for (const [layer, kind] of [
-        ["stacks", "stack"],
-        ["cells", "cell"],
-      ] as const) {
-        map.on("mousemove", layer, (e) =>
-          hover(e, () =>
-            setCard({ content: groupCard(e, kind), x: e.point.x, y: e.point.y, pinned: false }),
-          ),
-        );
-        map.on("click", layer, (e) => {
-          clearTimeout(hoverTimer.current);
+        const { sales, group } = hitsAt(map, e, CLICK_SLOP);
+        const [sale] = sales;
+        if (sale && sales.length === 1) {
           pinned.current = true;
-          setCard({ content: groupCard(e, kind), x: e.point.x, y: e.point.y, pinned: true });
-        });
-        map.on("mouseleave", layer, leave);
-      }
-      map.on("mouseleave", "sales", leave);
+          openProperty(sale.id, sale.lngLat, true, sale.price);
+        } else if (sales.length > 1) {
+          openSpot(sales);
+        } else if (group?.layer.id === "cells") {
+          // A group of sales zoomed out: go to it, towards where its sales are drawn one by one.
+          closeCard();
+          const at = pointOf(group);
+          if (at) map.easeTo({ center: at, zoom: Math.min(map.getZoom() + 3, POINT_ZOOM + 0.5) });
+        } else if (group) {
+          pinned.current = true;
+          setSelected(null);
+          showCard({ content: groupCard(group), anchor: pointOf(group), pinned: true });
+        } else {
+          closeCard();
+        }
+      });
     })().catch(() => setMapError("The map could not be started in this browser."));
     return () => {
       cancelled = true;
       clearTimeout(hoverTimer.current);
       listRequest.current?.abort();
+      spotRequest.current?.abort();
       map?.remove();
       mapRef.current = null;
       import("maplibre-gl").then((m) => m.removeProtocol("pmtiles")).catch(() => {});
     };
-  }, [openProperty, refreshList]);
+  }, [openProperty, openSpot, closeCard, highlight, showCard, refreshList]);
 
   // Filters and layer choice: new tile URLs, the list, and the address bar.
   useEffect(() => {
@@ -402,13 +405,15 @@ export function MapExplorer() {
     (map.getSource("sales") as VectorTileSource).setTiles([
       tileUrl("sales", filtersToParams(filters), version.current),
     ]);
-    map.setLayoutProperty("hexes", "visibility", showHexes ? "visible" : "none");
-    for (const id of ["cells", "stacks", "stack-counts", "sales"]) {
-      map.setLayoutProperty(id, "visibility", showHexes ? "none" : "visible");
-    }
+    setLayerVisibility(map, showHexes);
     writeUrl(map, filters, showHexes);
     refreshList();
   }, [filters, showHexes, ready, refreshList]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && ready) showSelection(map, selected);
+  }, [selected, ready]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeCard();
@@ -444,16 +449,7 @@ export function MapExplorer() {
     );
   }
 
-  // Next to the pointer, flipped to its other side near the map's right and bottom edges.
-  const CARD_W = 300;
-  const CARD_H = 340;
-  const cardPosition =
-    card?.x !== undefined && card.y !== undefined
-      ? {
-          left: card.x + 12 + CARD_W > size.w ? Math.max(card.x - 12 - CARD_W, 8) : card.x + 12,
-          top: Math.max(Math.min(card.y - 20, size.h - CARD_H), 8),
-        }
-      : undefined;
+  const cardPosition = placeCard(anchorPx, size);
 
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] min-h-[32rem] flex-col md:flex-row md:gap-3 md:p-3">
@@ -468,13 +464,20 @@ export function MapExplorer() {
           <Legend showHexes={showHexes} />
           <SalesList
             state={list}
+            selectedId={selected?.id}
             onFocusItem={(id) => highlight(id)}
             onOpenItem={(id) => {
               const item =
                 list.status === "ok" ? list.data.items.find((i) => i.id === id) : undefined;
+              const map = mapRef.current;
+              const at: [number, number] | undefined = item ? [item.lng, item.lat] : undefined;
               highlight(id);
-              if (item) mapRef.current?.easeTo({ center: [item.lng, item.lat] });
-              openProperty(id, undefined, undefined, true);
+              if (item && map) {
+                // Zoom in far enough to see the sale on its own, not inside a group.
+                map.easeTo({ center: at, zoom: Math.max(map.getZoom(), POINT_ZOOM + 1) });
+              }
+              pinned.current = true;
+              openProperty(id, at, true, item?.latestSale.priceEur);
             }}
           />
         </div>
@@ -510,7 +513,15 @@ export function MapExplorer() {
             aria-label="Sale details"
             aria-live="polite"
           >
-            <HoverCard content={card.content} onClose={card.pinned ? closeCard : undefined} />
+            <HoverCard
+              content={card.content}
+              onClose={card.pinned ? closeCard : undefined}
+              onChoose={
+                card.pinned
+                  ? (sale) => openProperty(sale.id, sale.lngLat, true, sale.price)
+                  : undefined
+              }
+            />
           </div>
         ) : null}
       </div>

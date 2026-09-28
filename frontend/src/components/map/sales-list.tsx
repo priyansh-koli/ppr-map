@@ -1,20 +1,31 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
 import { CONFIDENCE_LABEL, formatDate, formatEur } from "@/lib/format";
 
 import type { ListState } from "./map-explorer";
 
 /**
  * The list view synced with the map: the same sales, in text, reachable by keyboard.
- * Focusing or hovering an item highlights its marker; Enter opens its details.
+ * Focusing or hovering an item highlights its marker; Enter opens its details. The sale
+ * selected on the map is marked here too, and scrolled into view.
  */
 export function SalesList({
   state,
+  selectedId,
   onFocusItem,
   onOpenItem,
 }: {
   state: ListState;
+  selectedId?: string | null;
   onFocusItem: (id: string | null) => void;
   onOpenItem: (id: string) => void;
 }) {
+  const selectedRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView?.({ block: "nearest" });
+  }, [selectedId, state]);
   return (
     <section aria-labelledby="list-heading" className="text-sm">
       <h2
@@ -40,7 +51,9 @@ export function SalesList({
             <li key={item.id}>
               <button
                 type="button"
-                className="-mx-2 w-[calc(100%+1rem)] rounded-[10px] px-2 py-2 text-left hover:bg-surface-2"
+                ref={item.id === selectedId ? selectedRef : undefined}
+                aria-current={item.id === selectedId ? "true" : undefined}
+                className="-mx-2 w-[calc(100%+1rem)] rounded-[10px] px-2 py-2 text-left hover:bg-surface-2 aria-[current=true]:bg-surface-2 aria-[current=true]:shadow-[inset_3px_0_0_var(--color-ink)]"
                 onMouseEnter={() => onFocusItem(item.id)}
                 onFocus={() => onFocusItem(item.id)}
                 onBlur={() => onFocusItem(null)}

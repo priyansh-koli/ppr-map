@@ -1,9 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import type { PropertySummary } from "@/lib/api/client";
 import summary from "@/test-fixtures/summary-south-circular-road.json";
 
 import { HoverCard } from "./hover-card";
+import type { SalePoint } from "./layers";
+
+const SPOT: SalePoint[] = [
+  { id: "a", price: 410000, date: 20260301, lngLat: [-6.27, 53.33] },
+  { id: "b", price: 385000, date: 20250110, lngLat: [-6.27, 53.33] },
+];
 
 describe("HoverCard", () => {
   it("shows a real hover summary with its sources' caveats", () => {
@@ -36,5 +42,40 @@ describe("HoverCard", () => {
     expect(screen.queryByRole("button", { name: "Close details" })).toBeNull();
     rerender(<HoverCard content={{ kind: "cell", n: 3, median: 250000 }} onClose={() => {}} />);
     expect(screen.getByRole("button", { name: "Close details" })).toBeInTheDocument();
+  });
+
+  it("says a zoomed-out group zooms in when clicked", () => {
+    render(<HoverCard content={{ kind: "cell", n: 24, median: 310000 }} />);
+    expect(screen.getByText("24 sales here")).toBeInTheDocument();
+    expect(screen.getByText(/Click to zoom in/)).toBeInTheDocument();
+  });
+
+  it("counts sales on one spot while hovering, and lists them to choose from once pinned", () => {
+    const onChoose = vi.fn();
+    const { rerender } = render(
+      <HoverCard content={{ kind: "spot", sales: SPOT, addresses: null }} />,
+    );
+    expect(screen.getByText("2 sales at this spot")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /€410,000/ })).toBeNull();
+
+    rerender(
+      <HoverCard
+        content={{ kind: "spot", sales: SPOT, addresses: null }}
+        onClose={() => {}}
+        onChoose={onChoose}
+      />,
+    );
+    expect(screen.getAllByText("Loading address…")).toHaveLength(2);
+
+    rerender(
+      <HoverCard
+        content={{ kind: "spot", sales: SPOT, addresses: { a: "4 Synge Street, Dublin 8" } }}
+        onClose={() => {}}
+        onChoose={onChoose}
+      />,
+    );
+    expect(screen.getByText("Address not listed")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /4 Synge Street/ }));
+    expect(onChoose).toHaveBeenCalledWith(SPOT[0]);
   });
 });

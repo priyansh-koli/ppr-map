@@ -55,9 +55,19 @@ export function Legend({ showHexes }: { showHexes: boolean }) {
           <li className="flex items-center gap-2">
             <span
               aria-hidden
-              className="inline-block h-3 w-3 rounded-full bg-[#2a78d6] opacity-70"
+              className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#2a78d6] text-[9px] font-medium text-white ring-1 ring-white"
+            >
+              24
+            </span>
+            Zoomed out: sales grouped, sized by count and coloured by their median. Click one to
+            zoom in.
+          </li>
+          <li className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="inline-block h-3 w-3 shrink-0 rounded-full border-[3px] border-ink bg-[#1c5cab] shadow-[0_0_0_4px_rgb(22_24_29/0.16)]"
             />
-            Zoomed out: sales grouped, sized by count
+            The sale you selected
           </li>
         </ul>
       )}

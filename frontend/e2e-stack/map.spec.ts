@@ -65,3 +65,35 @@ test("filters change the list and the address bar", async ({ page }) => {
     .allTextContents();
   for (const t of texts) expect(t).toContain("new");
 });
+
+test("a sale chosen in the list is selected on the map and in the list", async ({ page }) => {
+  await page.goto("./map?lat=53.3321&lng=-6.2711&z=16");
+  const first = page.locator("section[aria-labelledby=list-heading] li button").first();
+  await expect(first).toBeVisible({ timeout: 15_000 });
+  const address = (await first.locator("span").first().textContent()) ?? "";
+  await first.click();
+  const current = page.locator("section[aria-labelledby=list-heading] [aria-current=true]");
+  await expect(current).toHaveCount(1);
+  await expect(current).toContainText(address);
+  await page.keyboard.press("Escape");
+  await expect(current).toHaveCount(0);
+});
+
+test("clicking empty map closes a pinned sale", async ({ page }) => {
+  // Strand Road, Sandymount: houses to the west, the strand and the sea to the east.
+  await page.goto("./map?lat=53.3262&lng=-6.2135&z=16");
+  const first = page.locator("section[aria-labelledby=list-heading] li button").first();
+  await expect(first).toBeVisible({ timeout: 15_000 });
+  await first.click();
+  const dialog = page.getByRole("dialog", { name: "Sale details" });
+  await expect(dialog).toBeVisible();
+  const map = page.getByRole("region", { name: "Map of property sales" });
+  const box = await map.boundingBox();
+  if (!box) throw new Error("the map has no size");
+  await page.waitForTimeout(1000); // the map eases to the chosen sale first
+  await map.click({ position: { x: box.width - 30, y: box.height / 2 } });
+  await expect(dialog).toBeHidden();
+  await expect(
+    page.locator("section[aria-labelledby=list-heading] [aria-current=true]"),
+  ).toHaveCount(0);
+});

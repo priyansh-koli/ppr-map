@@ -399,3 +399,19 @@ Everything below is **Proposed** until the Phase 0 review.
     - On phones the navigation folds into a menu sheet.
   - **The map stays on the light basemap in both themes:** the price ramp was validated against its land colour.
 - **Status:** Accepted (implementation detail; awaiting the owner's review with Phase 4).
+
+## D-044 Map legibility and selection
+
+- **Context:** the owner found the zoomed-out map too crowded and the place names unreadable. Below z14, 64 cells per tile side put a dot every 8 px, so the map was an even carpet of overlapping dots. The sales layers were also drawn above the basemap's labels. Selecting a sale left no mark on the map. The pinned card stayed where the click was while the map moved. Sales drawn on one street point could not be told apart, and a click on a group did nothing useful.
+- **Choice:**
+  - **Coarser groups (migration 0006):** 16 cells per tile side (32 px), each drawn at the mean position of its sales rather than at the cell's centre. Groups now sit on the towns and streets they stand for. Each sale is still counted in one cell of one tile, and a test checks that every group lies inside its cell.
+  - **Groups as bubbles:** they are sized by count on one log scale at every zoom, and coloured by their median in the D-038 bands. Counts of 10 or more are printed on the bubble (1.2k, 12k): in ink on the lightest band and in white on the others, each pair at least 4.5:1.
+  - **Names above the data:** the sales layers are inserted beneath the basemap's first label layer. Town and neighbourhood names get a 2 px white halo and darker text; street names get a firmer halo. A count that would collide with a name is left out, so the name wins.
+  - **Selection:**
+    - Clicking a group zooms in towards it. Hovering it still shows its count and median.
+    - Clicking a sale selects it. The selection is drawn above everything as a price-coloured dot with an ink ring and a soft halo, from its own GeoJSON source, so it stays visible at every zoom.
+    - The card follows its sale as the map moves. It docks in the corner when the sale leaves the view, or on phones.
+    - Clicking empty map or pressing Escape clears the selection.
+    - The selected sale is marked (`aria-current`) and scrolled into view in the list. Choosing a sale in the list zooms in far enough to see it on its own.
+  - **Sales on one spot:** when several sales overlap under the pointer, the card lists them to choose from. Their addresses come from the list endpoint for a small box round the spot, so it is one request to our own API, never a third party.
+- **Status:** Accepted (implementation detail; revises the cell size in D-038).

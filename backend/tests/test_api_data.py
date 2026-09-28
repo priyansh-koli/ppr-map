@@ -139,6 +139,22 @@ def test_each_sale_is_counted_in_one_cell_of_one_tile(db: sa.Engine) -> None:
     assert parent == children > 0
 
 
+def test_cells_sit_on_their_sales_inside_a_coarse_grid(db: sa.Engine) -> None:
+    """16 cells per tile side (32 px), each drawn at its sales' mean position, inside the cell."""
+    with db.connect() as conn:
+        sql = sa.text(
+            "SELECT c.i, c.j, c.cx, c.cy, ST_XMin(e) AS x0, ST_YMin(e) AS y0,"
+            " (ST_XMax(e) - ST_XMin(e)) / 16 AS cell"
+            " FROM tile_sales_cells(10, 492, 334, '{}') c, ST_TileEnvelope(10, 492, 334) e"
+        )
+        cells = conn.execute(sql).all()
+    assert cells
+    for c in cells:
+        assert 0 <= c.i < 16 and 0 <= c.j < 16
+        assert c.x0 + c.i * c.cell <= c.cx <= c.x0 + (c.i + 1) * c.cell
+        assert c.y0 + c.j * c.cell <= c.cy <= c.y0 + (c.j + 1) * c.cell
+
+
 def test_impossible_dates_fall_back_to_the_default(db: sa.Engine) -> None:
     with db.connect() as conn:
 
