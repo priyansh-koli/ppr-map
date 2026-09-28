@@ -97,3 +97,20 @@ test("clicking empty map closes a pinned sale", async ({ page }) => {
     page.locator("section[aria-labelledby=list-heading] [aria-current=true]"),
   ).toHaveCount(0);
 });
+
+test("the 3D view tilts the map over its terrain and lays it flat again", async ({ page }) => {
+  const terrain = page.waitForResponse(
+    (r) => r.url().includes("/basemap/terrain.pmtiles") && r.status() === 206,
+  );
+  await page.goto("./map?lat=53.3455&lng=-6.238&z=16");
+  await terrain; // the relief is shaded in the flat view too
+  const button = page.getByRole("button", { name: "3D view" });
+  await expect(button).toBeEnabled({ timeout: 15_000 });
+  await expect(button).toHaveAttribute("aria-pressed", "false");
+  await button.click();
+  await expect(button).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/pitch=60/);
+  await button.click();
+  await expect(button).toHaveAttribute("aria-pressed", "false");
+  await expect(page).not.toHaveURL(/pitch=/);
+});

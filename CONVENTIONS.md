@@ -66,7 +66,8 @@ Run `make help` for the full list.
 | `make enrich` | reload GTFS stops, OSM amenities and schools, Pobal deprivation; recompute vicinity values |
 | `make aggregate` | rebuild `area_stats`, `price_hex` and `property_summary` |
 | `make pipeline` | the monthly run: ingest, geocode, enrich, aggregate |
-| `make basemap` | download the Ireland basemap, fonts and sprites into `data/basemap` (served at `/basemap/`) |
+| `make basemap` | download the Ireland basemap, terrain, fonts and sprites into `data/basemap` (served at `/basemap/`) |
+| `make terrain` | only the elevation tiles for hill shading and the 3D view (55 MB; the map stays flat without them) |
 | `make api-types` | regenerate `frontend/openapi.json` and the TypeScript API types after changing an endpoint |
 | `make e2e-stack` | Playwright against the running stack with real data (accounts read their emails from Mailpit) |
 | `python -m app.cli purge-deleted` | daily housekeeping: accounts closed over 30 days ago, expired sessions and email links, views over 12 months old (run daily in production) |

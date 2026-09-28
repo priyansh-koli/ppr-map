@@ -71,6 +71,11 @@ export function Legend({ showHexes }: { showHexes: boolean }) {
           </li>
         </ul>
       )}
+      <p className="text-xs text-muted">
+        Hills are shaded from the Copernicus elevation model; tilt the map (3D view) to raise them.
+        Buildings stand at their height only where OpenStreetMap records one; the rest are flat
+        outlines.
+      </p>
     </section>
   );
 }

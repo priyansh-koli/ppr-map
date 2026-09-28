@@ -24,7 +24,7 @@ To fill the map with real data (first run: about 2 hours, mostly geocoding):
 .venv/bin/ppr ingest tailte_boundaries   # counties, EDs, Small Areas, townlands, towns
 make geocoder     # self-hosted Nominatim (first start imports Ireland; Docker memory >= 12 GB)
 make pipeline     # PPR ingest, geocode, enrich, aggregate
-make basemap      # the Ireland basemap, fonts and sprites (~600 MB)
+make basemap      # the Ireland basemap, terrain, fonts and sprites (~650 MB)
 ```
 
 `make test` runs the unit tests; `make test-db` adds the live-database checks.

@@ -13,7 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, STATIC_PREVIEW, type PropertyList } from "@/lib/api/client";
 import { DEFAULT_FILTERS, type Filters, filtersToParams, parseFilters } from "@/lib/filters";
 
-import { basemapStyle, IRELAND_BOUNDS, IRELAND_CENTER } from "./basemap";
+import { basemapStyle, IRELAND_BOUNDS, IRELAND_CENTER, TERRAIN } from "./basemap";
 import { placeCard } from "./card-position";
 import { FilterPanel } from "./filter-panel";
 import { type CardContent, HoverCard } from "./hover-card";
@@ -32,6 +32,8 @@ import { Legend } from "./legend";
 import { SalesList } from "./sales-list";
 
 const LIST_ZOOM = 12;
+// The 3D view's tilt; above 1° the map counts as tilted and the terrain is raised.
+const TILT = 60;
 const HOVER_DELAY_MS = 150;
 // Pixels round the pointer that count as on a marker: small dots stay easy to hit.
 const HOVER_SLOP = 3;
@@ -47,15 +49,24 @@ export type ListState =
   | { status: "error"; message: string }
   | { status: "ok"; data: PropertyList };
 
-function readView(): { center: [number, number]; zoom: number } {
+type View = { center: [number, number]; zoom: number; pitch: number; bearing: number };
+
+function readView(): View {
   const p = new URLSearchParams(window.location.search);
+  const num = (key: string, fallback: number) => {
+    const v = Number(p.get(key));
+    return p.has(key) && Number.isFinite(v) ? v : fallback;
+  };
+  const camera = {
+    pitch: Math.min(Math.max(num("pitch", 0), 0), TILT),
+    bearing: num("bearing", 0),
+  };
   const lat = Number(p.get("lat"));
   const lng = Number(p.get("lng"));
-  const z = Number(p.get("z"));
   if (p.has("lat") && p.has("lng") && Number.isFinite(lat) && Number.isFinite(lng)) {
-    return { center: [lng, lat], zoom: Number.isFinite(z) && p.has("z") ? z : 13 };
+    return { center: [lng, lat], zoom: num("z", 13), ...camera };
   }
-  return { center: IRELAND_CENTER, zoom: 6.3 };
+  return { center: IRELAND_CENTER, zoom: 6.3, ...camera };
 }
 
 function writeUrl(map: MapLibreMap, filters: Filters, hexes: boolean) {
@@ -64,6 +75,8 @@ function writeUrl(map: MapLibreMap, filters: Filters, hexes: boolean) {
   p.set("lat", c.lat.toFixed(5));
   p.set("lng", c.lng.toFixed(5));
   p.set("z", map.getZoom().toFixed(2));
+  if (map.getPitch() >= 1) p.set("pitch", map.getPitch().toFixed(0));
+  if (Math.abs(map.getBearing()) >= 1) p.set("bearing", map.getBearing().toFixed(0));
   if (hexes) p.set("layer", "hexes");
   // Keep Next's own history state: its patched replaceState then only changes the address and
   // does not dispatch a router update. That update would replace a navigation in flight, so a
@@ -113,6 +126,7 @@ export function MapExplorer() {
   const [list, setList] = useState<ListState>({ status: "zoom" });
   const [mapError, setMapError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
+  const [tilted, setTilted] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const highlighted = useRef<string | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -285,22 +299,52 @@ export function MapExplorer() {
       maplibregl.setWorkerUrl(`/maplibre/${maplibregl.getVersion()}/maplibre-gl-worker.mjs`);
       const protocol = new Protocol();
       maplibregl.addProtocol("pmtiles", protocol.tile);
-      version.current = (await api.meta().catch(() => null))?.dataVersion ?? "";
+      const origin = window.location.origin;
+      const [meta, hasTerrain] = await Promise.all([
+        api.meta().catch(() => null),
+        // The elevation extract is optional (`make basemap`); without it the map stays flat.
+        fetch(`${origin}/basemap/terrain.pmtiles`, { method: "HEAD" })
+          .then((r) => r.ok)
+          .catch(() => false),
+      ]);
+      version.current = meta?.dataVersion ?? "";
       if (cancelled || !container.current) return;
       const view = readView();
       map = new maplibregl.Map({
         container: container.current,
-        style: basemapStyle(window.location.origin),
+        style: basemapStyle(origin, { terrain: hasTerrain }),
         center: view.center,
         zoom: view.zoom,
+        pitch: view.pitch,
+        bearing: view.bearing,
+        maxPitch: TILT,
         maxBounds: IRELAND_BOUNDS,
         attributionControl: { compact: true },
       });
       mapRef.current = map;
-      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+      map.addControl(
+        new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }),
+        "top-right",
+      );
+      // Tilting (the 3D button, right-drag or two fingers) raises the terrain; it is laid flat
+      // again once the map is back to looking straight down.
+      let terrainOn = false;
+      const syncTilt = (settled: boolean) => {
+        if (!map) return;
+        const t = map.getPitch() >= 1;
+        if (t === terrainOn || (!t && !settled)) return;
+        terrainOn = t;
+        setTilted(t);
+        if (hasTerrain) map.setTerrain(t ? TERRAIN : null);
+      };
+      map.on("pitch", () => syncTilt(false));
+      map.on("pitchend", () => syncTilt(true));
       map.on("error", (e) => {
         if (String(e.error?.message ?? "").includes("/api/v1/tiles")) {
           setMapError("Sales could not be loaded. Is the data server running?");
+        } else {
+          // Anything else (an invalid style, a missing basemap file) would otherwise be silent.
+          console.error(e.error);
         }
       });
       const measure = () => {
@@ -312,6 +356,7 @@ export function MapExplorer() {
         measure();
         addDataLayers(map, filtersToParams(initial), version.current);
         setLayerVisibility(map, hexesInitially);
+        syncTilt(true);
         setReady(true);
         refreshList();
       });
@@ -421,6 +466,13 @@ export function MapExplorer() {
     return () => window.removeEventListener("keydown", onKey);
   }, [closeCard]);
 
+  const toggleTilt = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (tilted) map.easeTo({ pitch: 0, bearing: 0 });
+    else map.easeTo({ pitch: TILT, bearing: map.getBearing() || -20 });
+  };
+
   const locate = () => {
     if (!navigator.geolocation) {
       setMapError("This browser cannot share your location.");
@@ -489,14 +541,25 @@ export function MapExplorer() {
           aria-label="Map of property sales"
           role="region"
         />
-        <button
-          type="button"
-          onClick={locate}
-          disabled={locating}
-          className="btn btn-secondary btn-sm absolute left-3 top-3 shadow-window"
-        >
-          {locating ? "Finding you…" : "Near me"}
-        </button>
+        <div className="absolute left-3 top-3 flex gap-2">
+          <button
+            type="button"
+            onClick={locate}
+            disabled={locating}
+            className="btn btn-secondary btn-sm shadow-window"
+          >
+            {locating ? "Finding you…" : "Near me"}
+          </button>
+          <button
+            type="button"
+            onClick={toggleTilt}
+            disabled={!ready}
+            aria-pressed={tilted}
+            className="btn btn-secondary btn-sm shadow-window"
+          >
+            3D view
+          </button>
+        </div>
         {mapError ? (
           <p
             role="alert"

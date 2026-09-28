@@ -415,3 +415,26 @@ Everything below is **Proposed** until the Phase 0 review.
     - The selected sale is marked (`aria-current`) and scrolled into view in the list. Choosing a sale in the list zooms in far enough to see it on its own.
   - **Sales on one spot:** when several sales overlap under the pointer, the card lists them to choose from. Their addresses come from the list endpoint for a small box round the spot, so it is one request to our own API, never a third party.
 - **Status:** Accepted (implementation detail; revises the cell size in D-038).
+
+## D-045 Relief, buildings and a 3D view
+
+- **Context:** the owner found the zoomed-in map flat: no terrain, roads that barely showed and buildings that could hardly be seen. The Protomaps light flavour draws road casings in #e0e0e0 on land of #e2dfda, and buildings at half opacity in #ccc. The basemap carries no elevation.
+- **Options for relief:**
+  - (a) Hosted terrain tiles (MapTiler, Mapbox): these need a key and call a third party whenever the map is viewed (D-021). Rejected.
+  - (b) AWS "Terrarium" PNG tiles packed ourselves: public, but unmaintained, and would need our own packing step.
+  - (c) Mapterhorn's open terrain PMTiles, extracted for Ireland with the `pmtiles` CLI we already use (D-039).
+- **Choice:** (c).
+  - `make terrain` extracts Ireland to z11 (55 MB; about 23 m a pixel here, finer than the source), and Caddy serves it from `/basemap/`. Over Ireland the data is Copernicus DEM GLO-30, which is free and open with credit to DLR e.V. and Airbus Defence and Space, provided under COPERNICUS by the EU and ESA. The credit appears in the map's attribution. There is no sign-up and no view-time third-party call.
+  - **Hill shading:** always on, beneath the roads, fading out at street zooms.
+  - **3D view:**
+    - A "3D view" button tilts the map to 60°. So does right-drag or a two-finger drag.
+    - While the map is tilted the terrain is raised (×1.5, since Ireland's hills are low). It is laid flat again when the map looks straight down.
+    - The compass shows the bearing and tilt. Tilt and bearing are kept in the URL.
+    - A pale sky and fog fill the horizon.
+    - The map works without the terrain file: it stays flat, with buildings and no relief.
+  - **Buildings:**
+    - Every footprint is drawn in a warmer grey with an edge, so a terrace reads as separate houses.
+    - From z14, buildings are raised to their height **only where OpenStreetMap records one**. In sample tiles that is 8–35% of buildings, most of them in city centres. The rest stay flat: a guessed height could be read as a fact about a property ("Never fake data"). The key says so.
+  - **Roads:** casings in #c9c2b5, so roads have edges. The land colour is unchanged, because the price ramp was validated against it (D-038).
+  - **Tests:** the style is checked with MapLibre's own validator, with and without terrain. An invalid style (a stray `attribution: undefined`) had left the map blank with no error, so map errors other than tile errors are now logged.
+- **Status:** Accepted (implementation detail).

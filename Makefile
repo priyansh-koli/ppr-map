@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr geocode enrich aggregate pipeline osm-extract basemap geocoder test test-db lint format typecheck api-types e2e e2e-stack e2e-pages ci
+.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr geocode enrich aggregate pipeline osm-extract basemap terrain geocoder test test-db lint format typecheck api-types e2e e2e-stack e2e-pages ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -98,6 +98,9 @@ PMTILES_VERSION := 1.31.2
 BASEMAP_BUILD := 20260926
 BASEMAP_ASSETS_REF := 028c18f713baecad011301ff7a69acc39bcc2ae7
 BASEMAP_BBOX := -10.8,51.2,-5.3,55.5
+# Terrain (D-045): Mapterhorn's terrarium tiles (Copernicus GLO-30 over Ireland). z11 is
+# about 23 m a pixel here, already finer than the 30 m source, and 55 MB.
+TERRAIN_URL := https://download.mapterhorn.com/planet.pmtiles
 PMTILES := .tools/pmtiles
 
 # Release files: go-pmtiles-<v>_Darwin_<arch>.zip, but go-pmtiles_<v>_Linux_<arch>.tar.gz.
@@ -112,7 +115,7 @@ $(PMTILES):
 	  *) echo "make basemap supports macOS and Linux"; exit 1 ;; \
 	esac
 
-basemap: $(PMTILES) ## Download the Ireland basemap (~300 MB) and its fonts and sprites
+basemap: $(PMTILES) terrain ## Download the Ireland basemap (~600 MB), terrain, fonts and sprites
 	mkdir -p data/basemap
 	$(PMTILES) extract https://build.protomaps.com/$(BASEMAP_BUILD).pmtiles data/basemap/ireland.pmtiles --bbox=$(BASEMAP_BBOX) --maxzoom=15
 	curl -sSL --fail -o data/basemap/assets.tar.gz https://github.com/protomaps/basemaps-assets/archive/$(BASEMAP_ASSETS_REF).tar.gz
@@ -124,6 +127,10 @@ basemap: $(PMTILES) ## Download the Ireland basemap (~300 MB) and its fonts and 
 	  "basemaps-assets-$(BASEMAP_ASSETS_REF)/fonts/OFL.txt" \
 	  "basemaps-assets-$(BASEMAP_ASSETS_REF)/sprites/v4"
 	rm data/basemap/assets.tar.gz
+
+terrain: $(PMTILES) ## Download Ireland's elevation tiles for hill shading and the 3D view (~55 MB)
+	mkdir -p data/basemap
+	$(PMTILES) extract $(TERRAIN_URL) data/basemap/terrain.pmtiles --bbox=$(BASEMAP_BBOX) --maxzoom=11
 
 geocoder: check-docker ## Start self-hosted Nominatim (first run imports Ireland: 1h+)
 	@test -f $(OSM_PBF) || $(MAKE) osm-extract
