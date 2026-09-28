@@ -372,31 +372,30 @@ Everything below is **Proposed** until the Phase 0 review.
   - **Still open, for Phase 5:** unverified accounts have the full `user` role. Alerts must check `email_verified` themselves before sending (docs/permissions.md says `alert:receive` needs a verified email). The history list is capped at 200 rows without pagination.
 - **Status:** Accepted (implementation detail; corrects D-041).
 
-## D-043 Visual design: record windows on a surveyor's desk
+## D-043 Visual design: record windows on a survey sheet
 
-- **Context:** the owner asked for a look in the spirit of sorted.place (dublin-job-finder.vercel.app), similar but not the same, with our own improvements. The Phase 1–4 pages used default system type on white.
+- **Context:** the owner asked for a look in the spirit of sorted.place (dublin-job-finder.vercel.app), similar but not the same, with our own improvements. After a first pass they asked for its signature traits to go (the yellow highlight, the typeface, the patterned background). The Phase 1–4 pages used default system type on white.
 - **Choice:**
-  - **Kept from the reference, in our own form:**
-    - A textured desk behind white cards: ours is a limestone surveyor's grid (fine lines every 24 px, stronger every 120 px), where the reference uses dots.
-    - Very heavy display headlines with one highlighted phrase: ours is a highlighter stroke under the words, where the reference uses a solid block.
-    - Cards with a title bar in a mono face. Ours say what they hold (`register · 2 sales`, `latest sale · Cork city`) and carry three small survey marks instead of window buttons.
-    - A glass sticky header with a live status: ours shows the register's date, and the provisional window opens from it.
-    - Pill buttons and a theme toggle (device, light or dark).
-    - A few playful stickers.
-  - **Ours:**
-    - **Type:** Bricolage Grotesque for headings, Instrument Sans for text, IBM Plex Mono for bars and figures, and Caveat for the notes. All are self-hosted by next/font at build time, so no page loads a third-party font.
+  - **Shared with the reference, as a family resemblance:**
+    - White cards with a small mono label bar. Ours say what they hold (`register · 2 sales`, `register · latest entries`) and carry a map pin, not window buttons.
+    - A glass sticky header with the register's date; its provisional window opens from it.
+    - A theme toggle (device, light or dark).
+  - **Ours, and deliberately unlike it:**
+    - **Type:** Fraunces, a soft serif, for headings. The one phrase that matters is set in its italic, in brand green; there is no highlighter. IBM Plex Sans is the text face and IBM Plex Mono the label face. Big figures stay in the sans, with tabular digits. All fonts are self-hosted by next/font, and there is no handwriting face.
+    - **Background:** plain warm paper, with no repeating pattern. Faint map contour lines appear only behind the home hero, drawn from a fixed formula.
+    - **Hero:** a left-aligned headline beside one "latest entries" ledger window, which lists the newest market sale in six towns (real, from the list endpoint). A green register stamp carries the real total. There are no tilted floating cards, sticky notes or stickers.
+    - **Controls and tiles:** flat buttons with 10 px corners, not glossy pills. The status icon is a register page, not a pulsing "live" dot. County tiles use Irish number-plate index marks (D, C, KK…) with sales and median as plain figures, not red count bubbles.
     - **Colour:** green for the brand and actions, so blue stays reserved for data. The map's price scale (D-038) keeps its blues, and confidence marks everywhere are drawn as on the map: solid for house or street, a ring for town-level.
-    - **Home page, real data only:** each floating card is the latest market sale in one of six towns, from the list endpoint.
-      - The sticky note gives the register's totals, and the SOLD sign gives Dublin's 12-month median.
-      - The county tiles use Irish number-plate index marks (D, C, KK…) and link to the map.
-      - The monthly chart shows the provisional months as a lighter, labelled step, with a table view.
-      - A "what you will not find here" band turns the data's limits into a reason to trust it.
+    - **Home sections:**
+      - A monthly chart, with the provisional months as a lighter, labelled step and a table view.
+      - The 26 county tiles, linking to the map.
+      - A "what you will not find here" band, which turns the data's limits into a reason to trust it.
     - **New endpoint:** `GET /api/v1/stats/overview`. It returns national monthly counts (the county `area_stats` summed, market sales only) and each county's latest complete 12 months (count and median, n < 5 suppressed). It is held in memory per data version.
     - **Property page:** a "change" column against the previous sale. It appears only between two plain market sales (not VAT-exclusive, not full market price, bulk or a possible repeat filing), and says it is not adjusted for inflation or work done.
   - **Accessibility:**
     - Every token pair is checked for WCAG AA: text 4.5:1, and control borders 3:1 through a separate `--color-control` token.
     - Dark mode uses its own values, and an explicit choice is applied before first paint.
     - Motion stops under `prefers-reduced-motion`.
-    - On phones the navigation folds into a menu sheet, and the floating cards become a scrolling strip.
+    - On phones the navigation folds into a menu sheet.
   - **The map stays on the light basemap in both themes:** the price ramp was validated against its land colour.
 - **Status:** Accepted (implementation detail; awaiting the owner's review with Phase 4).

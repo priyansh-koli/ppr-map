@@ -25,7 +25,7 @@ export function PlaceholderPage({ routeKey, detail }: { routeKey: RouteKey; deta
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-12 sm:py-16">
       <PageHeader eyebrow={detail} title={route.title} lead={route.summary} />
       <Window title={`roadmap · phase ${route.phase}`} bodyClassName="p-5 sm:p-6">
-        <p className="font-hand text-2xl leading-snug text-ink">
+        <p className="font-display text-2xl italic leading-snug text-ink">
           Not built yet: this page arrives in Phase {route.phase}.
         </p>
         <dl className="mt-4 flex flex-wrap gap-2 text-sm">

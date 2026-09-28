@@ -60,18 +60,16 @@ export function Counties() {
         <div>
           <h2
             id="counties-heading"
-            className="font-display text-4xl font-extrabold tracking-[-0.03em] text-ink sm:text-5xl"
+            className="font-display text-4xl font-semibold tracking-[-0.015em] text-ink sm:text-5xl"
           >
-            Twenty-six counties. <span className="marker">One register.</span>
+            Twenty-six counties. <span className="hl">One register.</span>
           </h2>
           <p className="mt-3 max-w-2xl text-lg text-ink-2">
             Market sales and the median price in each county over the latest complete 12 months
             {period ? `, ${period}` : ""}. Tap a county to open the map there.
           </p>
         </div>
-        <p aria-hidden="true" className="hidden -rotate-3 font-hand text-2xl text-ink-2 md:block">
-          busiest first ↓
-        </p>
+        <p className="eyebrow">sorted by sales, most first</p>
       </div>
 
       {data ? (
@@ -82,36 +80,37 @@ export function Counties() {
                 href={`${ROUTES.map.path}?lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}&z=9`}
                 className="group relative flex h-full flex-col rounded-[14px] bg-surface p-3 shadow-window outline outline-1 -outline-offset-1 outline-line transition-transform duration-200 ease-out-soft hover:-translate-y-0.5 hover:shadow-lift"
               >
-                <span className="flex items-start justify-between gap-2">
+                <span className="flex items-center gap-2.5">
                   <span
                     aria-hidden="true"
-                    className="flex h-9 min-w-12 items-center justify-center rounded-md border-2 border-ink bg-white px-1.5 font-mono text-sm font-semibold tracking-wider text-[#111] shadow-sm"
+                    className="flex h-8 min-w-11 items-center justify-center rounded-[5px] border-2 border-ink bg-white px-1.5 font-mono text-[0.8rem] font-semibold tracking-wider text-[#111]"
                   >
                     {PLATE[c.slug] ?? c.name.slice(0, 2).toUpperCase()}
                   </span>
-                  <span className="rounded-full bg-sign px-2 py-0.5 text-xs font-bold text-white tabular-nums">
-                    <span className="sr-only">, </span>
-                    {count.format(c.sales)}
-                    <span className="sr-only"> sales</span>
+                  <span className="font-display text-lg font-semibold leading-tight text-ink">
+                    {c.name}
                   </span>
                 </span>
-                <span className="mt-3 font-display text-lg font-bold leading-tight text-ink">
-                  {c.name}
-                </span>
-                <span className="mt-0.5 text-sm text-muted">
-                  {c.medianPriceEur ? (
-                    <>
-                      median{" "}
+                <span className="mt-3 grid grid-cols-2 gap-2 border-t border-line pt-2.5 text-sm">
+                  <span>
+                    <span className="block text-xs text-muted">sales</span>
+                    <span className="font-semibold text-ink tabular-nums">
+                      {count.format(c.sales)}
+                    </span>
+                  </span>
+                  <span>
+                    <span className="block text-xs text-muted">median</span>
+                    {c.medianPriceEur ? (
                       <span
-                        className="font-semibold text-ink-2"
+                        className="font-semibold text-ink tabular-nums"
                         title={formatEur(c.medianPriceEur)}
                       >
                         {median.format(c.medianPriceEur)}
                       </span>
-                    </>
-                  ) : (
-                    "too few sales for a median"
-                  )}
+                    ) : (
+                      <span className="text-muted">too few sales</span>
+                    )}
+                  </span>
                 </span>
               </Link>
             </li>

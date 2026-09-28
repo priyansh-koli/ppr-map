@@ -39,13 +39,17 @@ export function Window({
   );
 }
 
-/** Three survey marks where a desktop window has its buttons: ours are not buttons. */
+/** A small map pin: every window here holds something from the register or the map. */
 function WindowGlyph() {
   return (
-    <span aria-hidden="true" className="flex shrink-0 items-center gap-1">
-      <span className="h-2 w-2 rounded-[2px] bg-accent" />
-      <span className="h-2 w-2 rounded-[2px] bg-marker" />
-      <span className="h-2 w-2 rounded-[2px] bg-line-strong" />
-    </span>
+    <svg viewBox="0 0 12 14" aria-hidden="true" className="h-3.5 w-3 shrink-0 text-accent">
+      <path
+        d="M6 13.2C3.9 10.5 1.2 7.6 1.2 5a4.8 4.8 0 0 1 9.6 0c0 2.6-2.7 5.5-4.8 8.2Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <circle cx="6" cy="5" r="1.6" fill="currentColor" />
+    </svg>
   );
 }

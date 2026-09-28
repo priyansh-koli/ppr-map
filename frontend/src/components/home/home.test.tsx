@@ -49,9 +49,7 @@ describe("home page overview", () => {
     const dublin = await screen.findByRole("link", { name: /Dublin/ });
     expect(dublin).toHaveAttribute("href", "/map?lat=53.4000&lng=-6.2800&z=9");
     expect(dublin).toHaveTextContent("€480K");
-    expect(screen.getByRole("link", { name: /Leitrim/ })).toHaveTextContent(
-      "too few sales for a median",
-    );
+    expect(screen.getByRole("link", { name: /Leitrim/ })).toHaveTextContent("too few sales");
   });
 });
 

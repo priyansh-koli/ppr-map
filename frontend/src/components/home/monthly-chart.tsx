@@ -48,7 +48,7 @@ export function MonthlyChart() {
           <p className="text-sm font-medium text-ink-2">
             Market sales in the last 12 complete months
           </p>
-          <p className="font-display text-5xl font-extrabold tracking-[-0.03em] text-ink sm:text-6xl">
+          <p className="text-5xl font-semibold tracking-[-0.02em] text-ink tabular-nums sm:text-6xl">
             {fmt.format(last12)}
           </p>
         </div>

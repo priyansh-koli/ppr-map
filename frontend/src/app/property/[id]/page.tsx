@@ -134,7 +134,7 @@ export default async function Page({ params }: Props) {
           register · county {county}
           {data.routingKey ? ` · Eircode area ${data.routingKey}` : ""}
         </p>
-        <h1 className="mt-2 font-display text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-ink sm:text-5xl">
+        <h1 className="mt-2 font-display text-4xl font-semibold leading-[1.02] tracking-[-0.015em] text-ink sm:text-5xl">
           {data.address}
         </h1>
         <RecordView propertyId={data.id} />
@@ -170,7 +170,7 @@ export default async function Page({ params }: Props) {
               <p className="text-sm font-medium text-ink-2">
                 Latest sale, {formatDate(latest.date)}
               </p>
-              <p className="font-display text-5xl font-extrabold tracking-[-0.03em] text-ink">
+              <p className="text-5xl font-semibold tracking-[-0.02em] text-ink tabular-nums">
                 {formatEur(latest.priceEur)}
               </p>
             </div>
@@ -229,9 +229,9 @@ export default async function Page({ params }: Props) {
       {data.caveats.length ? (
         <section
           aria-labelledby="caveats-heading"
-          className="rounded-[14px] bg-[color-mix(in_oklab,var(--color-marker)_24%,var(--color-surface))] p-5 text-sm text-ink shadow-window"
+          className="rounded-[14px] bg-accent-wash p-5 text-sm text-ink shadow-window"
         >
-          <h2 id="caveats-heading" className="font-hand text-2xl leading-none">
+          <h2 id="caveats-heading" className="font-display text-xl font-semibold">
             Worth knowing
           </h2>
           <ul className="mt-3 list-disc space-y-1 pl-5">

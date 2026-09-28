@@ -17,7 +17,7 @@ export function PageHeader({
   return (
     <header className={center ? "text-center" : undefined}>
       {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-      <h1 className="mt-2 font-display text-4xl font-extrabold tracking-[-0.03em] text-ink sm:text-5xl">
+      <h1 className="mt-2 font-display text-4xl font-semibold tracking-[-0.015em] text-ink sm:text-5xl">
         {title}
       </h1>
       {lead ? (

@@ -63,7 +63,7 @@ export default function Page() {
         <div>
           <h2
             id="how-heading"
-            className="font-display text-4xl font-extrabold tracking-[-0.03em] text-ink sm:text-5xl"
+            className="font-display text-4xl font-semibold tracking-[-0.015em] text-ink sm:text-5xl"
           >
             A price, a date, an address. We do the rest.
           </h2>
@@ -84,7 +84,7 @@ export default function Page() {
             ))}
           </ol>
         </div>
-        <Window title="map · how precisely each sale is placed" className="lg:rotate-1" lift>
+        <Window title="map · how precisely each sale is placed" lift>
           <ul className="divide-y divide-line">
             {PRECISION.map((p) => (
               <li key={p.label} className="flex items-center gap-4 py-4 first:pt-1 last:pb-1">
@@ -121,7 +121,7 @@ export default function Page() {
           <div>
             <h2
               id="never-heading"
-              className="font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl"
+              className="font-display text-4xl font-semibold tracking-[-0.015em] sm:text-5xl"
             >
               What you will not find here.
             </h2>
@@ -147,7 +147,7 @@ export default function Page() {
       </section>
 
       <section className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h2 className="font-display text-4xl font-extrabold tracking-[-0.03em] text-ink sm:text-5xl">
+        <h2 className="font-display text-4xl font-semibold tracking-[-0.015em] text-ink sm:text-5xl">
           Start with your own street.
         </h2>
         <p className="mt-3 text-lg text-ink-2">

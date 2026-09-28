@@ -39,14 +39,26 @@ export function StatusPill() {
   return (
     <details className="group relative">
       <summary className="flex h-9 cursor-pointer list-none items-center gap-2 rounded-full px-3 text-sm font-medium text-ink hover:bg-fill [&::-webkit-details-marker]:hidden">
-        <span aria-hidden="true" className="relative flex h-2 w-2">
-          {meta ? (
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-50 motion-reduce:hidden" />
-          ) : null}
-          <span
-            className={`relative h-2 w-2 rounded-full ${meta ? "bg-live" : "bg-line-strong"}`}
+        {/* A register page, not a live beacon: the data changes once a month. */}
+        <svg
+          viewBox="0 0 16 16"
+          aria-hidden="true"
+          className={`h-4 w-4 ${meta ? "text-accent" : "text-muted"}`}
+        >
+          <path
+            d="M4 1.75h5.5L12.25 4.5v9.75H4Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinejoin="round"
           />
-        </span>
+          <path
+            d="M6 7.5h4.25M6 10h4.25"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+          />
+        </svg>
         <span className="hidden sm:inline">{short}</span>
         <span className="sr-only sm:hidden">{short}</span>
       </summary>
