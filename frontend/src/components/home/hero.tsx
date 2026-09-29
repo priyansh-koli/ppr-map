@@ -119,7 +119,7 @@ export function Hero() {
         <div>
           <p className="eyebrow">Property Price Register · every county · since 2010</p>
           <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.02] tracking-[-0.015em] text-ink sm:text-6xl xl:text-7xl">
-            Every home sold in Ireland, <span className="hl">on one map.</span>
+            Ireland&rsquo;s home sales, <span className="hl">on the record.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-ink-2 sm:text-xl">
             {data ? (
