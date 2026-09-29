@@ -53,6 +53,13 @@ STREET_HIGHWAYS = {
     "pedestrian",
     "track",
 }
+# Buildings whose name can stand for where people live ("The Benson Building", "Carrigmore
+# Court"). A station, school or hotel sharing a place's name is not an address: "Adamstown"
+# matched Adamstown railway station and put a whole suburb on the platform.
+RESIDENTIAL_BUILDINGS = {
+    "apartments", "residential", "house", "terrace", "detached", "semidetached_house",
+    "bungalow", "dormitory", "flats", "yes",
+}  # fmt: skip
 LOCALITY_PLACES = {
     "town",
     "village",
@@ -232,8 +239,12 @@ def classify(result: Mapping[str, Any], queried_part: str) -> tuple[GeocodeConfi
         if type_ in STREET_HIGHWAYS:
             return GeocodeConfidence.STREET, ""
         return None, "implausible_type"
-    if (category == "landuse" and type_ == "residential") or category == "building":
+    if category == "landuse" and type_ == "residential":
         return GeocodeConfidence.STREET, ""
+    if category == "building":
+        if type_ in RESIDENTIAL_BUILDINGS:
+            return GeocodeConfidence.STREET, ""
+        return None, "implausible_type"
     if category == "place" and type_ in CITY_PLACES:
         return None, "too_coarse"
     if category == "place" and type_ in LOCALITY_PLACES:
