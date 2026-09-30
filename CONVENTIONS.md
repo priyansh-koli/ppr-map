@@ -62,10 +62,11 @@ Run `make help` for the full list.
 | `.venv/bin/ppr ingest tailte_boundaries` | download and load counties, EDs, Small Areas, townlands, settlements (about 4 min) |
 | `make geocoder` | start self-hosted Nominatim (first run imports Ireland, about 20 min; Docker memory ≥ 12 GB) |
 | `make ingest-ppr` | download the PPR and load it (skips an unchanged file; `ppr ingest ppr --file X --force` to reload) |
+| `make gazetteer` | rebuild the local street gazetteer from the OSM extract, official places and the DHLGH housing surveys (about 8 min; D-046) |
 | `make geocode` | geocode new properties with the D-003 cascade (`ppr geocode --refresh` redoes all; `--limit N` for a trial) |
 | `make enrich` | reload GTFS stops, OSM amenities and schools, Pobal deprivation; recompute vicinity values |
 | `make aggregate` | rebuild `area_stats`, `price_hex` and `property_summary` |
-| `make pipeline` | the monthly run: ingest, geocode, enrich, aggregate |
+| `make pipeline` | the monthly run: ingest, gazetteer, geocode, enrich, aggregate |
 | `make basemap` | download the Ireland basemap, terrain, fonts and sprites into `data/basemap` (served at `/basemap/`) |
 | `make terrain` | only the elevation tiles for hill shading and the 3D view (55 MB; the map stays flat without them) |
 | `make api-types` | regenerate `frontend/openapi.json` and the TypeScript API types after changing an endpoint |

@@ -99,7 +99,7 @@ The scheduler runs this on the 1st and on demand from admin. Each step is idempo
    - Then by validated Eircode (not automatic yet: PPR Eircodes are sometimes wrong, R-04).
    - Then by a fuzzy candidate match: trigram similarity ≥ 0.9, same number and unit, same county.
    - Uncertain merges are **not** made automatically. They go to an admin review queue.
-6. **Geocode** new or changed Properties with the D-003 cascade and store every attempt in `geocode_attempt`.
+6. **Geocode** new or changed Properties with the D-003 cascade and store every attempt in `geocode_attempt`. What Nominatim leaves at town level goes through the local street gazetteer (`gazetteer_feature`, D-046) before the other fallbacks.
 7. **Spatial joins:** attach `small_area_id`, `ed_id`, `townland_id`, `settlement_id` and `h3_r8` by point-in-polygon.
 8. **Flag outliers:** `not_full_market_price` (from PPR), `vat_exclusive` (from PPR), and `bulk_group_id` with a group size (D-031: same date and price above €5M across counties; or at least 3 properties in one county on the same date and price, where the price is not a whole €1,000 or at least 3 share a locality).
 9. **Aggregate:** refresh `area_stats` (with median and count suppression when n < 5), the H3 price hexes and `property_summary` (hover JSON). Then invalidate the tile cache and pre-warm the default tiles.

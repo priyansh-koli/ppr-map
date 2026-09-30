@@ -438,3 +438,35 @@ Everything below is **Proposed** until the Phase 0 review.
   - **Roads:** casings in #c9c2b5, so roads have edges. The land colour is unchanged, because the price ramp was validated against it (D-038).
   - **Tests:** the style is checked with MapLibre's own validator, with and without terrain. An invalid style (a stray `attribution: undefined`) had left the map blank with no error, so map errors other than tile errors are now logged.
 - **Status:** Accepted (implementation detail).
+
+## D-046 A local street gazetteer after Nominatim, and more open map data for it
+
+- **Context:** the owner found places on the map that were wrong, and recent houses that were not on it. Measured on 2026-09-29:
+  - **The register is current.** The PSRA site says "Register Last Updated: 23/09/2026". The `PPR-ALL.zip` we loaded is that release (807,724 sales to 2026-09-18), so no sale is missing from the data. Recent sales are missing from the *map*. About 10% of each month's sales are placed only at routing-key or county level, which the default filter hides. Another 44% are pooled into town-centre stacks.
+  - **Nominatim reads an address as a hierarchy**, so one part it does not know stops the match. "8 Clover Avenue, Broom Heights, Midleton" found nothing and fell back to Midleton. "24 Knightswood Crescent, Knightswood, Williamstown" fell back to the county, though Knightswood Crescent is in OSM. The ladder (D-035) drops leading parts, never middle ones.
+  - **A building's name was taken for an address:** 3,312 homes in Adamstown, Clonsilla and Sandymount sat on their railway stations, because the stations are named after the suburbs. Schools, hotels, offices and courthouses matched the same way.
+  - Misspellings in the PPR ("Steplechase Hill") and estates never mapped in OSM stay at town level.
+- **Options:**
+  - (a) A full Nominatim re-run with a longer ladder: slower, and it fixes only the middle-part problem.
+  - (b) Our own gazetteer, matched part by part in Python, needing no Nominatim.
+  - (c) Paid Eircode lookup (D-003): still the owner's decision.
+- **Choice:** (b), as a pass inside the fallback step, plus a rule fix.
+  - **`gazetteer_feature`** (migration 0007), rebuilt by `ppr gazetteer` / `make gazetteer`:
+    - **OSM**, from the extract we already have: named streets (segments of one name within 250 m merged), named residential estates and apartment buildings, 380k address points, and place nodes.
+    - **Official places:** townlands and CSO settlements, each reaching as far as its area suggests (capped at 4 km).
+    - **New source: the DHLGH National Housing Development Surveys 2011 and 2012.** These are 4,820 named developments with ITM coordinates, many built in 2005–2012 and never mapped in OSM. The 2013 and later surveys dropped the coordinates. Other sources were checked and not used:
+      - Eircode routing-key boundaries exist only as an unofficial Small Area approximation. An Post says they cannot place a property.
+      - Recent planning applications have no coordinates, and their addresses describe sites, not estate names.
+      - logainm.ie needs an API key (ask first).
+  - **Matching** (`geocode/local.py`): each part of the address is looked up on its own in its county. A street, estate or house number is accepted only if it lies near a place named *later* in the same address (the first later part that names one). Every other named place must also lie within 20 km.
+    - **No anchor, no match:** "Main Street" is in every town.
+    - **Cities never anchor:** Dublin has several Oak Parks. A city is still checked when it is named.
+    - **Same-named candidates more than 1 km apart** are ambiguous and rejected.
+    - **A name made only of street words** ("The Park", "The Green") is anchored only by the part right after it, usually its estate.
+    - **A part that is itself a townland or village name** is left to the locality steps, even when an estate shares its name.
+    - **One-letter misspellings** are forgiven only in a long, distinctive word of a name of two or more words, and only when exactly one such name exists in the county. Such matches are labelled `…_fuzzy`.
+    - **A Nominatim street may become the exact house**, but only within 1.5 km of it.
+  - **Methods:** `osm:address` (exact), `osm:street`, `osm:estate`, `nhds:estate`, with `_fuzzy` variants (street level). Every match is logged in `geocode_attempt` (method `local`, step 80). The results are recomputed on every run, like the other fallbacks.
+  - **Rule fix:** a Nominatim building counts as a street-level match only if it is a residential type (apartments, house, terrace, residential, `yes`…). Stored results that break the new rule are re-checked on the next run and go through the later steps again.
+- **Licence:** the surveys are **CC BY-SA 4.0**. We use them only to place estates, and the derived coordinates are published with the credit line in `config/sources.yaml`. Like ODbL for OSM (R-06), share-alike may apply to a database we distribute. **Owner to confirm.** Setting `nhds.use: false` and rebuilding removes them.
+- **Status:** Accepted (implementation detail); the licence point awaits the owner.
