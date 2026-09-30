@@ -632,6 +632,68 @@
         "title": "Overview",
         "type": "object"
       },
+      "Page_SearchHistoryOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SearchHistoryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[SearchHistoryOut]",
+        "type": "object"
+      },
+      "Page_ViewOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ViewOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[ViewOut]",
+        "type": "object"
+      },
       "PasswordChangeIn": {
         "properties": {
           "currentPassword": {
@@ -701,6 +763,31 @@
           "privacyVersion"
         ],
         "title": "Policies",
+        "type": "object"
+      },
+      "PriceChange": {
+        "description": "Against the previous sale, only when both are plain market sales; not adjusted for\ninflation or for work done in between.",
+        "properties": {
+          "changePct": {
+            "title": "Changepct",
+            "type": "number"
+          },
+          "previousDate": {
+            "format": "date",
+            "title": "Previousdate",
+            "type": "string"
+          },
+          "previousPriceEur": {
+            "title": "Previouspriceeur",
+            "type": "number"
+          }
+        },
+        "required": [
+          "previousDate",
+          "previousPriceEur",
+          "changePct"
+        ],
+        "title": "PriceChange",
         "type": "object"
       },
       "Profile-Input": {
@@ -979,6 +1066,16 @@
           "address": {
             "title": "Address",
             "type": "string"
+          },
+          "change": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PriceChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "confidence": {
             "$ref": "#/components/schemas/GeocodeConfidence"
@@ -1286,6 +1383,138 @@
         "title": "SchoolValue",
         "type": "object"
       },
+      "SearchHistoryIn": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the user searched for",
+            "title": "Label"
+          },
+          "query": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The search's URL parameters",
+            "title": "Query",
+            "type": "object"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "SearchHistoryIn",
+        "type": "object"
+      },
+      "SearchHistoryOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "query": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Query",
+            "type": "object"
+          },
+          "searchedAt": {
+            "format": "date-time",
+            "title": "Searchedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "query",
+          "label",
+          "searchedAt"
+        ],
+        "title": "SearchHistoryOut",
+        "type": "object"
+      },
+      "SearchResults": {
+        "properties": {
+          "bbox": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "west, south, east, north of every match; null when none match",
+            "title": "Bbox"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PropertyListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "places": {
+            "description": "The areas named by the `area` filter",
+            "items": {
+              "$ref": "#/components/schemas/AreaRef"
+            },
+            "title": "Places",
+            "type": "array"
+          },
+          "query": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The filters applied, as URL parameters",
+            "title": "Query",
+            "type": "object"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "query"
+        ],
+        "title": "SearchResults",
+        "type": "object"
+      },
       "Sourced_SchoolValue_": {
         "properties": {
           "asOf": {
@@ -1467,6 +1696,114 @@
           "distanceM"
         ],
         "title": "StopValue",
+        "type": "object"
+      },
+      "Suggestion": {
+        "description": "One autocomplete answer: a place to filter by, or a property to open.",
+        "properties": {
+          "bbox": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "kind": {
+            "enum": [
+              "county",
+              "settlement",
+              "electoral_division",
+              "townland",
+              "routing_key",
+              "property"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          },
+          "propertyId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propertyid"
+          },
+          "routingKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routingkey"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Area slug, for area kinds",
+            "title": "Slug"
+          }
+        },
+        "required": [
+          "kind",
+          "label"
+        ],
+        "title": "Suggestion",
         "type": "object"
       },
       "TokenIn": {
@@ -2084,6 +2421,67 @@
         ]
       }
     },
+    "/api/v1/geocode/autocomplete": {
+      "get": {
+        "description": "Places and addresses we hold data for (D-006): counties, towns, Electoral Divisions,\ntownlands, Eircode routing keys (and Dublin postal districts), and property addresses.\nNothing is sent to a third party.",
+        "operationId": "autocomplete_api_v1_geocode_autocomplete_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 10,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Suggestion"
+                  },
+                  "title": "Response Autocomplete Api V1 Geocode Autocomplete Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Autocomplete",
+        "tags": [
+          "search"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "description": "Liveness and dependency check: database and Redis.",
@@ -2229,6 +2627,147 @@
         ]
       }
     },
+    "/api/v1/me/history/searches": {
+      "delete": {
+        "operationId": "clear_searches_api_v1_me_history_searches_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Clear Searches",
+        "tags": [
+          "search",
+          "me"
+        ]
+      },
+      "get": {
+        "operationId": "searches_api_v1_me_history_searches_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Pagesize",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_SearchHistoryOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Searches",
+        "tags": [
+          "search",
+          "me"
+        ]
+      },
+      "post": {
+        "description": "Keep a search the user ran, unless history is off. Running the same search again\nmoves it to the top instead of adding a copy.",
+        "operationId": "record_search_api_v1_me_history_searches_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchHistoryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Search",
+        "tags": [
+          "search",
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/history/searches/{search_id}": {
+      "delete": {
+        "operationId": "delete_search_api_v1_me_history_searches__search_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "search_id",
+            "required": true,
+            "schema": {
+              "title": "Search Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Search",
+        "tags": [
+          "search",
+          "me"
+        ]
+      }
+    },
     "/api/v1/me/history/views": {
       "delete": {
         "operationId": "clear_views_api_v1_me_history_views_delete",
@@ -2243,21 +2782,54 @@
         ]
       },
       "get": {
+        "description": "Property pages visited in the last 12 months, newest first.",
         "operationId": "views_api_v1_me_history_views_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Pagesize",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ViewOut"
-                  },
-                  "title": "Response Views Api V1 Me History Views Get",
-                  "type": "array"
+                  "$ref": "#/components/schemas/Page_ViewOut_"
                 }
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Views",
@@ -2602,7 +3174,7 @@
     },
     "/api/v1/properties": {
       "get": {
-        "description": "The list view synced with the map: the latest matching sale per property in the box.",
+        "description": "The list view synced with the map: the latest matching sale per property in the box.\nIt is /search limited to the box, so it takes the same filters.",
         "operationId": "list_properties_api_v1_properties_get",
         "parameters": [
           {
@@ -2626,7 +3198,9 @@
                 "-date",
                 "date",
                 "-price",
-                "price"
+                "price",
+                "-change",
+                "change"
               ],
               "title": "Sort",
               "type": "string"
@@ -2775,6 +3349,147 @@
               "$ref": "#/components/schemas/GeocodeConfidence",
               "default": "locality"
             }
+          },
+          {
+            "in": "query",
+            "name": "vat",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "enum": [
+                "exclusive",
+                "inclusive",
+                "any"
+              ],
+              "title": "Vat",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Counties, comma-separated",
+            "in": "query",
+            "name": "county",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Counties, comma-separated",
+              "title": "County"
+            }
+          },
+          {
+            "description": "Area slugs, comma-separated",
+            "in": "query",
+            "name": "area",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Area slugs, comma-separated",
+              "title": "Area"
+            }
+          },
+          {
+            "description": "Eircode routing keys, e.g. D08,A63",
+            "in": "query",
+            "name": "routingKey",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Eircode routing keys, e.g. D08,A63",
+              "title": "Routingkey"
+            }
+          },
+          {
+            "description": "lat,lng",
+            "in": "query",
+            "name": "near",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "lat,lng",
+              "title": "Near"
+            }
+          },
+          {
+            "description": "With near; 100 to 20,000, default 1,000",
+            "in": "query",
+            "name": "radiusM",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "With near; 100 to 20,000, default 1,000",
+              "title": "Radiusm"
+            }
+          },
+          {
+            "description": "Nearest stop within this many metres",
+            "in": "query",
+            "name": "maxStopM",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Nearest stop within this many metres",
+              "title": "Maxstopm"
+            }
+          },
+          {
+            "description": "Nearest school within this many metres",
+            "in": "query",
+            "name": "maxSchoolM",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Nearest school within this many metres",
+              "title": "Maxschoolm"
+            }
           }
         ],
         "responses": {
@@ -2885,6 +3600,361 @@
         "summary": "Summary",
         "tags": [
           "properties"
+        ]
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "description": "Every property whose latest matching sale passes the filters: the same matches as the\nmap (`/tiles/sales` takes the same parameters). `-change` sorts by the largest rise since\nthe previous plain market sale.",
+        "operationId": "search_api_v1_search_get",
+        "parameters": [
+          {
+            "description": "west,south,east,north",
+            "in": "query",
+            "name": "bbox",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "west,south,east,north",
+              "title": "Bbox"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "-date",
+              "enum": [
+                "-date",
+                "date",
+                "-price",
+                "price",
+                "-change",
+                "change"
+              ],
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Pagesize",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priceMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pricemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priceMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pricemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dateFrom",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Datefrom"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dateTo",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dateto"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "enum": [
+                "new",
+                "second_hand",
+                "any"
+              ],
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeNonMarket",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Excludenonmarket",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeBulk",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Excludebulk",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minConfidence",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/GeocodeConfidence",
+              "default": "locality"
+            }
+          },
+          {
+            "in": "query",
+            "name": "vat",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "enum": [
+                "exclusive",
+                "inclusive",
+                "any"
+              ],
+              "title": "Vat",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Counties, comma-separated",
+            "in": "query",
+            "name": "county",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Counties, comma-separated",
+              "title": "County"
+            }
+          },
+          {
+            "description": "Area slugs, comma-separated",
+            "in": "query",
+            "name": "area",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Area slugs, comma-separated",
+              "title": "Area"
+            }
+          },
+          {
+            "description": "Eircode routing keys, e.g. D08,A63",
+            "in": "query",
+            "name": "routingKey",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Eircode routing keys, e.g. D08,A63",
+              "title": "Routingkey"
+            }
+          },
+          {
+            "description": "lat,lng",
+            "in": "query",
+            "name": "near",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "lat,lng",
+              "title": "Near"
+            }
+          },
+          {
+            "description": "With near; 100 to 20,000, default 1,000",
+            "in": "query",
+            "name": "radiusM",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "With near; 100 to 20,000, default 1,000",
+              "title": "Radiusm"
+            }
+          },
+          {
+            "description": "Nearest stop within this many metres",
+            "in": "query",
+            "name": "maxStopM",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Nearest stop within this many metres",
+              "title": "Maxstopm"
+            }
+          },
+          {
+            "description": "Nearest school within this many metres",
+            "in": "query",
+            "name": "maxSchoolM",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Nearest school within this many metres",
+              "title": "Maxschoolm"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search",
+        "tags": [
+          "search"
         ]
       }
     },

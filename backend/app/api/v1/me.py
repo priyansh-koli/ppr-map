@@ -25,6 +25,7 @@ from app.redis_client import get_redis
 from app.schemas.auth import Me, MePatch, PasswordChangeIn, PasswordIn
 from app.schemas.base import ApiModel, Money
 from app.schemas.properties import PropertySummary
+from app.schemas.search import Page
 from app.services import email as mail
 from app.services.accounts import export, load_me
 
@@ -412,21 +413,35 @@ async def record_view(body: ViewIn, user: HistoryUser, db: Db) -> None:
     await db.commit()
 
 
-@router.get("/history/views", response_model=list[ViewOut])
-async def views(user: HistoryUser, db: Db) -> list[ViewOut]:
+@router.get("/history/views", response_model=Page[ViewOut])
+async def views(
+    user: HistoryUser,
+    db: Db,
+    page: Annotated[int, Query(ge=1, le=100)] = 1,
+    page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 50,
+) -> Page[ViewOut]:
+    """Property pages visited in the last 12 months, newest first."""
+    visible = (
+        "FROM view_history v JOIN property p ON p.id = v.property_id "
+        "WHERE v.user_id = :u AND NOT p.is_suppressed AND v.viewed_at > now() - :keep"
+    )
+    params = {"u": user.id, "keep": HISTORY_KEEP}
+    total: int = (await db.execute(sa.text(f"SELECT count(*) {visible}"), params)).scalar_one()
     rows = (
         await db.execute(
             sa.text(
-                "SELECT v.id, p.public_id, p.address_display, v.viewed_at "
-                "FROM view_history v "
-                "JOIN property p ON p.id = v.property_id WHERE v.user_id = :u "
-                "AND NOT p.is_suppressed AND v.viewed_at > now() - :keep "
-                "ORDER BY v.viewed_at DESC LIMIT 200"
+                f"SELECT v.id, p.public_id, p.address_display, v.viewed_at {visible} "
+                "ORDER BY v.viewed_at DESC, v.id DESC LIMIT :limit OFFSET :offset"
             ),
-            {"u": user.id, "keep": HISTORY_KEEP},
+            {**params, "limit": page_size, "offset": (page - 1) * page_size},
         )
     ).all()
-    return [ViewOut(id=r[0], property_id=r[1], address=r[2], viewed_at=r[3]) for r in rows]
+    return Page[ViewOut](
+        items=[ViewOut(id=r[0], property_id=r[1], address=r[2], viewed_at=r[3]) for r in rows],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.delete("/history/views", status_code=204)

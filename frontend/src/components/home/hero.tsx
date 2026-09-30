@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
+import { PlaceSearch } from "@/components/search/place-search";
 import { ConfidenceChip } from "@/components/ui/confidence-chip";
 import { Contours } from "@/components/ui/contours";
 import { Window } from "@/components/ui/window";
+import { DEFAULT_FILTERS, filtersToParams } from "@/lib/filters";
 import { formatDate, formatEur } from "@/lib/format";
+import { withSuggestion } from "@/lib/search";
 import { ROUTES } from "@/lib/routes";
 
 import { type Town, useLatestSales, useOverview } from "./data";
@@ -110,6 +114,24 @@ function Ledger() {
   );
 }
 
+/** The hero's search bar: a place opens its search, an address opens the property. */
+function HeroSearch() {
+  const router = useRouter();
+  return (
+    <div className="mt-8 max-w-xl">
+      <PlaceSearch
+        size="lg"
+        label="Search a town, area, Eircode routing key or address"
+        onSelect={(s) => {
+          const f = withSuggestion(DEFAULT_FILTERS, s);
+          if (f) router.push(`${ROUTES.search.path}?${filtersToParams(f).toString()}`);
+          else if (s.propertyId) router.push(`/property/${s.propertyId}`);
+        }}
+      />
+    </div>
+  );
+}
+
 export function Hero() {
   const { data } = useOverview();
   return (
@@ -135,7 +157,8 @@ export function Hero() {
             , each placed as precisely as its address allows, and each one telling you how precise
             that is.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <HeroSearch />
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <Link href={ROUTES.map.path} className="btn btn-primary px-6 text-base">
               Open the map
               <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true">

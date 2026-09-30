@@ -470,3 +470,23 @@ Everything below is **Proposed** until the Phase 0 review.
   - **Rule fix:** a Nominatim building counts as a street-level match only if it is a residential type (apartments, house, terrace, residential, `yes`…). Stored results that break the new rule are re-checked on the next run and go through the later steps again.
 - **Licence:** the surveys are **CC BY-SA 4.0**. We use them only to place estates, and the derived coordinates are published with the credit line in `config/sources.yaml`. Like ODbL for OSM (R-06), share-alike may apply to a database we distribute. **Owner to confirm.** Setting `nhds.use: false` and rebuilding removes them.
 - **Status:** Accepted (implementation detail); the licence point awaits the owner.
+
+---
+
+*Phase 5 (search, area pages, saved searches, alerts, calculators, admin) decisions, from 2026-09-30.*
+
+## D-047 Search: one matching function for the map, the list, search and alerts
+
+- **Context:** the brief asks for search by county, area, Eircode routing key, radius, price, date, type, market flags, VAT and distance to transport or school, with results as a list and a map, synced, and a shareable URL. The map and its list already shared `tile_matching_sales` (D-038) for price, date, type and flags.
+- **Options:** (a) a separate search query in the API; (b) extend the tiles' function and have everything call it.
+- **Choice:** (b).
+  - **Filters (migration 0008):** `county`, `area` (slugs of any area kind; a Small Area or ED matches only exact and street points, which are the only ones joined to them, D-035), `routingKey` (a Dublin key also matches addresses filed with only "Dublin 8"), `near` + `radiusM` (≤ 20 km), `vat`, `maxStopM`, `maxSchoolM`. Lists are one comma-separated parameter, as Martin passes query strings.
+  - **Speed:** the function stays one plain SELECT that reads the parameters inline. Postgres inlines it, and the immutable parameter parsers on a known object fold to constants. A first version that parsed the parameters once in a CTE was ten times slower (z10 tile 1.7 s against 0.1 s), because the planner could no longer see the values.
+  - **`/search`** calls the function over the smallest box the place filters allow (a county's box is widened by 0.05°, because a property may lie up to 2 km outside its county, D-035) and returns each property once with its latest matching sale, the total and the box of all matches. On the full data: 0.1 to 0.5 s for a place, 1.3 s for all of Ireland, 2.1 s sorted by price change.
+  - **Price change** is shown and sortable only between two plain market sales (not "not full market price", not VAT-exclusive, not bulk, not a possible repeat filing), as on the property page (D-043), and is labelled as not adjusted for inflation or work done.
+  - **Autocomplete** reads only our tables (D-006): areas by name, routing keys and Dublin districts ("d8", "Dublin 6W"), and addresses where every word appears (common short forms expanded). 0.13 to 0.3 s.
+  - **Search history** records a search once the user has settled on it for 2.5 s, not every keystroke. Repeats move to the top. The coordinates of "my location" are never stored (docs/permissions.md); the entry keeps `near=my-location`. Both history lists are now paginated (closes that item of D-042).
+  - **Rate limits** follow docs/permissions.md: 60 searches a minute per IP hash anonymously, 300 signed in; autocomplete 120 and 300.
+  - **Pages:** `/search` has the place box, "Near my location" (asked only on click, with the reason), the filters, a sort, the results and a map of the same matches drawn from the same tiles. The home hero has the same place box. The map explorer shows place filters from a search and can remove them.
+- **Also fixed:** Small Area slugs of merged areas contained a slash (`sa-268003013/268003018`), which cannot sit in one URL path segment. They now use a hyphen; migration 0008 rewrites the 2,082 stored slugs.
+- **Status:** Accepted (implementation detail).

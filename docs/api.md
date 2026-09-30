@@ -10,16 +10,15 @@
 
 ## Common types
 
-- **`SearchFilter`:** used as query params on `/search`, and stored as JSON in saved searches.
-  - `county[]`, `areaId[]`, `routingKey[]`
-  - `near=lat,lng&radiusM` (≤ 20 km)
+- **`SearchFilter`** (**built in Phase 5**, D-047): the same query parameters on `/tiles/sales`, `/properties`, `/search` and in saved searches, parsed by one SQL function (`tile_matching_sales`), so the map, the list and search results cannot disagree. Lists are one comma-separated parameter. Anything the API cannot use is a 422; the tile server ignores it and draws the default map.
+  - `county=cork,kerry`; `area=<area slugs>` (a county, town, ED, townland or Small Area); `routingKey=D08,A63` (a Dublin routing key also matches addresses filed with only the postal district, "Dublin 8")
+  - `near=lat,lng` and `radiusM` (100 to 20,000; default 1,000)
   - `priceMin`, `priceMax`, `dateFrom`, `dateTo`
   - `type=new|second_hand|any`
   - `excludeNonMarket=true` (default), `excludeBulk=true` (default), `vat=exclusive|inclusive|any`
-  - `maxStopM`, `maxSchoolM`
-  - `minConfidence=exact|street|locality|…`
-  - `sort=price|-price|date|-date|change`
-  - `page`, `pageSize` (≤ 100)
+  - `maxStopM`, `maxSchoolM` (50 to 10,000): straight-line distance to the nearest stop or school, known only for exact and street locations (D-036), so they also leave out everything placed less precisely
+  - `minConfidence=exact|street|locality|routing_key|county` (default `locality`)
+- **Sort** (`/search`, `/properties`): `-date` (default), `date`, `-price`, `price`, `-change` (biggest rise since the previous plain market sale), `change`.
 - **`Confidence`:** `exact | street | locality | routing_key | county | unmatched`.
 - **`Sourced<T>`:** `{ value: T, source: string, asOf: date, note?: string }`. Every enriched value uses this shape.
 
@@ -53,7 +52,7 @@
 
 ## Me
 
-**Built in Phase 4**, except saved searches (Phase 5) and search history (with search, Phase 5). `/me/export` is a direct JSON download, not a job. `POST /me/history/views {propertyId}` records a property page visit.
+**Built in Phase 4**, except saved searches (Phase 5) and search history (Phase 5, D-047). `/me/export` is a direct JSON download, not a job. `POST /me/history/views {propertyId}` records a property page visit. `POST /me/history/searches {query, label?}` records a search the user settled on: the filters are validated and stored as URL parameters; a repeat moves to the top; the coordinates of "my location" are replaced by `my-location` (the client marks them with `nearSource=geolocation`). Both history lists are pages (`page`, `pageSize` ≤ 100) of `{items, total, page, pageSize}`, newest first, 12 months at most; search history keeps the newest 200.
 | Method | Path | Notes |
 |---|---|---|
 | GET/PATCH | `/me` | profile, preferences, `historyEnabled`, notification settings |
@@ -71,7 +70,7 @@
 ## Map
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/tiles/sales/{z}/{x}/{y}?{SearchFilter subset}` | **Built (Phase 3).** Martin calling `sales_tiles` (migration 0004). Below z14: layer `cells` (`n`, `median`). From z14: layer `sales` (points for exact and street locations) and layer `stacks` (`n`, `median`, `confidence`: every coarser location, one feature each). Filters: `priceMin`, `priceMax`, `dateFrom`, `dateTo`, `type`, `excludeNonMarket`, `excludeBulk`, `minConfidence`; anything unparseable falls back to the default (D-038). |
+| GET | `/tiles/sales/{z}/{x}/{y}?{SearchFilter subset}` | **Built (Phase 3).** Martin calling `sales_tiles` (migration 0004). Below z14: layer `cells` (`n`, `median`). From z14: layer `sales` (points for exact and street locations) and layer `stacks` (`n`, `median`, `confidence`: every coarser location, one feature each). Filters: the whole `SearchFilter` (Phase 5, D-047); anything unparseable falls back to the default (D-038). |
 | GET | `/tiles/price-hex/{z}/{x}/{y}?window=&segment=` | **Built (Phase 3).** Layer `hexes` (`n`, `median`, `suppressed`); H3 r6 up to z7, r7 for z8-9, r8 from z10 (D-009). |
 | GET | `/tiles/planning/{z}/{x}/{y}.pbf?since=&minUnits=` | planning application points layer |
 | GET | `/tiles/environment/{kind}/{z}/{x}/{y}.pbf` | radon, noise and zoning (GZT) overlays |
@@ -82,7 +81,7 @@ The `sales` point layer carries: `id`, `price`, `date` (yyyymmdd int), `isNew`, 
 ## Properties
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/properties?bbox=w,s,e,n&{SearchFilter subset}&sort=&page=&pageSize=` | **Built (Phase 3).** The list synced with the map: the latest matching sale per property in the box, using the same SQL as the tiles, so they always agree. A box wider than 0.6° or taller than 0.4° is refused (422, "Zoom in to list sales"). |
+| GET | `/properties?bbox=w,s,e,n&{SearchFilter}&sort=&page=&pageSize=` | **Built (Phase 3; full filters and `change` in Phase 5).** The list synced with the map: `/search` limited to the box. A box wider than 0.6° or taller than 0.4° is refused (422, "Zoom in to list sales"). Each item has `change` (`previousDate`, `previousPriceEur`, `changePct`) when its latest and previous sales are both plain market sales. |
 | GET | `/properties/{id}/summary` | **Built (Phase 3).** The hover card. Reads only Redis (`summary:{id}:{dataVersion}`) or `property_summary`: 10 ms uncached, 3 ms cached on the dev stack. |
 | GET | `/properties/{id}` | **Built (Phase 3).** Every sale, location precision and method, areas, vicinity, the most local 12-month median series, and caveats. The full Eircode is not returned, only its routing key. |
 | GET | `/properties/{id}/comparables?radiusM=500&months=24` | same street plus nearby, market sales only; only `exact` and `street` confidence are used for the distance test |
@@ -115,8 +114,8 @@ Summary shape (draft):
 ## Search and geocode
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/search?{SearchFilter}` | `{items: PropertyListItem[], total, bbox}`; syncs the list and map through the shared filter. Limited to 60/min anonymous, 300/min user. |
-| GET | `/geocode/autocomplete?q=` | searches our own properties, areas, routing keys and Dublin districts with pg_trgm (D-006); ≥ 3 chars, max 10 results |
+| GET | `/search?{SearchFilter}&bbox=&sort=&page=&pageSize=` | **Built (Phase 5, D-047).** `{items, total, page, pageSize, bbox, query, places}`: each property once, with its latest matching sale; `bbox` covers every match; `query` is the search as URL parameters; `places` names the `area` slugs. 60/min anonymous (per IP hash), 300/min signed in. On the full data: 0.1 to 0.5 s for a place, 1.3 s for all of Ireland, 2.1 s sorted by change. |
+| GET | `/geocode/autocomplete?q=&limit=` | **Built (Phase 5).** Counties, towns, EDs and townlands by name; routing keys and Dublin districts ("d8", "Dublin 6W"); addresses where every word matches (`rd` means road). Our own tables only (D-006). 2 to 100 characters, at most 10 answers; 120/min anonymous, 300/min signed in. |
 
 ## Areas
 | Method | Path | Notes |

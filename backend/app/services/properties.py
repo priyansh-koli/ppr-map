@@ -1,13 +1,10 @@
 """Reads for the map, hover card and property page. The hover path reads one precomputed row
 (or Redis); nothing here calls a third party (ARCHITECTURE.md goal 1)."""
 
-import json
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.schemas.properties import SalesFilter
 
 META = """
 SELECT r.stats ->> 'data_version', (r.stats ->> 'max_sale_date')::date,
@@ -22,25 +19,6 @@ SUMMARY = """
 SELECT ps.payload FROM property_summary ps JOIN property p ON p.id = ps.property_id
 WHERE p.public_id = :id AND NOT p.is_suppressed
 """
-
-# tile_matching_sales is the function behind /tiles/sales (migration 0004), so the list and
-# the map always agree on which sales match.
-LIST = """
-SELECT m.public_id, p.address_display, m.confidence::text, ST_Y(m.geom), ST_X(m.geom),
-       m.sale_date, m.price_eur, m.is_new, m.nfmp, m.vatx, m.bulk, m.n_sales,
-       count(*) OVER () AS total
-FROM tile_matching_sales(ST_MakeEnvelope(:w, :s, :e, :n, 4326), CAST(:params AS json)) m
-JOIN property p ON p.id = m.property_id
-WHERE m.geom && ST_MakeEnvelope(:w, :s, :e, :n, 4326)
-ORDER BY {order}, m.property_id
-LIMIT :limit OFFSET :offset
-"""
-ORDERS = {
-    "-date": "m.sale_date DESC",
-    "date": "m.sale_date ASC",
-    "-price": "m.price_eur DESC",
-    "price": "m.price_eur ASC",
-}
 
 DETAIL = """
 SELECT p.id, p.public_id, p.address_display, p.county::text, p.eircode_routing_key,
@@ -83,25 +61,6 @@ GROUP BY a.id ORDER BY array_position(:ids, a.id) LIMIT 1
 """
 
 
-def filter_params(f: SalesFilter) -> str:
-    """The tile functions' query parameters, as JSON."""
-    params: dict[str, Any] = {
-        "type": f.type,
-        "excludeNonMarket": str(f.exclude_non_market).lower(),
-        "excludeBulk": str(f.exclude_bulk).lower(),
-        "minConfidence": f.min_confidence.value,
-    }
-    for key, value in (
-        ("priceMin", f.price_min),
-        ("priceMax", f.price_max),
-        ("dateFrom", f.date_from),
-        ("dateTo", f.date_to),
-    ):
-        if value is not None:
-            params[key] = str(value)
-    return json.dumps(params)
-
-
 async def meta(session: AsyncSession) -> Any:
     return (await session.execute(sa.text(META))).one_or_none()
 
@@ -109,33 +68,6 @@ async def meta(session: AsyncSession) -> Any:
 async def summary(session: AsyncSession, public_id: str) -> dict[str, Any] | None:
     row = (await session.execute(sa.text(SUMMARY), {"id": public_id})).one_or_none()
     return dict(row[0]) if row else None
-
-
-async def list_properties(
-    session: AsyncSession,
-    bbox: tuple[float, float, float, float],
-    f: SalesFilter,
-    sort: str,
-    page: int,
-    page_size: int,
-) -> tuple[list[Any], int]:
-    w, s, e, n = bbox
-    sql = LIST.format(order=ORDERS[sort])
-    rows = (
-        await session.execute(
-            sa.text(sql),
-            {
-                "w": w,
-                "s": s,
-                "e": e,
-                "n": n,
-                "params": filter_params(f),
-                "limit": page_size,
-                "offset": (page - 1) * page_size,
-            },
-        )
-    ).all()
-    return list(rows), (int(rows[0].total) if rows else 0)
 
 
 async def detail(session: AsyncSession, public_id: str) -> Any:

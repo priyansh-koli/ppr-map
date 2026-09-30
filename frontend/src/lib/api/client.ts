@@ -19,6 +19,12 @@ export type WishlistItem = components["schemas"]["WishlistItemOut"];
 export type View = components["schemas"]["ViewOut"];
 export type MePatch = components["schemas"]["MePatch"];
 export type Overview = components["schemas"]["Overview"];
+export type SearchResults = components["schemas"]["SearchResults"];
+export type Suggestion = components["schemas"]["Suggestion"];
+export type SearchHistoryItem = components["schemas"]["SearchHistoryOut"];
+export type ViewPage = components["schemas"]["Page_ViewOut_"];
+export type SearchHistoryPage = components["schemas"]["Page_SearchHistoryOut_"];
+export type AreaRef = components["schemas"]["AreaRef"];
 export type CountyStat = components["schemas"]["CountyStat"];
 
 /** The GitHub Pages preview (D-034) is static: there is no API or tile server behind it. */
@@ -159,8 +165,18 @@ export const api = {
       init,
     ),
 
+  search: (query: URLSearchParams, init?: RequestInit) =>
+    get<SearchResults>(`/search?${query.toString()}`, init),
+  autocomplete: (q: string, init?: RequestInit) =>
+    get<Suggestion[]>(`/geocode/autocomplete?q=${encodeURIComponent(q)}`, init),
+
   recordView: (propertyId: string) => send<void>("POST", "/me/history/views", { propertyId }),
-  views: () => get<View[]>("/me/history/views"),
+  views: (page = 1) => get<ViewPage>(`/me/history/views?page=${page}`),
+  recordSearch: (query: Record<string, string>, label?: string) =>
+    send<void>("POST", "/me/history/searches", { query, label }),
+  searches: (page = 1) => get<SearchHistoryPage>(`/me/history/searches?page=${page}`),
+  clearSearches: () => send<void>("DELETE", "/me/history/searches"),
+  deleteSearch: (id: number) => send<void>("DELETE", `/me/history/searches/${id}`),
   clearViews: () => send<void>("DELETE", "/me/history/views"),
   deleteView: (id: number) => send<void>("DELETE", `/me/history/views/${id}`),
 };

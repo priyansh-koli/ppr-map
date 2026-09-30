@@ -3,9 +3,10 @@ allowed: the limits protect against abuse, they are not a correctness guarantee.
 
 import contextlib
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from redis.asyncio import Redis
 
+from app.auth.tokens import ip_hash
 from app.redis_client import REDIS_ERRORS
 
 
@@ -33,3 +34,19 @@ async def forget(cache: Redis | None, key: str) -> None:
         return
     with contextlib.suppress(*REDIS_ERRORS):
         await cache.delete(f"ratelimit:{key}")
+
+
+async def limit_caller(
+    cache: Redis | None,
+    request: Request,
+    user_id: object | None,
+    scope: str,
+    per_minute: tuple[int, int],
+) -> None:
+    """Per-minute limits for public reads (docs/permissions.md): (anonymous, signed in).
+    Anonymous callers are counted by a salted hash of their IP, users by their id."""
+    if user_id is not None:
+        await limit(cache, f"{scope}:u:{user_id}", per_minute[1], 60)
+        return
+    ip = request.client.host if request.client else "unknown"
+    await limit(cache, f"{scope}:ip:{ip_hash(ip)}", per_minute[0], 60)

@@ -166,6 +166,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/geocode/autocomplete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Autocomplete
+         * @description Places and addresses we hold data for (D-006): counties, towns, Electoral Divisions,
+         *     townlands, Eircode routing keys (and Dublin postal districts), and property addresses.
+         *     Nothing is sent to a third party.
+         */
+        get: operations["autocomplete_api_v1_geocode_autocomplete_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -228,6 +250,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/history/searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Searches */
+        get: operations["searches_api_v1_me_history_searches_get"];
+        put?: never;
+        /**
+         * Record Search
+         * @description Keep a search the user ran, unless history is off. Running the same search again
+         *     moves it to the top instead of adding a copy.
+         */
+        post: operations["record_search_api_v1_me_history_searches_post"];
+        /** Clear Searches */
+        delete: operations["clear_searches_api_v1_me_history_searches_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/history/searches/{search_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Search */
+        delete: operations["delete_search_api_v1_me_history_searches__search_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/history/views": {
         parameters: {
             query?: never;
@@ -235,7 +297,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Views */
+        /**
+         * Views
+         * @description Property pages visited in the last 12 months, newest first.
+         */
         get: operations["views_api_v1_me_history_views_get"];
         put?: never;
         /**
@@ -377,6 +442,7 @@ export interface paths {
         /**
          * List Properties
          * @description The list view synced with the map: the latest matching sale per property in the box.
+         *     It is /search limited to the box, so it takes the same filters.
          */
         get: operations["list_properties_api_v1_properties_get"];
         put?: never;
@@ -419,6 +485,28 @@ export interface paths {
          * @description The hover card: one precomputed row, cached in Redis per data version.
          */
         get: operations["summary_api_v1_properties__property_id__summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search
+         * @description Every property whose latest matching sale passes the filters: the same matches as the
+         *     map (`/tiles/sales` takes the same parameters). `-change` sorts by the largest rise since
+         *     the previous plain market sale.
+         */
+        get: operations["search_api_v1_search_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -723,6 +811,28 @@ export interface components {
              */
             windowStart: string;
         };
+        /** Page[SearchHistoryOut] */
+        Page_SearchHistoryOut_: {
+            /** Items */
+            items: components["schemas"]["SearchHistoryOut"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ViewOut] */
+        Page_ViewOut_: {
+            /** Items */
+            items: components["schemas"]["ViewOut"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /** Total */
+            total: number;
+        };
         /** PasswordChangeIn */
         PasswordChangeIn: {
             /** Currentpassword */
@@ -746,6 +856,22 @@ export interface components {
             privacyVersion: string;
             /** Termsversion */
             termsVersion: string;
+        };
+        /**
+         * PriceChange
+         * @description Against the previous sale, only when both are plain market sales; not adjusted for
+         *     inflation or for work done in between.
+         */
+        PriceChange: {
+            /** Changepct */
+            changePct: number;
+            /**
+             * Previousdate
+             * Format: date
+             */
+            previousDate: string;
+            /** Previouspriceeur */
+            previousPriceEur: number;
         };
         /** Profile */
         "Profile-Input": {
@@ -813,6 +939,7 @@ export interface components {
         PropertyListItem: {
             /** Address */
             address: string;
+            change?: components["schemas"]["PriceChange"] | null;
             confidence: components["schemas"]["GeocodeConfidence"];
             /** Id */
             id: string;
@@ -926,6 +1053,65 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /** SearchHistoryIn */
+        SearchHistoryIn: {
+            /**
+             * Label
+             * @description What the user searched for
+             */
+            label?: string | null;
+            /**
+             * Query
+             * @description The search's URL parameters
+             */
+            query: {
+                [key: string]: string;
+            };
+        };
+        /** SearchHistoryOut */
+        SearchHistoryOut: {
+            /** Id */
+            id: number;
+            /** Label */
+            label: string | null;
+            /** Query */
+            query: {
+                [key: string]: string;
+            };
+            /**
+             * Searchedat
+             * Format: date-time
+             */
+            searchedAt: string;
+        };
+        /** SearchResults */
+        SearchResults: {
+            /**
+             * Bbox
+             * @description west, south, east, north of every match; null when none match
+             */
+            bbox?: number[] | null;
+            /** Items */
+            items: components["schemas"]["PropertyListItem"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /**
+             * Places
+             * @description The areas named by the `area` filter
+             */
+            places?: components["schemas"]["AreaRef"][];
+            /**
+             * Query
+             * @description The filters applied, as URL parameters
+             */
+            query: {
+                [key: string]: string;
+            };
+            /** Total */
+            total: number;
+        };
         /** Sourced[SchoolValue] */
         Sourced_SchoolValue_: {
             /** Asof */
@@ -983,6 +1169,36 @@ export interface components {
             /** Name */
             name?: string | null;
             type: components["schemas"]["PoiType"];
+        };
+        /**
+         * Suggestion
+         * @description One autocomplete answer: a place to filter by, or a property to open.
+         */
+        Suggestion: {
+            /** Bbox */
+            bbox?: number[] | null;
+            /** Detail */
+            detail?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "county" | "settlement" | "electoral_division" | "townland" | "routing_key" | "property";
+            /** Label */
+            label: string;
+            /** Lat */
+            lat?: number | null;
+            /** Lng */
+            lng?: number | null;
+            /** Propertyid */
+            propertyId?: string | null;
+            /** Routingkey */
+            routingKey?: string | null;
+            /**
+             * Slug
+             * @description Area slug, for area kinds
+             */
+            slug?: string | null;
         };
         /** TokenIn */
         TokenIn: {
@@ -1328,6 +1544,38 @@ export interface operations {
             };
         };
     };
+    autocomplete_api_v1_geocode_autocomplete_get: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Suggestion"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_api_v1_health_get: {
         parameters: {
             query?: never;
@@ -1461,9 +1709,12 @@ export interface operations {
             };
         };
     };
-    views_api_v1_me_history_views_get: {
+    searches_api_v1_me_history_searches_get: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1476,7 +1727,126 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ViewOut"][];
+                    "application/json": components["schemas"]["Page_SearchHistoryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_search_api_v1_me_history_searches_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchHistoryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_searches_api_v1_me_history_searches_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_search_api_v1_me_history_searches__search_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                search_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    views_api_v1_me_history_views_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ViewOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1773,7 +2143,7 @@ export interface operations {
             query: {
                 /** @description west,south,east,north in degrees */
                 bbox: string;
-                sort?: "-date" | "date" | "-price" | "price";
+                sort?: "-date" | "date" | "-price" | "price" | "-change" | "change";
                 page?: number;
                 pageSize?: number;
                 priceMin?: number | string | null;
@@ -1784,6 +2154,21 @@ export interface operations {
                 excludeNonMarket?: boolean;
                 excludeBulk?: boolean;
                 minConfidence?: components["schemas"]["GeocodeConfidence"];
+                vat?: "exclusive" | "inclusive" | "any";
+                /** @description Counties, comma-separated */
+                county?: string | null;
+                /** @description Area slugs, comma-separated */
+                area?: string | null;
+                /** @description Eircode routing keys, e.g. D08,A63 */
+                routingKey?: string | null;
+                /** @description lat,lng */
+                near?: string | null;
+                /** @description With near; 100 to 20,000, default 1,000 */
+                radiusM?: number | null;
+                /** @description Nearest stop within this many metres */
+                maxStopM?: number | null;
+                /** @description Nearest school within this many metres */
+                maxSchoolM?: number | null;
             };
             header?: never;
             path?: never;
@@ -1858,6 +2243,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PropertySummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_api_v1_search_get: {
+        parameters: {
+            query?: {
+                /** @description west,south,east,north */
+                bbox?: string | null;
+                sort?: "-date" | "date" | "-price" | "price" | "-change" | "change";
+                page?: number;
+                pageSize?: number;
+                priceMin?: number | string | null;
+                priceMax?: number | string | null;
+                dateFrom?: string | null;
+                dateTo?: string | null;
+                type?: "new" | "second_hand" | "any";
+                excludeNonMarket?: boolean;
+                excludeBulk?: boolean;
+                minConfidence?: components["schemas"]["GeocodeConfidence"];
+                vat?: "exclusive" | "inclusive" | "any";
+                /** @description Counties, comma-separated */
+                county?: string | null;
+                /** @description Area slugs, comma-separated */
+                area?: string | null;
+                /** @description Eircode routing keys, e.g. D08,A63 */
+                routingKey?: string | null;
+                /** @description lat,lng */
+                near?: string | null;
+                /** @description With near; 100 to 20,000, default 1,000 */
+                radiusM?: number | null;
+                /** @description Nearest stop within this many metres */
+                maxStopM?: number | null;
+                /** @description Nearest school within this many metres */
+                maxSchoolM?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResults"];
                 };
             };
             /** @description Validation Error */

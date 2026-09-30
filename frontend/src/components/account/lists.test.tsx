@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-import type { View, WishlistItem } from "@/lib/api/client";
+import type { SearchHistoryItem, View, WishlistItem } from "@/lib/api/client";
 import { deferred, mockApi } from "@/test-fixtures/api";
 
 import { History } from "./history";
@@ -27,6 +27,15 @@ const VIEW: View = {
   address: "49 South Circular Road, Dublin 8",
   viewedAt: "2026-09-27T10:00:00+00:00",
 };
+
+const SEARCH: SearchHistoryItem = {
+  id: 4,
+  query: { area: "carlow-1f4955", priceMax: "300000" },
+  label: "Carlow",
+  searchedAt: "2026-09-28T10:00:00+00:00",
+};
+
+const page = <T,>(items: T[], total = items.length) => ({ items, total, page: 1, pageSize: 50 });
 
 describe("Wishlist", () => {
   it("formats a decimal-string price", async () => {
@@ -77,22 +86,48 @@ describe("Wishlist", () => {
 
 describe("History", () => {
   it("shows when each property was viewed", async () => {
-    mockApi({ "GET /me/history/views": () => [200, [VIEW]] });
+    mockApi({
+      "GET /me/history/views": () => [200, page([VIEW])],
+      "GET /me/history/searches": () => [200, page([SEARCH])],
+    });
     render(<History />);
     expect(await screen.findByText(/27 Sept 2026/)).toBeInTheDocument();
+    const search = await screen.findByRole("link", { name: "Carlow" });
+    expect(search).toHaveAttribute("href", "/search?area=carlow-1f4955&priceMax=300000");
+    expect(screen.getByText(/Carlow · up to €300k ·/)).toBeInTheDocument();
+  });
+
+  it("loads older entries a page at a time", async () => {
+    const older = { ...VIEW, id: 99, address: "1 Older Road, Carlow" };
+    mockApi({
+      "GET /me/history/views": () => [200, page([VIEW], 2)],
+      "GET /me/history/searches": () => [200, page([])],
+    });
+    render(<History />);
+    const more = await screen.findByRole("button", { name: "Show more (1 older)" });
+    mockApi({
+      "GET /me/history/views": () => [200, { ...page([older], 2), page: 2 }],
+      "GET /me/history/searches": () => [200, page([])],
+    });
+    fireEvent.click(more);
+    expect(await screen.findByRole("link", { name: older.address })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Show more/ })).not.toBeInTheDocument();
   });
 
   it("keeps the list and says so when clearing fails", async () => {
     mockApi({
-      "GET /me/history/views": () => [200, [VIEW]],
+      "GET /me/history/views": () => [200, page([VIEW])],
+      "GET /me/history/searches": () => [200, page([])],
       "DELETE /me/history/views": () => [500, { title: "Internal Server Error" }],
     });
     render(<History />);
-    fireEvent.click(await screen.findByRole("button", { name: "Clear all" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Clear all viewed properties" }));
     expect(
-      await screen.findByText("Could not clear your history: Internal Server Error"),
+      await screen.findByText("Could not clear your viewed properties: Internal Server Error"),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: VIEW.address })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Clear all" })).toBeEnabled());
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Clear all viewed properties" })).toBeEnabled(),
+    );
   });
 });

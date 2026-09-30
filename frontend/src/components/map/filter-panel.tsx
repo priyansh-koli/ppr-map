@@ -2,13 +2,26 @@
 
 import { useEffect, useState } from "react";
 
-import type { Filters, MinConfidence, SaleType } from "@/lib/filters";
+import Link from "next/link";
+
+import { slugLabel } from "@/lib/describe";
+import {
+  countyName,
+  type Filters,
+  filtersToParams,
+  hasPlaceFilter,
+  type MinConfidence,
+  type SaleType,
+  type Vat,
+} from "@/lib/filters";
+import { formatDistance } from "@/lib/format";
+import { ROUTES } from "@/lib/routes";
 
 // Borders, radius and colours come from the base form styles (globals.css).
 const input = "mt-0.5 w-full px-2.5 py-1.5";
 
 /** Number fields apply after a short pause so every keystroke is not a new set of tiles. */
-function PriceInput({
+export function PriceInput({
   label,
   value,
   onChange,
@@ -62,12 +75,76 @@ export function FilterPanel({
 }) {
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     onChange({ ...filters, [key]: value });
+  // Place filters come from a search (D-047); here they can only be removed.
+  const places = [
+    ...filters.county.map((c) => ({
+      label: `Co. ${countyName(c)}`,
+      drop: () =>
+        set(
+          "county",
+          filters.county.filter((x) => x !== c),
+        ),
+    })),
+    ...filters.area.map((a) => ({
+      label: slugLabel(a),
+      drop: () =>
+        set(
+          "area",
+          filters.area.filter((x) => x !== a),
+        ),
+    })),
+    ...filters.routingKey.map((k) => ({
+      label: k,
+      drop: () =>
+        set(
+          "routingKey",
+          filters.routingKey.filter((x) => x !== k),
+        ),
+    })),
+    ...(filters.near
+      ? [
+          {
+            label: `Within ${formatDistance(filters.radiusM ?? 1000)} of a point`,
+            drop: () => onChange({ ...filters, near: null, radiusM: null }),
+          },
+        ]
+      : []),
+  ];
   return (
     <form
       aria-label="Filter sales"
       className="space-y-3 text-sm"
       onSubmit={(e) => e.preventDefault()}
     >
+      {hasPlaceFilter(filters) ? (
+        <fieldset className="space-y-1">
+          <legend className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            Places
+          </legend>
+          <p className="text-muted">Only sales in:</p>
+          <ul className="flex flex-wrap gap-1.5">
+            {places.map((p) => (
+              <li key={p.label} className="chip gap-1.5 pr-1">
+                {p.label}
+                <button
+                  type="button"
+                  onClick={p.drop}
+                  aria-label={`Remove ${p.label}`}
+                  className="grid h-5 w-5 place-items-center rounded-full hover:bg-fill"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+          <Link
+            className="text-accent underline"
+            href={`${ROUTES.search.path}?${filtersToParams(filters).toString()}`}
+          >
+            Change in search
+          </Link>
+        </fieldset>
+      ) : null}
       <fieldset className="space-y-1">
         <legend className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted">
           Layer
@@ -132,6 +209,18 @@ export function FilterPanel({
             <option value="any">New and second-hand</option>
             <option value="new">New builds only</option>
             <option value="second_hand">Second-hand only</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className="text-muted">VAT</span>
+          <select
+            className={input}
+            value={filters.vat}
+            onChange={(e) => set("vat", e.target.value as Vat)}
+          >
+            <option value="any">Any</option>
+            <option value="exclusive">Filed without VAT (new builds)</option>
+            <option value="inclusive">Filed with VAT or none due</option>
           </select>
         </label>
         <label className="block">

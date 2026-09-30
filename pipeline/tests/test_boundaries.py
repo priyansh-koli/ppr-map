@@ -27,6 +27,7 @@ def test_area_names_from_official_upper_case() -> None:
 def test_slugs_are_stable_and_distinguish_same_names() -> None:
     assert area_slug(AreaKind.COUNTY, "cork", "Cork") == "cork"
     assert area_slug(AreaKind.SMALL_AREA, "A017010016", "017010016") == "sa-017010016"
+    assert area_slug(AreaKind.SMALL_AREA, "A268113017/02", "268113017/02") == "sa-268113017-02"
     a = area_slug(AreaKind.TOWNLAND, "4e53b5b4-f409-4728-9d0b-f62916789acb", "Barnadarrig")
     b = area_slug(AreaKind.TOWNLAND, "0000aaaa-f409-4728-9d0b-f62916789acb", "Barnadarrig")
     assert a.startswith("townland-barnadarrig-") and a != b

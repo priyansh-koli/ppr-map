@@ -1,4 +1,5 @@
 import os
+import re
 from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,9 @@ from fastapi.testclient import TestClient
 from app.api.v1.health import get_redis_ping
 from app.db import get_session
 from app.main import create_app
+from app.policies import PRIVACY_VERSION, TERMS_VERSION
+from app.redis_client import get_redis
+from app.services.email import Email, get_mailer
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = BACKEND_DIR.parent
@@ -170,3 +174,122 @@ def _build_carlow(engine: Any) -> None:
         )
     compute_vicinity(engine)
     aggregate(engine)
+
+
+# --- accounts: a fake mailbox and Redis, and a client that behaves like the frontend ------
+
+PASSWORD = "correct horse battery"
+
+
+class Outbox:
+    def __init__(self) -> None:
+        self.sent: list[Email] = []
+
+    async def send(self, email: Email) -> None:
+        self.sent.append(email)
+
+    def token_for(self, to: str) -> str:
+        body = next(e.body for e in reversed(self.sent) if e.to == to and "token=" in e.body)
+        match = re.search(r"token=([\w-]+)", body)
+        assert match, body
+        return match.group(1)
+
+
+class FakeRedis:
+    """Enough of redis.asyncio.Redis for the caches and rate limits."""
+
+    def __init__(self) -> None:
+        self.data: dict[str, Any] = {}
+
+    async def get(self, key: str) -> Any:
+        return self.data.get(key)
+
+    async def mget(self, *keys: str) -> list[Any]:
+        return [self.data.get(k) for k in keys]
+
+    async def set(self, key: str, value: Any, ex: int | None = None) -> None:
+        self.data[key] = value
+
+    async def delete(self, *keys: str) -> None:
+        for k in keys:
+            self.data.pop(k, None)
+
+    async def incr(self, key: str) -> int:
+        self.data[key] = int(self.data.get(key, 0)) + 1
+        return int(self.data[key])
+
+    async def expire(self, key: str, seconds: int, nx: bool = False) -> None:
+        return None
+
+    async def ttl(self, key: str) -> int:
+        return 60
+
+    def pipeline(self, transaction: bool = True) -> "FakePipeline":
+        return FakePipeline(self)
+
+
+class FakePipeline:
+    """Queues calls and runs them on `execute`, like redis.asyncio's pipeline."""
+
+    def __init__(self, redis: FakeRedis) -> None:
+        self.redis = redis
+        self.calls: list[Any] = []
+
+    async def __aenter__(self) -> "FakePipeline":
+        return self
+
+    async def __aexit__(self, *_: object) -> None:
+        return None
+
+    def set(self, key: str, value: Any, ex: int | None = None) -> None:
+        self.calls.append(self.redis.set(key, value, ex))
+
+    def delete(self, *keys: str) -> None:
+        self.calls.append(self.redis.delete(*keys))
+
+    async def execute(self) -> list[Any]:
+        return [await c for c in self.calls]
+
+
+@pytest.fixture
+def outbox() -> Outbox:
+    return Outbox()
+
+
+@pytest.fixture
+def redis() -> FakeRedis:
+    return FakeRedis()
+
+
+def browser(outbox: Outbox, redis: FakeRedis) -> TestClient:
+    """A client that behaves like our frontend: it echoes the CSRF cookie in a header."""
+
+    async def cache() -> AsyncIterator[FakeRedis]:
+        yield redis
+
+    client = make_api({get_mailer: lambda: outbox, get_redis: cache})
+    client.get("/api/v1/auth/policies")
+    client.headers["X-CSRF-Token"] = client.cookies["ppr_csrf"]
+    return client
+
+
+def register(client: TestClient, email: str, **extra: Any) -> Any:
+    body = {
+        "fullName": "Aoife Byrne",
+        "email": email,
+        "password": PASSWORD,
+        "age18Plus": True,
+        "acceptTerms": True,
+        "termsVersion": TERMS_VERSION,
+        "privacyVersion": PRIVACY_VERSION,
+        **extra,
+    }
+    return client.post("/api/v1/auth/register", json=body)
+
+
+def signed_in(outbox: Outbox, redis: FakeRedis, email: str) -> TestClient:
+    client = browser(outbox, redis)
+    assert register(client, email).status_code == 202
+    login = client.post("/api/v1/auth/login", json={"email": email, "password": PASSWORD})
+    assert login.status_code == 200, login.text
+    return client

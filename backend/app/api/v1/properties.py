@@ -4,33 +4,31 @@ import contextlib
 import json
 import time
 from datetime import date
-from decimal import Decimal
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.filters import sales_filter
+from app.api.v1.search import list_item, parse_bbox
 from app.db import get_session
-from app.models.enums import GeocodeConfidence
 from app.redis_client import REDIS_ERRORS, get_redis
 from app.schemas.properties import (
     AreaRef,
     AreaSeries,
-    LatestSale,
     Location,
     Meta,
     PropertyDetail,
     PropertyList,
-    PropertyListItem,
     PropertySummary,
     Sale,
-    SaleFlags,
     SalesFilter,
     StatsPoint,
     Vicinity,
 )
 from app.services import properties as q
+from app.services import search
 
 router = APIRouter(tags=["properties"])
 
@@ -49,31 +47,6 @@ META_TTL_S = 60.0
 
 class _Shared:
     meta: tuple[float, Meta] | None = None
-
-
-def sales_filter(
-    price_min: Annotated[Decimal | None, Query(alias="priceMin", ge=0)] = None,
-    price_max: Annotated[Decimal | None, Query(alias="priceMax", ge=0)] = None,
-    date_from: Annotated[date | None, Query(alias="dateFrom")] = None,
-    date_to: Annotated[date | None, Query(alias="dateTo")] = None,
-    type_: Annotated[Literal["new", "second_hand", "any"], Query(alias="type")] = "any",
-    exclude_non_market: Annotated[bool, Query(alias="excludeNonMarket")] = True,
-    exclude_bulk: Annotated[bool, Query(alias="excludeBulk")] = True,
-    min_confidence: Annotated[
-        GeocodeConfidence, Query(alias="minConfidence")
-    ] = GeocodeConfidence.LOCALITY,
-) -> SalesFilter:
-    """The map's filters, with the tiles' defaults."""
-    return SalesFilter(
-        price_min=price_min,
-        price_max=price_max,
-        date_from=date_from,
-        date_to=date_to,
-        type=type_,
-        exclude_non_market=exclude_non_market,
-        exclude_bulk=exclude_bulk,
-        min_confidence=min_confidence,
-    )
 
 
 Session = Annotated[AsyncSession, Depends(get_session)]
@@ -133,38 +106,30 @@ async def list_properties(
     session: Session,
     filters: Annotated[SalesFilter, Depends(sales_filter)],
     bbox: Annotated[str, Query(description="west,south,east,north in degrees")],
-    sort: Literal["-date", "date", "-price", "price"] = "-date",
+    sort: Literal["-date", "date", "-price", "price", "-change", "change"] = "-date",
     page: Annotated[int, Query(ge=1, le=1000)] = 1,
     page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 50,
 ) -> PropertyList:
-    """The list view synced with the map: the latest matching sale per property in the box."""
-    try:
-        w, s, e, n = (float(v) for v in bbox.split(","))
-    except ValueError:
-        raise HTTPException(422, "bbox must be west,south,east,north") from None
-    if not (w < e and s < n):
-        raise HTTPException(422, "bbox must be west,south,east,north")
+    """The list view synced with the map: the latest matching sale per property in the box.
+    It is /search limited to the box, so it takes the same filters."""
+    box = parse_bbox(bbox)
+    assert box is not None
+    w, s, e, n = box
     if e - w > MAX_BBOX_DEGREES[0] or n - s > MAX_BBOX_DEGREES[1]:
         raise HTTPException(422, "Zoom in to list sales")
-    rows, total = await q.list_properties(session, (w, s, e, n), filters, sort, page, page_size)
-    items = [
-        PropertyListItem(
-            id=r[0],
-            address=r[1],
-            confidence=r[2],
-            lat=r[3],
-            lng=r[4],
-            latest_sale=LatestSale(
-                date=r[5],
-                price_eur=r[6],
-                is_new=r[7],
-                flags=SaleFlags(not_full_market_price=r[8], vat_exclusive=r[9], bulk=r[10]),
-            ),
-            n_sales=r[11],
-        )
-        for r in rows
-    ]
-    return PropertyList(items=items, total=total, page=page, page_size=page_size)
+    empty = PropertyList(items=[], total=0, page=page, page_size=page_size)
+    found = await search.envelope(session, filters, box)
+    if found is None:
+        return empty
+    rows = await search.search(session, filters, found, sort, page, page_size)
+    if not rows or not rows[0][15]:
+        return empty
+    return PropertyList(
+        items=[list_item(r) for r in rows if r[0] is not None],
+        total=rows[0][15],
+        page=page,
+        page_size=page_size,
+    )
 
 
 def _caveats(confidence: str, sales: list[Sale], provisional_from: date) -> list[str]:

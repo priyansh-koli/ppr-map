@@ -206,11 +206,12 @@ SLUG_PREFIX = {
 
 def area_slug(kind: AreaKind, code: str, name: str) -> str:
     """'cork'; 'sa-017010016'; 'ed-carlow-rural-1a2b3c'. A short hash of the code keeps
-    same-named townlands and EDs apart while staying stable between runs."""
+    same-named townlands and EDs apart while staying stable between runs. Merged Small Areas
+    are named '268003013/268003018'; the slash becomes a hyphen, since slugs are URL paths."""
     if kind is AreaKind.COUNTY:
         return code
     if kind is AreaKind.SMALL_AREA:
-        return f"sa-{name}"
+        return f"sa-{slugify(name)}"
     suffix = hashlib.sha1(code.encode(), usedforsecurity=False).hexdigest()[:6]
     return f"{SLUG_PREFIX[kind]}{slugify(name)}-{suffix}"
 
