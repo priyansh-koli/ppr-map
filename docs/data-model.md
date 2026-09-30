@@ -156,6 +156,14 @@ PK: `(area_id, source, key, as_of)`.
 
 Indexes: `GIST(geom)`, `(type)`, `unique(source, source_ref)`.
 
+### `gazetteer_feature`
+The local street gazetteer for the geocoding pass after Nominatim (D-046). Rebuilt whole by `ppr gazetteer` from the OSM extract, the official townlands and settlements in `area`, and the DHLGH National Housing Development Surveys 2011–2012.
+`id, kind text (street | estate | address | place | city), name, house_number text null (address only), detail text (highway, place, building type, or nhds), county county, geom Point 4326, radius_m int null (places: how far an address in them may lie), source text, source_ref text (OSM way/node id, survey DRef), as_of date`
+
+A `street` row is every same-named OSM segment within 250 m merged into one, placed on the street nearest the middle. Features outside the Republic (the extract includes Northern Ireland) get no county and are dropped.
+
+Indexes: `GIST(geom)`, `(county, kind)`.
+
 ### `property_enrichment`
 One row per property. Values are kept wide for speed. Each group of values carries its source and as-of date in `provenance jsonb`.
 `property_id PK FK, nearest_stop_id, nearest_stop_type, nearest_stop_m int, nearest_rail_m int, nearest_primary_school_id, nearest_primary_school_m, nearest_post_primary_school_id, nearest_post_primary_school_m, amenities_1km jsonb ({"shop":12,"pharmacy":2,…}), deprivation_band text, deprivation_level text ('ed'), provenance jsonb, computed_at`

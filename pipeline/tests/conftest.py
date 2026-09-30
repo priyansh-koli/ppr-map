@@ -35,7 +35,12 @@ def migrated_engine() -> Iterator[sa.Engine]:
 def engine(migrated_engine: sa.Engine) -> sa.Engine:
     """A migrated database with no PPR or area data in it."""
     with migrated_engine.begin() as conn:
-        conn.execute(sa.text("TRUNCATE property, sale, ingest_run, area RESTART IDENTITY CASCADE"))
+        conn.execute(
+            sa.text(
+                "TRUNCATE property, sale, ingest_run, area, gazetteer_feature "
+                "RESTART IDENTITY CASCADE"
+            )
+        )
     return migrated_engine
 
 

@@ -304,6 +304,32 @@ class Poi(Base):
     __table_args__ = (sa.UniqueConstraint("source", "source_ref"), gist("poi", "geom"))
 
 
+class GazetteerFeature(Base):
+    """Streets, estates, address points and places for the local geocoding pass (D-046).
+
+    Rebuilt whole by `ppr gazetteer`. Same-named street segments close together are merged
+    into one row whose point lies on the street."""
+
+    __tablename__ = "gazetteer_feature"
+
+    id: Mapped[int] = mapped_column(sa.BigInteger, sa.Identity(), primary_key=True)
+    kind: Mapped[str] = mapped_column(sa.Text)  # street | estate | address | place | city
+    name: Mapped[str] = mapped_column(sa.Text)
+    house_number: Mapped[str | None] = mapped_column(sa.Text)
+    detail: Mapped[str | None] = mapped_column(sa.Text)  # highway, place or building type
+    county: Mapped[County] = mapped_column(COUNTY)
+    geom: Mapped[Any] = mapped_column(point_4326())
+    radius_m: Mapped[int | None] = mapped_column(sa.Integer)  # places: how far they reach
+    source: Mapped[str] = mapped_column(sa.Text)
+    source_ref: Mapped[str | None] = mapped_column(sa.Text)
+    as_of: Mapped[date] = mapped_column(sa.Date)
+
+    __table_args__ = (
+        sa.Index("ix_gazetteer_feature_county_kind", "county", "kind"),
+        gist("gazetteer_feature", "geom"),
+    )
+
+
 class PropertyEnrichment(Base):
     """Precomputed vicinity values, one row per property. Provenance per value group."""
 
