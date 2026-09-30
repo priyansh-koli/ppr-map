@@ -4,10 +4,13 @@
    town, bounded to the county's box, and `rules.pick` accepts or rejects each result.
 2. **County check** in PostGIS: a point more than 2 km outside the reported county is
    rejected (`county_conflict`).
-3. **Fallbacks** in the database for what Nominatim could not place: official townland and
+3. **Local street gazetteer** (D-046): each address part looked up on its own in
+   `gazetteer_feature` (OSM streets, estates and address points, DHLGH surveyed estates),
+   accepted only near a place named later in the address (`local.py`).
+4. **Fallbacks** in the database for what is still not placed: official townland and
    CSO settlement names (`locality`), then the median of precise points sharing the Eircode
    routing key (`routing_key`), then a point inside the county (`county`).
-4. **Spatial joins**: Small Area, ED, townland and settlement ids, and the H3 r8 cell.
+5. **Spatial joins**: Small Area, ED, townland and settlement ids, and the H3 r8 cell.
 
 Every query is logged in `geocode_attempt` and the run in `ingest_run`. Properties are
 geocoded once (`geocoded_at`); `refresh=True` redoes all but the admin-locked ones.
@@ -16,7 +19,6 @@ geocoded once (`geocoded_at`); `refresh=True` redoes all but the admin-locked on
 import collections
 import concurrent.futures as cf
 import json
-import re
 import time
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
@@ -27,11 +29,15 @@ import h3
 import httpx
 import sqlalchemy as sa
 from app.models.data import IngestRun
-from app.models.enums import IngestKind, IngestStatus
+from app.models.enums import GeocodeConfidence, IngestKind, IngestStatus
 
+from ppr_pipeline.geocode import local
+from ppr_pipeline.geocode.gazetteer import load_index
 from ppr_pipeline.geocode.rules import (
+    RESIDENTIAL_BUILDINGS,
     Candidate,
     fold,
+    km_between,
     ladder,
     name_tokens,
     name_variants,
@@ -51,6 +57,7 @@ COUNTY_BUFFER_M = 2000
 MIN_ROUTING_KEY_POINTS = 10
 # A precise point this far from its routing key's median is flagged for review.
 ROUTING_KEY_CONFLICT_M = 25_000
+LOCAL_STEP = 80
 GAZETTEER_STEP = 90
 
 # Nominatim result fields kept for the rules and the attempt log.
@@ -341,6 +348,51 @@ UPDATE property SET
 WHERE geocoded_at IS NOT NULL AND NOT geocode_locked AND geocode_method NOT LIKE 'nominatim:%'
 """
 
+# Rules change (D-046: a railway station is not an address); a stored Nominatim result the
+# current rules reject is dropped and the property goes through the later steps again.
+RECHECK_BUILDINGS = """
+UPDATE property SET
+    geom = NULL, geocode_confidence = 'unmatched', geocode_method = 'nominatim:none',
+    geocode_source = NULL, updated_at = now()
+WHERE geocoded_at IS NOT NULL AND NOT geocode_locked AND geocode_confidence = 'street'
+  AND geocode_method LIKE 'nominatim:building/%'
+  AND substr(geocode_method, 20) <> ALL(:types)
+"""
+
+# The local pass may improve anything Nominatim placed at town level or not at all, and may
+# turn a Nominatim street into the exact house on it, if the two agree.
+STREET_TO_EXACT_KM = 1.5
+LOCAL_CANDIDATES = """
+SELECT id, address_display, county::text, geocode_confidence::text, ST_X(geom), ST_Y(geom)
+FROM property
+WHERE geocoded_at IS NOT NULL AND NOT geocode_locked
+  AND (geocode_confidence = 'unmatched'
+       OR (geocode_confidence IN ('locality', 'street') AND geocode_method LIKE 'nominatim:%'))
+"""
+
+CREATE_LOCAL_STAGE = """
+CREATE TEMP TABLE local_stage (
+    property_id bigint, lon float8, lat float8, confidence geocode_confidence, method text,
+    source text, query text
+) ON COMMIT DROP
+"""
+
+APPLY_LOCAL = """
+WITH upd AS (
+    UPDATE property p SET
+        geom = ST_SetSRID(ST_MakePoint(s.lon, s.lat), 4326), geocode_confidence = s.confidence,
+        geocode_method = s.method, geocode_source = s.source,
+        geocoded_at = now(), updated_at = now()
+    FROM local_stage s WHERE p.id = s.property_id
+    RETURNING p.id
+)
+INSERT INTO geocode_attempt (property_id, run_id, step, method, query, candidate_geom,
+                             candidate_type, confidence, accepted)
+SELECT s.property_id, :run_id, :step, 'local', s.query,
+       ST_SetSRID(ST_MakePoint(s.lon, s.lat), 4326), s.method, s.confidence, true
+FROM local_stage s
+"""
+
 UNMATCHED = """
 SELECT id, address_display, county::text FROM property
 WHERE geocode_confidence = 'unmatched' AND geocoded_at IS NOT NULL AND NOT geocode_locked
@@ -518,9 +570,42 @@ def _apply_gazetteer(
     return len(hits)
 
 
+def local_pass(conn: sa.Connection, run_id: int) -> dict[str, int]:
+    """Match against `gazetteer_feature`; a no-op until `ppr gazetteer` has filled it."""
+    index = load_index(conn)
+    if not index.named and not index.addresses:
+        return {"local_exact": 0, "local_street": 0}
+    hits = []
+    for pid, display, county, current, lon, lat in conn.execute(sa.text(LOCAL_CANDIDATES)):
+        m = local.match(index, display, county)
+        if m is None:
+            continue
+        if current == "street" and (
+            m.confidence is not GeocodeConfidence.EXACT
+            or km_between(m.lon, m.lat, lon, lat) > STREET_TO_EXACT_KM
+        ):
+            continue
+        hits.append((pid, m.lon, m.lat, m.confidence.value, m.method, m.source, m.part))
+    conn.execute(sa.text(CREATE_LOCAL_STAGE))
+    raw = conn.connection.driver_connection
+    assert raw is not None
+    columns = "property_id, lon, lat, confidence, method, source, query"
+    with raw.cursor() as cur, cur.copy(f"COPY local_stage ({columns}) FROM STDIN") as copy:
+        for row in hits:
+            copy.write_row(row)
+    conn.execute(sa.text(APPLY_LOCAL), {"run_id": run_id, "step": LOCAL_STEP})
+    conn.execute(sa.text("DROP TABLE local_stage"))
+    exact = sum(1 for h in hits if h[3] == GeocodeConfidence.EXACT.value)
+    return {"local_exact": exact, "local_street": len(hits) - exact}
+
+
 def fallbacks(engine: sa.Engine, run_id: int) -> dict[str, int]:
     with engine.begin() as conn:
         conn.execute(sa.text(RESET_FALLBACKS))
+        rechecked = conn.execute(
+            sa.text(RECHECK_BUILDINGS), {"types": sorted(RESIDENTIAL_BUILDINGS)}
+        ).rowcount
+        matched_locally = local_pass(conn, run_id)
         index = gazetteer_index(conn)
         gazetteer = _apply_gazetteer(conn, index, gazetteer_match, None, run_id)
         routing = conn.execute(
@@ -541,6 +626,8 @@ def fallbacks(engine: sa.Engine, run_id: int) -> dict[str, int]:
             },
         ).rowcount
     return {
+        "rechecked_buildings": rechecked,
+        **matched_locally,
         "gazetteer": gazetteer,
         "routing_key": routing,
         "county_town": county_town,
