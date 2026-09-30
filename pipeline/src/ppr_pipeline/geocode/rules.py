@@ -321,3 +321,16 @@ def too_far_from_town(
     else:
         limit = MAX_KM_FROM_CITY if is_city else MAX_KM_FROM_TOWN[confidence]
     return km_between(lon, lat, tlon, tlat) > limit
+
+
+def name_variants(name: str) -> set[str]:
+    """ "Muinebeag (Bagenalstown)" is also "Muinebeag" and "Bagenalstown";
+    "Graiguenamanagh-Tinnahinch" is also each town on its own."""
+    out = {name}
+    m = re.fullmatch(r"(.+?)\s*\((.+)\)", name)
+    if m:
+        out |= {m.group(1), m.group(2)}
+    for n in list(out):
+        if re.search(r"\w-\w", n) and " " not in n:
+            out |= set(n.split("-"))
+    return out

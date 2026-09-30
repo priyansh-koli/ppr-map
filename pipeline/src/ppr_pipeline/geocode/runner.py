@@ -34,6 +34,7 @@ from ppr_pipeline.geocode.rules import (
     fold,
     ladder,
     name_tokens,
+    name_variants,
     pick,
     query_parts,
     split_house_number,
@@ -440,19 +441,6 @@ FROM property p JOIN med m ON m.rk = p.eircode_routing_key
 WHERE p.geocode_confidence IN ('exact', 'street', 'locality')
   AND ST_Distance(p.geom::geography, m.pt::geography) > :max_m
 """
-
-
-def name_variants(name: str) -> set[str]:
-    """ "Muinebeag (Bagenalstown)" is also "Muinebeag" and "Bagenalstown";
-    "Graiguenamanagh-Tinnahinch" is also each town on its own."""
-    out = {name}
-    m = re.fullmatch(r"(.+?)\s*\((.+)\)", name)
-    if m:
-        out |= {m.group(1), m.group(2)}
-    for n in list(out):
-        if re.search(r"\w-\w", n) and " " not in n:
-            out |= set(n.split("-"))
-    return out
 
 
 def gazetteer_index(conn: sa.Connection) -> dict[tuple[str, frozenset[str]], list[tuple[str, int]]]:
