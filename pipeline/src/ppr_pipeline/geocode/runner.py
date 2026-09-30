@@ -432,8 +432,9 @@ FROM hit h
 """
 
 # Median, not mean: one wrong point cannot drag it. Only if it lies in the property's county.
+# MATERIALIZED: the medians are computed once, whatever join the planner picks.
 APPLY_ROUTING_KEY = """
-WITH med AS (
+WITH med AS MATERIALIZED (
     SELECT eircode_routing_key AS rk,
            percentile_cont(0.5) WITHIN GROUP (ORDER BY ST_X(geom)) AS x,
            percentile_cont(0.5) WITHIN GROUP (ORDER BY ST_Y(geom)) AS y
@@ -476,7 +477,7 @@ WHERE a.kind = 'county' AND a.code = p.county::text
 
 # Review signal only: PPR Eircodes are sometimes wrong (R-04), so neither side is trusted.
 FLAG_ROUTING_KEY_CONFLICTS = """
-WITH med AS (
+WITH med AS MATERIALIZED (
     SELECT eircode_routing_key AS rk,
            ST_SetSRID(ST_MakePoint(
                percentile_cont(0.5) WITHIN GROUP (ORDER BY ST_X(geom)),
@@ -605,6 +606,10 @@ def fallbacks(engine: sa.Engine, run_id: int) -> dict[str, int]:
         rechecked = conn.execute(
             sa.text(RECHECK_BUILDINGS), {"types": sorted(RESIDENTIAL_BUILDINGS)}
         ).rowcount
+        # The reset turned a third of all properties back to 'unmatched' in this transaction,
+        # which the planner's statistics do not know: without this it planned the routing-key
+        # step for one unmatched row and re-ran its median per row, for hours (2026-09-30).
+        conn.execute(sa.text("ANALYZE property"))
         matched_locally = local_pass(conn, run_id)
         index = gazetteer_index(conn)
         gazetteer = _apply_gazetteer(conn, index, gazetteer_match, None, run_id)
