@@ -254,6 +254,16 @@ class Location(ApiModel):
     source: str | None
 
 
+class VatEstimate(ApiModel):
+    """A VAT-exclusive price with VAT added: an estimate, never the price paid (D-015)."""
+
+    rate: float
+    price_eur: Money
+    applies_to: Literal["any", "qualifying_apartment"] = Field(
+        description="'any' new dwelling, or only a qualifying apartment (9% from 8 Oct 2025)"
+    )
+
+
 class Sale(ApiModel):
     date: date
     price_eur: Money
@@ -263,6 +273,7 @@ class Sale(ApiModel):
     bulk_group_size: int | None
     size_band: str | None
     possible_duplicate: bool
+    vat_estimates: list[VatEstimate] = Field(default_factory=list)
 
 
 class AreaRef(ApiModel):

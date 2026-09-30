@@ -16,6 +16,7 @@ import {
   formatDate,
   formatDistance,
   formatEur,
+  formatRate,
 } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 
@@ -60,7 +61,22 @@ function SaleFlags({ sale }: { sale: PropertyDetail["sales"][number] }) {
     sale.bulkGroupSize ? `bulk sale of ${sale.bulkGroupSize}` : null,
     sale.possibleDuplicate ? "possible repeat filing" : null,
   ].filter(Boolean);
-  return <>{flags.join(", ")}</>;
+  return (
+    <>
+      {flags.join(", ")}
+      {sale.vatEstimates?.length ? (
+        <span className="mt-0.5 block text-ink-2">
+          {sale.vatEstimates
+            .map((e) =>
+              e.appliesTo === "qualifying_apartment"
+                ? `≈ ${formatEur(e.priceEur)} if a qualifying apartment (${formatRate(e.rate)})`
+                : `≈ ${formatEur(e.priceEur)} with VAT at ${formatRate(e.rate)} (estimate)`,
+            )
+            .join("; ")}
+        </span>
+      ) : null}
+    </>
+  );
 }
 
 const pct = new Intl.NumberFormat("en-IE", {

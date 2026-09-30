@@ -25,6 +25,9 @@ export type SearchHistoryItem = components["schemas"]["SearchHistoryOut"];
 export type ViewPage = components["schemas"]["Page_ViewOut_"];
 export type SearchHistoryPage = components["schemas"]["Page_SearchHistoryOut_"];
 export type AreaRef = components["schemas"]["AreaRef"];
+export type Rules = components["schemas"]["Rules"];
+export type StampDuty = components["schemas"]["StampDutyOut"];
+export type Affordability = components["schemas"]["AffordabilityOut"];
 export type CountyStat = components["schemas"]["CountyStat"];
 
 /** The GitHub Pages preview (D-034) is static: there is no API or tile server behind it. */
@@ -169,6 +172,12 @@ export const api = {
     get<SearchResults>(`/search?${query.toString()}`, init),
   autocomplete: (q: string, init?: RequestInit) =>
     get<Suggestion[]>(`/geocode/autocomplete?q=${encodeURIComponent(q)}`, init),
+
+  rules: (init?: RequestInit) => get<Rules>("/tools/rules", init),
+  stampDuty: (query: URLSearchParams, init?: RequestInit) =>
+    get<StampDuty>(`/tools/stamp-duty?${query.toString()}`, init),
+  affordability: (query: URLSearchParams, init?: RequestInit) =>
+    get<Affordability>(`/tools/affordability?${query.toString()}`, init),
 
   recordView: (propertyId: string) => send<void>("POST", "/me/history/views", { propertyId }),
   views: (page = 1) => get<ViewPage>(`/me/history/views?page=${page}`),

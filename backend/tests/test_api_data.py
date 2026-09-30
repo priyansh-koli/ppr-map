@@ -178,3 +178,22 @@ def test_overview(api: TestClient) -> None:
     assert carlow["sales"] >= 0 and 52 < carlow["lat"] < 53 and -7.2 < carlow["lng"] < -6.5
     # The counties' window ends before the provisional months start.
     assert data["windowEnd"] < api.get("/api/v1/meta").json()["provisionalFrom"]
+
+
+def test_vat_exclusive_sales_carry_labelled_estimates(api: TestClient, db: sa.Engine) -> None:
+    with db.connect() as conn:
+        pid, sold, price = conn.execute(
+            sa.text(
+                "SELECT p.public_id, s.sale_date, s.price_eur FROM sale s "
+                "JOIN property p ON p.id = s.property_id WHERE s.vat_exclusive LIMIT 1"
+            )
+        ).one()
+    body = api.get(f"/api/v1/properties/{pid}").json()
+    sale = next(s for s in body["sales"] if s["vatExclusive"])
+    first = sale["vatEstimates"][0]
+    assert first["rate"] == 0.135 and first["appliesTo"] == "any"
+    assert first["priceEur"] == round(float(price) * 1.135, 2)
+    # 2025 fixture sales: before 8 Oct 2025 only 13.5%; from then also 9% for apartments.
+    assert len(sale["vatEstimates"]) == (2 if str(sold) >= "2025-10-08" else 1)
+    assert any("estimates" in c for c in body["caveats"])
+    assert all(not s["vatEstimates"] for s in body["sales"] if not s["vatExclusive"])

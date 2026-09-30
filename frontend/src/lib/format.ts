@@ -62,3 +62,17 @@ export const CONFIDENCE_NOTE: Record<string, string> = {
   county: "Only its county is known.",
   unmatched: "Could not be located.",
 };
+
+/** A rate held as a fraction: 0.135 → "13.5%", 0.09 → "9%". */
+export function formatRate(fraction: number): string {
+  return `${Number((fraction * 100).toFixed(2))}%`;
+}
+
+const EUR_CENTS = new Intl.NumberFormat("en-IE", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+/** Tax to the cent: €3,524.23. */
+export const formatEurCents = (value: number | string) => EUR_CENTS.format(Number(value));

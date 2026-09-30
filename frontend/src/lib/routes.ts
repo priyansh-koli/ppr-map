@@ -75,7 +75,8 @@ export const ROUTES = {
     path: "/tools/stamp-duty",
     samplePath: "/tools/stamp-duty",
     title: "Stamp duty calculator",
-    summary: "Rates are verified against Revenue before this calculator goes live.",
+    summary:
+      "Stamp duty on a home at today's rates, band by band. Rates checked against Revenue; information only.",
     phase: 5,
     access: "public",
   },
@@ -84,7 +85,7 @@ export const ROUTES = {
     samplePath: "/tools/affordability",
     title: "Mortgage affordability",
     summary:
-      "Based on the Central Bank mortgage measures, verified before launch. Information only, not financial advice.",
+      "What the Central Bank mortgage measures let you borrow and spend. Information only, not financial advice.",
     phase: 5,
     access: "public",
   },

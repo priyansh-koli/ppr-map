@@ -4,9 +4,11 @@ import contextlib
 import json
 import time
 from datetime import date
+from decimal import Decimal
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from pydantic import ValidationError
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,10 +27,11 @@ from app.schemas.properties import (
     Sale,
     SalesFilter,
     StatsPoint,
+    VatEstimate,
     Vicinity,
 )
 from app.services import properties as q
-from app.services import search
+from app.services import rates, search
 
 router = APIRouter(tags=["properties"])
 
@@ -132,6 +135,17 @@ async def list_properties(
     )
 
 
+def _vat_estimates(price: Decimal, sold_on: date) -> list[VatEstimate]:
+    """VAT added back at the rates for the sale's date; none if the rates cannot be read."""
+    try:
+        return [
+            VatEstimate(rate=float(rate), price_eur=amount, applies_to=applies)
+            for rate, amount, applies in rates.vat_estimates(price, sold_on)
+        ]
+    except (OSError, ValidationError, LookupError):
+        return []
+
+
 def _caveats(confidence: str, sales: list[Sale], provisional_from: date) -> list[str]:
     out = []
     if confidence not in ("exact", "street"):
@@ -145,7 +159,10 @@ def _caveats(confidence: str, sales: list[Sale], provisional_from: date) -> list
             + " Distances to nearby places are not shown."
         )
     if any(s.vat_exclusive for s in sales):
-        out.append("New-build prices are filed without VAT; the price paid was higher.")
+        out.append(
+            "New-build prices are filed without VAT; the price paid was higher. The VAT-inclusive "
+            "figures are estimates at the rate for the sale date, not the price paid."
+        )
     if any(s.not_full_market_price for s in sales):
         out.append(
             "At least one sale was filed as not at full market price, so it is left out of "
@@ -178,6 +195,7 @@ async def property_detail(property_id: PropertyId, session: Session) -> Property
             bulk_group_size=r[5],
             size_band=r[6],
             possible_duplicate=r[7],
+            vat_estimates=_vat_estimates(r[1], r[0]) if r[4] else [],
         )
         for r in await q.sales(session, p.id)
     ]

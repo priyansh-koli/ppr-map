@@ -48,6 +48,8 @@ services:
     volumes:
       - ../backend/app:/srv/backend/app:ro
       - ../backend/alembic:/srv/backend/alembic:ro
+      # rates.yaml and sources.yaml, so an edit there needs no rebuild (PPR_CONFIG_DIR).
+      - ../config:/srv/config:ro
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }

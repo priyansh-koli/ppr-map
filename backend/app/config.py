@@ -8,6 +8,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # backend/app/config.py -> repo root. Alembic and `python -m app.cli` run from backend/, so a
 # relative ".env" would miss it. In the Docker image this file does not exist and is ignored.
 REPO_ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
+# config/ holds rates.yaml and sources.yaml; the Docker image sets PPR_CONFIG_DIR=/srv/config.
+REPO_CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
 
 
 class Settings(BaseSettings):
@@ -31,6 +33,7 @@ class Settings(BaseSettings):
     session_secret: str = Field(default="", repr=False)
     csrf_secret: str = Field(default="", repr=False)
     ip_hash_salt: str = Field(default="", repr=False)
+    ppr_config_dir: Path = REPO_CONFIG_DIR
 
     @model_validator(mode="after")
     def _secrets_in_production(self) -> Self:

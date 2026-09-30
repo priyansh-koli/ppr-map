@@ -490,3 +490,17 @@ Everything below is **Proposed** until the Phase 0 review.
   - **Pages:** `/search` has the place box, "Near my location" (asked only on click, with the reason), the filters, a sort, the results and a map of the same matches drawn from the same tiles. The home hero has the same place box. The map explorer shows place filters from a search and can remove them.
 - **Also fixed:** Small Area slugs of merged areas contained a slash (`sa-268003013/268003018`), which cannot sit in one URL path segment. They now use a hyphen; migration 0008 rewrites the 2,082 stored slugs.
 - **Status:** Accepted (implementation detail).
+
+## D-048 Calculators and VAT estimates on verified, dated rates
+
+- **Context:** the brief asks for a stamp duty and a mortgage affordability calculator with every rate in one config file, verified first (R-10). D-015 asks for a labelled VAT-inclusive estimate on new-build prices.
+- **Verified on 2026-09-30** (`config/rates.yaml`, each value with its URL):
+  - **Stamp duty** (Revenue, page updated 22 Oct 2025): 1% up to €1m, 2% from €1m to €1.5m, 6% above €1.5m, for instruments from 2 Oct 2024. On a new home the duty is on the VAT-exclusive price (Revenue's example: €400,000 including 13.5% VAT is €352,422.90). Not covered: three or more apartments in one block, the 15% rate on ten or more houses, reliefs.
+  - **VAT on new homes:** the reduced rate, 13.5%, has applied since 1 Jan 2003, so for every PPR year. Since 8 Oct 2025 (to 31 Dec 2030) a *qualifying apartment* (in a multi-storey block of at least three apartments with shared access; not student or other rated accommodation) is at the second reduced rate, 9% (Revenue's Tax and Duty Manual; current rates page).
+  - **Central Bank mortgage measures** (from 1 Jan 2023): loan-to-income 4 times gross income for first-time buyers and 3.5 for others, none for buy-to-let; loan-to-value 90% for both, 70% for buy-to-let; lenders may exceed the limits for 15% (10% buy-to-let) of their lending. The 8 Apr 2026 change exempts some bridging loans only.
+- **Choice:**
+  - The backend loads the file through a strict model: a null or missing value fails to load, and the calculators answer 503 instead of calculating. Every answer names its sources and their check dates, and the rules version.
+  - **Affordability** is the lower of the income limit (plus the deposit) and the deposit limit, and says which one applies. It shows a monthly repayment only at a rate the user enters: quoting a "typical" rate would be advice we cannot keep current.
+  - **VAT estimates:** a VAT-exclusive sale gets its price with VAT at the rate for its sale date. The PPR does not say whether a new home is an apartment, so from 8 Oct 2025 a second estimate at 9% is shown "if a qualifying apartment". Both are labelled estimates, never the price paid.
+- **Upkeep:** re-check the file after each Budget (October) and Central Bank review (usually December); change `verified_on` and `rules_version` with it.
+- **Status:** Accepted (implementation detail; the values are facts checked at source).

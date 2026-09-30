@@ -1,31 +1,76 @@
 # Stamp duty, VAT and Central Bank mortgage measures for the calculators and the
-# VAT-inclusive estimate (D-015, R-10).
+# VAT-inclusive estimate (D-015, R-10, D-048).
 #
-# DELIBERATELY EMPTY UNTIL PHASE 5. Every value must be verified against its official source
-# on the day it is entered, with `source_url` and `verified_on` filled in. The calculators refuse
-# to run while any value they need is null.
+# Every value was checked against its official source on `verified_on`; `source_url` names it.
+# Re-check them whenever a Budget or a Central Bank review is announced (usually October and
+# December). The backend refuses to start a calculation with a value missing, and each answer
+# carries `rulesVersion` and the sources, so a stale figure is visible.
 
+rules_version: "2026-09-30"
+
+# VAT on the supply of new dwellings, as a dated table: the rate depends on the date of the
+# sale and, since 8 October 2025, on whether the dwelling is a qualifying apartment.
 vat_new_dwellings:
-  # Dated table: rates can change by date and dwelling type.
-  - applies_from: null
+  - applies_from: 2003-01-01
     applies_to: null
-    dwelling_type: null  # e.g. house | apartment | any
-    rate: null
-    source_url: null
-    verified_on: null
+    dwelling_type: any  # houses, and apartments that do not qualify for the second reduced rate
+    rate: 0.135
+    note: "Reduced rate of VAT: 13.5% since 1 January 2003 (every year the PPR covers)."
+    source_url: "https://www.revenue.ie/en/vat/vat-rates/historical-vat-rates/index.aspx"
+    verified_on: 2026-09-30
+  - applies_from: 2025-10-08
+    applies_to: 2030-12-31
+    dwelling_type: qualifying_apartment
+    rate: 0.09
+    note: >-
+      Second reduced rate (9%) for new apartments in a multi-storey block of at least three
+      apartments with grouped or common access (not student accommodation or other blocks liable
+      to commercial rates). A single apartment over a shop or a duplex pair stays at 13.5%.
+    source_url: "https://www.revenue.ie/en/tax-professionals/tdm/value-added-tax/part11-immovable-goods/supply-of-property/vat-rate-for-qualifying-apartments.pdf"
+    also_checked:
+      - "https://www.revenue.ie/en/vat/vat-rates/search-vat-rates/current-vat-rates.aspx"
+      - "https://www.revenue.ie/en/vat/vat-rates/what-are-vat-rates/second-reduced-rate-vat.aspx"
+    verified_on: 2026-09-30
 
 stamp_duty_residential:
-  bands: []  # [{up_to: <eur or null>, rate: <fraction>}]
-  source_url: null
-  verified_on: null
+  applies_from: 2024-10-02  # instruments executed on or after this date
+  # Marginal bands on the VAT-exclusive consideration: each rate applies to the slice of the
+  # price up to `up_to` (null = no upper limit).
+  bands:
+    - { up_to: 1000000, rate: 0.01 }
+    - { up_to: 1500000, rate: 0.02 }
+    - { up_to: null, rate: 0.06 }
+  vat_exclusive_consideration: true  # "You pay Stamp Duty on the VAT-exclusive amount."
+  not_covered: >-
+    Three or more apartments in one block (1% and 2% only), the 15% rate on ten or more houses
+    in 12 months, and reliefs such as the young trained farmer relief.
+  source_url: "https://www.revenue.ie/en/property/stamp-duty/property/stamp-duty-property/rates.aspx"
+  also_checked:
+    - "https://www.revenue.ie/en/property/stamp-duty/consideration/vat-exclusive-consideration.aspx"
+  verified_on: 2026-09-30
 
 central_bank_mortgage_measures:
+  applies_from: 2023-01-01
+  # Multiples of gross annual income (all applicants together).
   loan_to_income:
-    first_time_buyer: null
-    second_and_subsequent: null
+    first_time_buyer: 4.0
+    second_and_subsequent: 3.5
+    buy_to_let: null  # buy-to-let loans are not subject to the LTI limit
+  # Largest loan as a share of the property's value.
   loan_to_value:
-    first_time_buyer: null
-    second_and_subsequent: null
-    buy_to_let: null
-  source_url: null
-  verified_on: null
+    first_time_buyer: 0.90
+    second_and_subsequent: 0.90
+    buy_to_let: 0.70
+  # Share of each lender's new lending allowed above the limits, at the lender's discretion.
+  allowances:
+    first_time_buyer: 0.15
+    second_and_subsequent: 0.15
+    buy_to_let: 0.10
+  note: >-
+    On 8 April 2026 some principal-home bridging loans were exempted from the LTI limit; all
+    other elements were unchanged. Lenders decide individually and may lend less.
+  source_url: "https://www.centralbank.ie/consumer-hub/explainers/what-are-the-mortgage-measures"
+  also_checked:
+    - "https://www.centralbank.ie/news/article/press-release-targeted-amendment-to-mortgage-measures-home-bridging-loans-8-april-2026"
+    - "https://www.centralbank.ie/financial-system/financial-stability/macro-prudential-policy/mortgage-measures/mortgage-measures---faq"
+  verified_on: 2026-09-30

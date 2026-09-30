@@ -31,7 +31,7 @@ backend/    FastAPI app (app/api, app/models, app/schemas, app/auth, app/service
 pipeline/   Python package: ingest, normalise, dedupe, geocode, enrich, aggregate (CLI via Typer)
 infra/      docker-compose.yml, Martin config, Nominatim setup, reverse proxy
 docs/       architecture, decisions, data model, API, permissions, services, research
-config/     sources.yaml (every dataset, licence, allow/deny) and rates.yaml (empty until verified in Phase 5)
+config/     sources.yaml (every dataset, licence, allow/deny) and rates.yaml (tax and lending rules, each with source and check date, D-048)
 ```
 
 ## Code conventions

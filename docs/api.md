@@ -124,10 +124,16 @@ Summary shape (draft):
 | GET | `/areas/{idOrSlug}/stats?periodKind=&segment=` | the time series from `area_stats`, with provisional and suppressed flags |
 
 ## Tools
+
+**Built in Phase 5** (D-048). Rates come from `config/rates.yaml`, each with its official source and the date it was checked; a missing value is a 503, never a guess. Every answer carries `rulesVersion`, `sources` (name, url, verifiedOn) and a "not financial advice" note.
+
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/tools/stamp-duty?price=&isNew=&vatInclusive=` | rates come from `config/rates.yaml` and are verified before Phase 5 |
-| GET | `/tools/affordability?grossIncome=&secondIncome=&firstTimeBuyer=&deposit=&termYears=&ratePct=` | Central Bank LTI and LTV rules from the same config; the response includes `rulesVersion` and `rulesSource` |
+| GET | `/tools/rules` | the rules in use, their sources and check dates |
+| GET | `/tools/stamp-duty?price=&isNew=&vatInclusive=true&qualifyingApartment=false` | residential rates from 2 Oct 2024 (1% to €1m, 2% to €1.5m, 6% above), band by band; a new home's VAT-inclusive price has VAT taken out first (13.5%, or 9% for a qualifying apartment from 8 Oct 2025) |
+| GET | `/tools/affordability?grossIncome=&secondIncome=&buyer=first_time_buyer|second_and_subsequent|buy_to_let&deposit=&termYears=30&ratePct=` | the lower of the income limit (LTI 4 or 3.5 times gross income, none for buy-to-let) plus the deposit, and the deposit limit (LTV 90%, or 70% for buy-to-let); `limitedBy` says which; a monthly repayment only for a rate the user enters; `firstTimeBuyer=true|false` is accepted as a shorthand |
+
+The property page's sales carry `vatEstimates` for VAT-exclusive prices (D-015): the price with VAT at the rate for the sale date, and a second figure at 9% where the home could be a qualifying apartment.
 
 ## Admin (requires `admin:*` permissions; every write is audit-logged)
 | Method | Path | Notes |

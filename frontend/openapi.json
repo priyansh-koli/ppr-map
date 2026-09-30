@@ -21,6 +21,122 @@
         "title": "Accepted",
         "type": "object"
       },
+      "AffordabilityOut": {
+        "properties": {
+          "allowance": {
+            "title": "Allowance",
+            "type": "number"
+          },
+          "depositEur": {
+            "title": "Depositeur",
+            "type": "number"
+          },
+          "incomeEur": {
+            "title": "Incomeeur",
+            "type": "number"
+          },
+          "limitedBy": {
+            "enum": [
+              "income",
+              "deposit"
+            ],
+            "title": "Limitedby",
+            "type": "string"
+          },
+          "loanEur": {
+            "title": "Loaneur",
+            "type": "number"
+          },
+          "loanToIncome": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loantoincome"
+          },
+          "loanToValue": {
+            "title": "Loantovalue",
+            "type": "number"
+          },
+          "maxLoanByIncomeEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxloanbyincomeeur"
+          },
+          "maxPriceByDepositEur": {
+            "title": "Maxpricebydepositeur",
+            "type": "number"
+          },
+          "maxPriceEur": {
+            "title": "Maxpriceeur",
+            "type": "number"
+          },
+          "measuresNote": {
+            "title": "Measuresnote",
+            "type": "string"
+          },
+          "monthlyRepaymentEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthlyrepaymenteur"
+          },
+          "note": {
+            "default": "Information only, not financial or tax advice. Lenders decide individually, and your own circumstances or reliefs may change the figures.",
+            "title": "Note",
+            "type": "string"
+          },
+          "rulesVersion": {
+            "title": "Rulesversion",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "stampDutyEur": {
+            "title": "Stampdutyeur",
+            "type": "number"
+          }
+        },
+        "required": [
+          "rulesVersion",
+          "sources",
+          "incomeEur",
+          "depositEur",
+          "loanToIncome",
+          "loanToValue",
+          "maxLoanByIncomeEur",
+          "maxPriceByDepositEur",
+          "maxPriceEur",
+          "loanEur",
+          "limitedBy",
+          "monthlyRepaymentEur",
+          "stampDutyEur",
+          "allowance",
+          "measuresNote"
+        ],
+        "title": "AffordabilityOut",
+        "type": "object"
+      },
       "AreaLine": {
         "properties": {
           "change12mPct": {
@@ -198,6 +314,41 @@
           "lng"
         ],
         "title": "CountyStat",
+        "type": "object"
+      },
+      "DutyBandOut": {
+        "properties": {
+          "dutyEur": {
+            "title": "Dutyeur",
+            "type": "number"
+          },
+          "fromEur": {
+            "title": "Fromeur",
+            "type": "number"
+          },
+          "rate": {
+            "title": "Rate",
+            "type": "number"
+          },
+          "toEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Toeur"
+          }
+        },
+        "required": [
+          "fromEur",
+          "toEur",
+          "rate",
+          "dutyEur"
+        ],
+        "title": "DutyBandOut",
         "type": "object"
       },
       "EmailIn": {
@@ -1254,6 +1405,32 @@
         "title": "ResetIn",
         "type": "object"
       },
+      "Rules": {
+        "properties": {
+          "note": {
+            "default": "Information only, not financial or tax advice. Lenders decide individually, and your own circumstances or reliefs may change the figures.",
+            "title": "Note",
+            "type": "string"
+          },
+          "rulesVersion": {
+            "title": "Rulesversion",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rulesVersion",
+          "sources"
+        ],
+        "title": "Rules",
+        "type": "object"
+      },
       "Sale": {
         "properties": {
           "bulkGroupSize": {
@@ -1298,6 +1475,13 @@
               }
             ],
             "title": "Sizeband"
+          },
+          "vatEstimates": {
+            "items": {
+              "$ref": "#/components/schemas/VatEstimate"
+            },
+            "title": "Vatestimates",
+            "type": "array"
           },
           "vatExclusive": {
             "title": "Vatexclusive",
@@ -1515,6 +1699,30 @@
         "title": "SearchResults",
         "type": "object"
       },
+      "Source": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "verifiedOn": {
+            "format": "date",
+            "title": "Verifiedon",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "verifiedOn"
+        ],
+        "title": "Source",
+        "type": "object"
+      },
       "Sourced_SchoolValue_": {
         "properties": {
           "asOf": {
@@ -1627,6 +1835,82 @@
           "source"
         ],
         "title": "Sourced[str]",
+        "type": "object"
+      },
+      "StampDutyOut": {
+        "properties": {
+          "bands": {
+            "items": {
+              "$ref": "#/components/schemas/DutyBandOut"
+            },
+            "title": "Bands",
+            "type": "array"
+          },
+          "considerationEur": {
+            "title": "Considerationeur",
+            "type": "number"
+          },
+          "dutyEur": {
+            "title": "Dutyeur",
+            "type": "number"
+          },
+          "effectiveRate": {
+            "title": "Effectiverate",
+            "type": "number"
+          },
+          "notCovered": {
+            "title": "Notcovered",
+            "type": "string"
+          },
+          "note": {
+            "default": "Information only, not financial or tax advice. Lenders decide individually, and your own circumstances or reliefs may change the figures.",
+            "title": "Note",
+            "type": "string"
+          },
+          "priceEur": {
+            "title": "Priceeur",
+            "type": "number"
+          },
+          "rulesVersion": {
+            "title": "Rulesversion",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "vatEur": {
+            "title": "Vateur",
+            "type": "number"
+          },
+          "vatRate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vatrate"
+          }
+        },
+        "required": [
+          "rulesVersion",
+          "sources",
+          "priceEur",
+          "considerationEur",
+          "vatEur",
+          "vatRate",
+          "dutyEur",
+          "effectiveRate",
+          "bands",
+          "notCovered"
+        ],
+        "title": "StampDutyOut",
         "type": "object"
       },
       "StatsPoint": {
@@ -1870,6 +2154,35 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VatEstimate": {
+        "description": "A VAT-exclusive price with VAT added: an estimate, never the price paid (D-015).",
+        "properties": {
+          "appliesTo": {
+            "description": "'any' new dwelling, or only a qualifying apartment (9% from 8 Oct 2025)",
+            "enum": [
+              "any",
+              "qualifying_apartment"
+            ],
+            "title": "Appliesto",
+            "type": "string"
+          },
+          "priceEur": {
+            "title": "Priceeur",
+            "type": "number"
+          },
+          "rate": {
+            "title": "Rate",
+            "type": "number"
+          }
+        },
+        "required": [
+          "rate",
+          "priceEur",
+          "appliesTo"
+        ],
+        "title": "VatEstimate",
         "type": "object"
       },
       "Vicinity": {
@@ -3977,6 +4290,278 @@
         "summary": "Overview",
         "tags": [
           "stats"
+        ]
+      }
+    },
+    "/api/v1/tools/affordability": {
+      "get": {
+        "description": "The most the Central Bank measures allow you to borrow and spend: the lower of the\nincome limit and the deposit limit. Lenders may lend less.",
+        "operationId": "affordability_api_v1_tools_affordability_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "grossIncome",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100000000.0,
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "title": "Grossincome"
+            }
+          },
+          {
+            "in": "query",
+            "name": "deposit",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100000000.0,
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "title": "Deposit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "secondIncome",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100000000.0,
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "default": "0",
+              "title": "Secondincome"
+            }
+          },
+          {
+            "in": "query",
+            "name": "buyer",
+            "required": false,
+            "schema": {
+              "default": "first_time_buyer",
+              "enum": [
+                "first_time_buyer",
+                "second_and_subsequent",
+                "buy_to_let"
+              ],
+              "title": "Buyer",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Shorthand for buyer",
+            "in": "query",
+            "name": "firstTimeBuyer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Shorthand for buyer",
+              "title": "Firsttimebuyer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "termYears",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 35,
+              "minimum": 5,
+              "title": "Termyears",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Your quoted rate",
+            "in": "query",
+            "name": "ratePct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 20.0,
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Your quoted rate",
+              "title": "Ratepct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffordabilityOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Affordability",
+        "tags": [
+          "tools"
+        ]
+      }
+    },
+    "/api/v1/tools/rules": {
+      "get": {
+        "description": "Which rules the calculators use, their sources and when they were checked.",
+        "operationId": "rules_api_v1_tools_rules_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rules"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Rules",
+        "tags": [
+          "tools"
+        ]
+      }
+    },
+    "/api/v1/tools/stamp-duty": {
+      "get": {
+        "description": "Stamp duty on one home at today's rates. On a new home it is charged on the price\nwithout VAT.",
+        "operationId": "stamp_duty_api_v1_tools_stamp_duty_get",
+        "parameters": [
+          {
+            "description": "Price in euro",
+            "in": "query",
+            "name": "price",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0.0,
+                  "maximum": 100000000.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "description": "Price in euro",
+              "title": "Price"
+            }
+          },
+          {
+            "in": "query",
+            "name": "isNew",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Isnew",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "For a new home: the price includes VAT",
+            "in": "query",
+            "name": "vatInclusive",
+            "required": false,
+            "schema": {
+              "default": true,
+              "description": "For a new home: the price includes VAT",
+              "title": "Vatinclusive",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "A new apartment in a block of 3+ with shared access (9% VAT since 8 Oct 2025)",
+            "in": "query",
+            "name": "qualifyingApartment",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "A new apartment in a block of 3+ with shared access (9% VAT since 8 Oct 2025)",
+              "title": "Qualifyingapartment",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StampDutyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stamp Duty",
+        "tags": [
+          "tools"
         ]
       }
     }
