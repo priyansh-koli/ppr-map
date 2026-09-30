@@ -77,6 +77,21 @@ sources:
       - ETL_DATE
     forbidden_fields: [ApplicantForename, ApplicantSurname, ApplicantAddress]
 
+  nhds:
+    name: DHLGH National Housing Development Surveys 2011 and 2012 (named estates with ITM coordinates)
+    url: "https://data.gov.ie/dataset/national-housing-development-survey-2011"
+    format: CSV (cp1252), ITM EPSG:2157
+    licence: CC BY-SA 4.0
+    attribution: "Contains National Housing Development Survey data, Department of Housing, Local Government and Heritage (CC BY-SA 4.0)."
+    cadence: static (the surveys ended in 2017; 2013 onwards dropped the coordinates)
+    use: true
+    verified: true
+    checked_on: 2026-09-29
+    # Used only as a geocoding reference for estate names (D-046); share-alike, see there.
+    datasets:
+      "2011": "https://opendata.housing.gov.ie/dataset/4a83cbbe-191d-4180-a8a9-65f58a3d7da0/resource/1206e311-fe37-42d0-84ec-59ecb33b3d54/download/nationalhousingdevelopmentsurvey2011.csv"
+      "2012": "https://opendata.housing.gov.ie/dataset/7a654bb1-4b53-4efe-b70e-98a10bdd13ff/resource/b36bfb0d-2caf-4b98-81d5-ad4b7992f573/download/national_housing_development_survey_2012.csv"
+
   gzt_zoning:
     name: Generalised Zoning Types (Development Plans and Local Area Plans)
     url: "https://data-housinggovie.opendata.arcgis.com/"

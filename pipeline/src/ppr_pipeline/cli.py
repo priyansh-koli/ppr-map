@@ -11,6 +11,7 @@ from ppr_pipeline import boundaries
 from ppr_pipeline.aggregate import aggregate as rebuild_aggregates
 from ppr_pipeline.db import get_engine
 from ppr_pipeline.enrich.run import enrich as enrich_all
+from ppr_pipeline.geocode.gazetteer import build_gazetteer
 from ppr_pipeline.geocode.runner import geocode_properties
 from ppr_pipeline.ppr import ingest as ppr_ingest
 from ppr_pipeline.sources import load_sources
@@ -83,6 +84,28 @@ def ingest(
         f"failed {summary.rows_failed}"
     )
     for name, value in summary.stats.items():
+        typer.echo(f"  {name}: {value}")
+
+
+OSM_PBF = Path("osm") / "ireland-and-northern-ireland-latest.osm.pbf"
+
+
+@app.command()
+def gazetteer(
+    refresh: Annotated[
+        bool, typer.Option(help="Download the housing-development surveys again.")
+    ] = False,
+) -> None:
+    """Build the local street gazetteer from the OSM extract, official places and the DHLGH
+    housing-development surveys (needs `make osm-extract` and the boundaries)."""
+    pbf = DATA_DIR / OSM_PBF
+    if not pbf.exists():
+        typer.echo(f"{pbf} is missing: run `make osm-extract` first", err=True)
+        raise typer.Exit(code=1)
+    summary = build_gazetteer(
+        get_engine(), pbf, load_sources()["nhds"], DATA_DIR, refresh=refresh, progress=typer.echo
+    )
+    for name, value in summary.items():
         typer.echo(f"  {name}: {value}")
 
 
