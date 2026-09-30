@@ -98,8 +98,12 @@ PERIODS: dict[str, tuple[str, str, str]] = {
 }
 
 
-def register_dates(conn: sa.Connection) -> tuple[date, date, str]:
-    """(latest sale date, first provisional day, data version)."""
+def register_dates(conn: sa.Connection, aggregate_run: int) -> tuple[date, date, str]:
+    """(latest sale date, first provisional day, data version).
+
+    The version names the register (latest sale, PPR ingest run) and this aggregate run, so
+    re-geocoding or re-aggregating the same register also gets new tile URLs and hover-card
+    cache keys: "2026-09-18.r1.a18"."""
     max_date: date | None = conn.execute(
         sa.text("SELECT max(sale_date) FROM sale WHERE withdrawn_at IS NULL")
     ).scalar_one()
@@ -115,7 +119,7 @@ def register_dates(conn: sa.Connection) -> tuple[date, date, str]:
     provisional_from = (
         date(month.year - 1, 12, 1) if month.month == 1 else date(month.year, month.month - 1, 1)
     )
-    return max_date, provisional_from, f"{max_date.isoformat()}.r{run_id}"
+    return max_date, provisional_from, f"{max_date.isoformat()}.r{run_id}.a{aggregate_run}"
 
 
 def area_stats(conn: sa.Connection, provisional_from: date, last_month: date) -> int:
@@ -309,7 +313,7 @@ def aggregate(engine: sa.Engine, progress: Progress = lambda _: None) -> dict[st
     started = time.monotonic()
     try:
         with engine.begin() as conn:
-            max_date, provisional_from, data_version = register_dates(conn)
+            max_date, provisional_from, data_version = register_dates(conn, run_id)
             last_month = max_date.replace(day=1)
             progress("  area stats")
             n_stats = area_stats(conn, provisional_from, last_month)

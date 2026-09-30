@@ -308,7 +308,7 @@ Everything below is **Proposed** until the Phase 0 review.
   - `area_stats`: counties, settlements and EDs get month, quarter, year and a rolling 12 months ending each month; Small Areas and townlands get quarter and year only, which keeps the table at 2.6 million rows. Groups with n < 5 keep the count and drop every price. Periods ending on or after the first day of the month before the latest sale's month are provisional.
   - `price_hex`: H3 r8 cells from exact and street points, with their r7 and r6 parents recomputed from the sales (not averaged), over 12 and 36 months: 24,044 cells.
   - `property_summary`: one JSON row per property. The area line uses the settlement if it has unsuppressed 12-month stats, else the county. Flood is always the OPW link with no value (D-010).
-  - `data_version` is the latest sale date and the PPR ingest run id (`2026-09-18.r1`).
+  - `data_version` is the latest sale date and the PPR ingest run id (`2026-09-18.r1`). *Update 2026-09-30:* it now also names the aggregate run (`2026-09-18.r1.a18`): re-geocoding the same register kept the old version, so Martin and the hover-card cache would have served the old locations.
 - **Status:** Accepted (implementation detail).
 
 ## D-038 Map tiles and the synced list, as built
@@ -468,6 +468,8 @@ Everything below is **Proposed** until the Phase 0 review.
     - **A Nominatim street may become the exact house**, but only within 1.5 km of it.
   - **Methods:** `osm:address` (exact), `osm:street`, `osm:estate`, `nhds:estate`, with `_fuzzy` variants (street level). Every match is logged in `geocode_attempt` (method `local`, step 80). The results are recomputed on every run, like the other fallbacks.
   - **Rule fix:** a Nominatim building counts as a street-level match only if it is a residential type (apartments, house, terrace, residential, `yes`…). Stored results that break the new rule are re-checked on the next run and go through the later steps again.
+- **Result (2026-09-30, run 17, 5 min):** precise points (exact or street) rose from 333,818 to 417,402 properties (45.8% to 57.3%): exact 68,423 → 100,967, street 265,395 → 316,435, locality 324,320 → 248,381, routing key 28,864 → 26,427, county 41,458 → 36,250. The local pass placed 32,544 at the house and 68,193 on the street; 3,667 Nominatim building matches were re-checked. The first attempt (29 Sept) never finished: see the next point.
+- **Fix, 2026-09-30:** the fallbacks reset a third of all properties to `unmatched` inside one transaction, so the planner still believed there were almost none and re-ran the routing-key median once per property. The medians are now materialised and `property` is analysed after the reset.
 - **Licence:** the surveys are **CC BY-SA 4.0**. We use them only to place estates, and the derived coordinates are published with the credit line in `config/sources.yaml`. Like ODbL for OSM (R-06), share-alike may apply to a database we distribute. **Owner to confirm.** Setting `nhds.use: false` and rebuilding removes them.
 - **Status:** Accepted (implementation detail); the licence point awaits the owner.
 
