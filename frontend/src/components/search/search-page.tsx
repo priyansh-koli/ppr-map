@@ -123,7 +123,7 @@ function ResultRow({
             {item.change.changePct >= 0 ? "+" : "−"}
             {Math.abs(item.change.changePct).toLocaleString("en-IE")}%
           </span>{" "}
-          since {formatEur(item.change.previousPriceEur)} in {formatDate(item.change.previousDate)}
+          since {formatEur(item.change.previousPriceEur)} on {formatDate(item.change.previousDate)}
           <span className="text-muted"> (not adjusted for inflation or work done)</span>
         </span>
       ) : null}

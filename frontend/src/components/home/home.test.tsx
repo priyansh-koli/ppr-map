@@ -47,7 +47,7 @@ describe("home page overview", () => {
   it("links each county to the map and never shows a median for too few sales", async () => {
     render(<Counties />);
     const dublin = await screen.findByRole("link", { name: /Dublin/ });
-    expect(dublin).toHaveAttribute("href", "/map?lat=53.4000&lng=-6.2800&z=9");
+    expect(dublin).toHaveAttribute("href", "/area/dublin");
     expect(dublin).toHaveTextContent("€480K");
     expect(screen.getByRole("link", { name: /Leitrim/ })).toHaveTextContent("too few sales");
   });

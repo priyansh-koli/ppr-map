@@ -12,8 +12,8 @@ import { SignInLink } from "./sign-in-link";
 
 const buttonClass = "btn btn-secondary btn-sm";
 
-/** Save a property to the wishlist; signed-out users get a way to sign in first. */
-export function SaveButton({ propertyId }: { propertyId: string }) {
+/** Save a property or an area to the wishlist; signed-out users get a way to sign in first. */
+export function SaveButton({ propertyId, areaSlug }: { propertyId?: string; areaSlug?: string }) {
   const { me, loading } = useSession();
   const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +48,8 @@ export function SaveButton({ propertyId }: { propertyId: string }) {
           setState("saving");
           setError(null);
           try {
-            await api.saveProperty(propertyId);
+            if (areaSlug) await api.saveArea(areaSlug);
+            else if (propertyId) await api.saveProperty(propertyId);
             setState("saved");
           } catch (e) {
             // The API says why (a full wishlist is a 409), so show that.

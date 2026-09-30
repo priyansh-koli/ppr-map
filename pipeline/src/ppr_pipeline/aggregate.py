@@ -24,16 +24,29 @@ MIN_N = 5
 HEX_RESOLUTIONS = (6, 7, 8)
 Progress = Callable[[str], None]
 
+# Ireland as one area, so national figures are real medians rather than sums of counties.
+# Its shape is the counties' display shapes merged; it holds no point-in-polygon parts.
+ENSURE_COUNTRY = """
+INSERT INTO area (kind, code, name, name_ga, geom, source, source_version, slug)
+SELECT 'country', 'IE', 'Ireland', 'Éire', ST_Multi(ST_Union(geom)),
+       'Tailte Éireann counties, merged', max(source_version), 'ireland'
+FROM area WHERE kind = 'county'
+HAVING count(*) > 0
+ON CONFLICT (kind, code) DO NOTHING
+"""
+
 # Market sales, with the areas each one may count towards. Small Areas and EDs only for
 # points precise enough to be in them (the geocoder leaves those ids empty otherwise).
 CREATE_MARKET = """
 CREATE TEMP TABLE market ON COMMIT DROP AS
 SELECT s.id, s.property_id, s.sale_date, s.price_eur, s.is_new,
        date_trunc('month', s.sale_date)::date AS month,
-       c.id AS county_id, p.settlement_id, p.ed_id, p.small_area_id, p.townland_id, p.h3_r8
+       c.id AS county_id, p.settlement_id, p.ed_id, p.small_area_id, p.townland_id, p.h3_r8,
+       ie.id AS country_id
 FROM sale s
 JOIN property p ON p.id = s.property_id
 JOIN area c ON c.kind = 'county' AND c.code = p.county::text
+JOIN area ie ON ie.kind = 'country' AND ie.code = 'IE'
 WHERE s.withdrawn_at IS NULL AND NOT s.not_full_market_price AND s.bulk_group_id IS NULL
   AND NOT s.is_possible_duplicate AND NOT p.is_suppressed
 """
@@ -44,7 +57,7 @@ CREATE TEMP TABLE sale_area ON COMMIT DROP AS
 SELECT m.sale_date, m.month, m.price_eur, a.area_id, a.detail, seg.segment
 FROM market m
 CROSS JOIN LATERAL (VALUES
-    (m.county_id, true), (m.settlement_id, true), (m.ed_id, true),
+    (m.country_id, true), (m.county_id, true), (m.settlement_id, true), (m.ed_id, true),
     (m.small_area_id, false), (m.townland_id, false)
 ) AS a(area_id, detail)
 CROSS JOIN LATERAL (VALUES
@@ -123,6 +136,7 @@ def register_dates(conn: sa.Connection, aggregate_run: int) -> tuple[date, date,
 
 
 def area_stats(conn: sa.Connection, provisional_from: date, last_month: date) -> int:
+    conn.execute(sa.text(ENSURE_COUNTRY))
     conn.execute(sa.text(CREATE_MARKET))
     conn.execute(sa.text(CREATE_SALE_AREA))
     conn.execute(sa.text(CREATE_ROLLING), {"last_month": last_month})

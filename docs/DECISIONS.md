@@ -506,3 +506,17 @@ Everything below is **Proposed** until the Phase 0 review.
   - **VAT estimates:** a VAT-exclusive sale gets its price with VAT at the rate for its sale date. The PPR does not say whether a new home is an apartment, so from 8 Oct 2025 a second estimate at 9% is shown "if a qualifying apartment". Both are labelled estimates, never the price paid.
 - **Upkeep:** re-check the file after each Budget (October) and Central Bank review (usually December); change `verified_on` and `rules_version` with it.
 - **Status:** Accepted (implementation detail; the values are facts checked at source).
+
+## D-049 Area pages: the brief's figures, Ireland as a real area, and honest small numbers
+
+- **Context:** the brief asks for area pages (county, town, Small Area) with the median over time, sales volume, price distribution and a comparison with national figures.
+- **Choice:**
+  - **Ireland is an area.** The aggregate step adds `area` kind `country` (`ireland`, the counties' display shapes merged) and counts every market sale towards it, so national medians are real medians, not averages of county medians.
+  - **Headline:** the latest complete 12 months (no provisional month) against the 12 months a year earlier, and against Ireland over the same months. Small Areas and townlands have yearly statistics only (D-037), so theirs is the latest complete calendar year.
+  - **Series:** any period kind the area has, all or new or second-hand, with Ireland's line in grey (the "highlight one, grey the rest" pattern; blue and grey validated with the dataviz checks on both themes). Suppressed periods are gaps; provisional ones dashed. Rolling windows start in December 2010, the first with 12 months of register. Every value is in a table view.
+  - **Distribution** is counted from market sales over the headline window in 15 bands, with Ireland's share per band as a tick. A band with fewer than 5 sales shows no count; if no band reaches 5, the page says so instead of drawing it.
+  - **What else is known:** Pobal deprivation for EDs, and a Small Area's ED's, labelled as the ED's (D-011). Three EDs have no Pobal value and show nothing.
+  - **Point-based areas:** Small Areas and EDs count only sales placed at their house or street (D-035); their pages say so.
+  - **Links:** county tiles on the home page, the property page's area list and the area page's parents and children all link to area pages; each area links to its sales on the map and in search, and can be saved to the wishlist.
+- **Not done:** a CSO comparison on area pages waits for the CSO index, which the price estimate loads (D-020).
+- **Status:** Accepted (implementation detail).

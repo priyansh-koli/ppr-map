@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import { formatEur, formatMonth } from "@/lib/format";
-import { ROUTES } from "@/lib/routes";
 
 import { useOverview } from "./data";
 
@@ -66,7 +65,8 @@ export function Counties() {
           </h2>
           <p className="mt-3 max-w-2xl text-lg text-ink-2">
             Market sales and the median price in each county over the latest complete 12 months
-            {period ? `, ${period}` : ""}. Tap a county to open the map there.
+            {period ? `, ${period}` : ""}. Open a county for its prices over time, its towns and its
+            sales on the map.
           </p>
         </div>
         <p className="eyebrow">sorted by sales, most first</p>
@@ -77,7 +77,7 @@ export function Counties() {
           {data.counties.map((c) => (
             <li key={c.slug}>
               <Link
-                href={`${ROUTES.map.path}?lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}&z=9`}
+                href={`/area/${c.slug}`}
                 className="group relative flex h-full flex-col rounded-[14px] bg-surface p-3 shadow-window outline outline-1 -outline-offset-1 outline-line transition-transform duration-200 ease-out-soft hover:-translate-y-0.5 hover:shadow-lift"
               >
                 <span className="flex items-center gap-2.5">

@@ -118,10 +118,14 @@ Summary shape (draft):
 | GET | `/geocode/autocomplete?q=&limit=` | **Built (Phase 5).** Counties, towns, EDs and townlands by name; routing keys and Dublin districts ("d8", "Dublin 6W"); addresses where every word matches (`rd` means road). Our own tables only (D-006). 2 to 100 characters, at most 10 answers; 120/min anonymous, 300/min signed in. |
 
 ## Areas
+
+**Built in Phase 5** (D-049). Slugs: `ireland`, a county's code (`dublin`), `sa-<code>` for Small Areas, and name plus a short hash for towns, EDs and townlands. Answers are held in memory per data version.
+
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/areas/{idOrSlug}` | name, kind, parent chain, simplified geometry, census, deprivation and crime `Sourced` values |
-| GET | `/areas/{idOrSlug}/stats?periodKind=&segment=` | the time series from `area_stats`, with provisional and suppressed flags |
+| GET | `/areas/{slug}` | `kind`, `name`, `nameGa`, `parents` (nearest first, ending with Ireland), `bbox`, simplified GeoJSON `geometry`, `headline` and `national` (the latest complete 12 months, or the latest complete year for Small Areas and townlands: `n`, median, p25, p75, `changePct` against a year earlier), `attributes` (Pobal deprivation for an ED; a Small Area shows its ED's, labelled so), `children` (a county's towns, Ireland's counties, an ED's Small Areas, busiest first), `periodKinds`, `pointBased` (Small Areas and EDs count only exact and street points) |
+| GET | `/areas/{slug}/stats?periodKind=&segment=` | the series from `area_stats` (`month`, `quarter`, `year`, `rolling_12m`; Small Areas and townlands only `quarter` and `year`, otherwise 422) with Ireland's for the same periods; suppressed (n < 5) and provisional flags; rolling windows start in Dec 2010, the first with 12 months of register |
+| GET | `/areas/{slug}/distribution` | market sales over the latest complete 12 months in 15 price bands (€0 to €1.5m+), a band's count left out (null) below 5 sales, with Ireland's share per band |
 
 ## Tools
 

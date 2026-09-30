@@ -7,6 +7,8 @@ const EUR_SHORT = new Intl.NumberFormat("en-IE", {
   style: "currency",
   currency: "EUR",
   notation: "compact",
+  // Without a minimum, the currency's default of two decimals is clamped to one: "€300.0K".
+  minimumFractionDigits: 0,
   maximumFractionDigits: 1,
 });
 const DATE_TIME = new Intl.DateTimeFormat("en-IE", { dateStyle: "medium", timeStyle: "short" });

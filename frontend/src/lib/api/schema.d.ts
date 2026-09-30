@@ -4,6 +4,70 @@
  */
 
 export interface paths {
+    "/api/v1/areas/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Area Detail
+         * @description An area with its parents, shape, latest complete 12 months against Ireland's, what is
+         *     known about it, and its busiest sub-areas.
+         */
+        get: operations["area_detail_api_v1_areas__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/areas/{slug}/distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Distribution
+         * @description How many market sales fell in each price band over the latest complete 12 months, with
+         *     Ireland's shares for comparison. Bands with fewer than 5 sales are not given.
+         */
+        get: operations["distribution_api_v1_areas__slug__distribution_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/areas/{slug}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Area Stats
+         * @description The area's series from `area_stats`, with Ireland's for the same periods. Periods with
+         *     fewer than 5 sales keep their count and have no prices; the latest two months are
+         *     provisional. Small Areas and townlands have quarters and years only.
+         */
+        get: operations["area_stats_api_v1_areas__slug__stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -656,6 +720,68 @@ export interface components {
             /** Stampdutyeur */
             stampDutyEur: number;
         };
+        /** AreaAttributeOut */
+        AreaAttributeOut: {
+            /**
+             * Asof
+             * Format: date
+             */
+            asOf: string;
+            /** Label */
+            label: string;
+            /** Licence */
+            licence: string;
+            /** Source */
+            source: string;
+            /** Value */
+            value: string;
+        };
+        /** AreaDetail */
+        AreaDetail: {
+            /** Attributes */
+            attributes: components["schemas"]["AreaAttributeOut"][];
+            /** Bbox */
+            bbox: number[];
+            /** Children */
+            children: components["schemas"]["SubArea"][];
+            /** Childrenkind */
+            childrenKind: string | null;
+            /** Code */
+            code: string;
+            /** Dataversion */
+            dataVersion: string;
+            /**
+             * Geometry
+             * @description Simplified GeoJSON, for display only
+             */
+            geometry: {
+                [key: string]: unknown;
+            };
+            headline: components["schemas"]["Headline"] | null;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Namega */
+            nameGa: string | null;
+            national: components["schemas"]["Headline"] | null;
+            /** Parents */
+            parents: components["schemas"]["AreaRef"][];
+            /**
+             * Periodkinds
+             * @description Series this area has
+             */
+            periodKinds: ("month" | "quarter" | "year" | "rolling_12m")[];
+            /**
+             * Pointbased
+             * @description True for Small Areas and EDs: only sales placed at their house or street can be counted in them
+             */
+            pointBased: boolean;
+            /** Slug */
+            slug: string;
+            /** Source */
+            source: string;
+        };
         /** AreaLine */
         AreaLine: {
             /** Change12Mpct */
@@ -692,6 +818,39 @@ export interface components {
             /** Points */
             points: components["schemas"]["StatsPoint"][];
         };
+        /** AreaStatsOut */
+        AreaStatsOut: {
+            area: components["schemas"]["AreaRef"];
+            /**
+             * National
+             * @description Ireland, same periods and segment
+             */
+            national: components["schemas"]["SeriesPoint"][];
+            /**
+             * Periodkind
+             * @enum {string}
+             */
+            periodKind: "month" | "quarter" | "year" | "rolling_12m";
+            /** Points */
+            points: components["schemas"]["SeriesPoint"][];
+            /**
+             * Segment
+             * @enum {string}
+             */
+            segment: "all" | "new" | "second_hand";
+        };
+        /** Bin */
+        Bin: {
+            /** Fromeur */
+            fromEur: number;
+            /**
+             * N
+             * @description null when fewer than 5 sales (suppressed)
+             */
+            n: number | null;
+            /** Toeur */
+            toEur: number | null;
+        };
         /**
          * County
          * @enum {string}
@@ -720,6 +879,29 @@ export interface components {
             sales: number;
             /** Slug */
             slug: string;
+        };
+        /** Distribution */
+        Distribution: {
+            area: components["schemas"]["AreaRef"];
+            /** Bins */
+            bins: components["schemas"]["Bin"][];
+            /** N */
+            n: number;
+            /**
+             * Nationalshare
+             * @description Share of Ireland's sales in each bin, for comparison
+             */
+            nationalShare: (number | null)[];
+            /**
+             * Windowend
+             * Format: date
+             */
+            windowEnd: string;
+            /**
+             * Windowstart
+             * Format: date
+             */
+            windowStart: string;
         };
         /** DutyBandOut */
         DutyBandOut: {
@@ -757,6 +939,35 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * Headline
+         * @description The latest complete 12 months (no provisional month in it).
+         */
+        Headline: {
+            /**
+             * Changepct
+             * @description Median against the 12 months a year earlier; null if either is suppressed
+             */
+            changePct?: number | null;
+            /** Median */
+            median: number | null;
+            /** N */
+            n: number;
+            /** P25 */
+            p25: number | null;
+            /** P75 */
+            p75: number | null;
+            /**
+             * Windowend
+             * Format: date
+             */
+            windowEnd: string;
+            /**
+             * Windowstart
+             * Format: date
+             */
+            windowStart: string;
         };
         /** Health */
         Health: {
@@ -1240,6 +1451,26 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** SeriesPoint */
+        SeriesPoint: {
+            /** Median */
+            median: number | null;
+            /** N */
+            n: number;
+            /** P25 */
+            p25: number | null;
+            /** P75 */
+            p75: number | null;
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /** Provisional */
+            provisional: boolean;
+            /** Suppressed */
+            suppressed: boolean;
+        };
         /** Source */
         Source: {
             /** Name */
@@ -1337,6 +1568,19 @@ export interface components {
             /** Name */
             name?: string | null;
             type: components["schemas"]["PoiType"];
+        };
+        /** SubArea */
+        SubArea: {
+            /** Kind */
+            kind: string;
+            /** Median */
+            median: number | null;
+            /** N */
+            n: number;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
         };
         /**
          * Suggestion
@@ -1487,6 +1731,102 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    area_detail_api_v1_areas__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AreaDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    distribution_api_v1_areas__slug__distribution_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Distribution"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    area_stats_api_v1_areas__slug__stats_get: {
+        parameters: {
+            query?: {
+                periodKind?: ("month" | "quarter" | "year" | "rolling_12m") | null;
+                segment?: "all" | "new" | "second_hand";
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AreaStatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     forgot_password_api_v1_auth_forgot_password_post: {
         parameters: {
             query?: never;

@@ -137,6 +137,184 @@
         "title": "AffordabilityOut",
         "type": "object"
       },
+      "AreaAttributeOut": {
+        "properties": {
+          "asOf": {
+            "format": "date",
+            "title": "Asof",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value",
+          "source",
+          "asOf",
+          "licence"
+        ],
+        "title": "AreaAttributeOut",
+        "type": "object"
+      },
+      "AreaDetail": {
+        "properties": {
+          "attributes": {
+            "items": {
+              "$ref": "#/components/schemas/AreaAttributeOut"
+            },
+            "title": "Attributes",
+            "type": "array"
+          },
+          "bbox": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Bbox",
+            "type": "array"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/SubArea"
+            },
+            "title": "Children",
+            "type": "array"
+          },
+          "childrenKind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Childrenkind"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "dataVersion": {
+            "title": "Dataversion",
+            "type": "string"
+          },
+          "geometry": {
+            "additionalProperties": true,
+            "description": "Simplified GeoJSON, for display only",
+            "title": "Geometry",
+            "type": "object"
+          },
+          "headline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Headline"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "nameGa": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Namega"
+          },
+          "national": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Headline"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "parents": {
+            "items": {
+              "$ref": "#/components/schemas/AreaRef"
+            },
+            "title": "Parents",
+            "type": "array"
+          },
+          "periodKinds": {
+            "description": "Series this area has",
+            "items": {
+              "enum": [
+                "month",
+                "quarter",
+                "year",
+                "rolling_12m"
+              ],
+              "type": "string"
+            },
+            "title": "Periodkinds",
+            "type": "array"
+          },
+          "pointBased": {
+            "description": "True for Small Areas and EDs: only sales placed at their house or street can be counted in them",
+            "title": "Pointbased",
+            "type": "boolean"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "nameGa",
+          "slug",
+          "code",
+          "parents",
+          "bbox",
+          "geometry",
+          "headline",
+          "national",
+          "attributes",
+          "children",
+          "childrenKind",
+          "periodKinds",
+          "pointBased",
+          "source",
+          "dataVersion"
+        ],
+        "title": "AreaDetail",
+        "type": "object"
+      },
       "AreaLine": {
         "properties": {
           "change12mPct": {
@@ -236,6 +414,94 @@
         "title": "AreaSeries",
         "type": "object"
       },
+      "AreaStatsOut": {
+        "properties": {
+          "area": {
+            "$ref": "#/components/schemas/AreaRef"
+          },
+          "national": {
+            "description": "Ireland, same periods and segment",
+            "items": {
+              "$ref": "#/components/schemas/SeriesPoint"
+            },
+            "title": "National",
+            "type": "array"
+          },
+          "periodKind": {
+            "enum": [
+              "month",
+              "quarter",
+              "year",
+              "rolling_12m"
+            ],
+            "title": "Periodkind",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "segment": {
+            "enum": [
+              "all",
+              "new",
+              "second_hand"
+            ],
+            "title": "Segment",
+            "type": "string"
+          }
+        },
+        "required": [
+          "area",
+          "periodKind",
+          "segment",
+          "points",
+          "national"
+        ],
+        "title": "AreaStatsOut",
+        "type": "object"
+      },
+      "Bin": {
+        "properties": {
+          "fromEur": {
+            "title": "Fromeur",
+            "type": "number"
+          },
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when fewer than 5 sales (suppressed)",
+            "title": "N"
+          },
+          "toEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Toeur"
+          }
+        },
+        "required": [
+          "fromEur",
+          "toEur",
+          "n"
+        ],
+        "title": "Bin",
+        "type": "object"
+      },
       "County": {
         "enum": [
           "carlow",
@@ -314,6 +580,59 @@
           "lng"
         ],
         "title": "CountyStat",
+        "type": "object"
+      },
+      "Distribution": {
+        "properties": {
+          "area": {
+            "$ref": "#/components/schemas/AreaRef"
+          },
+          "bins": {
+            "items": {
+              "$ref": "#/components/schemas/Bin"
+            },
+            "title": "Bins",
+            "type": "array"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "nationalShare": {
+            "description": "Share of Ireland's sales in each bin, for comparison",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Nationalshare",
+            "type": "array"
+          },
+          "windowEnd": {
+            "format": "date",
+            "title": "Windowend",
+            "type": "string"
+          },
+          "windowStart": {
+            "format": "date",
+            "title": "Windowstart",
+            "type": "string"
+          }
+        },
+        "required": [
+          "area",
+          "windowStart",
+          "windowEnd",
+          "n",
+          "bins",
+          "nationalShare"
+        ],
+        "title": "Distribution",
         "type": "object"
       },
       "DutyBandOut": {
@@ -407,6 +726,80 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Headline": {
+        "description": "The latest complete 12 months (no provisional month in it).",
+        "properties": {
+          "changePct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Median against the 12 months a year earlier; null if either is suppressed",
+            "title": "Changepct"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "p25": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P25"
+          },
+          "p75": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P75"
+          },
+          "windowEnd": {
+            "format": "date",
+            "title": "Windowend",
+            "type": "string"
+          },
+          "windowStart": {
+            "format": "date",
+            "title": "Windowstart",
+            "type": "string"
+          }
+        },
+        "required": [
+          "windowStart",
+          "windowEnd",
+          "n",
+          "median",
+          "p25",
+          "p75"
+        ],
+        "title": "Headline",
         "type": "object"
       },
       "Health": {
@@ -1699,6 +2092,71 @@
         "title": "SearchResults",
         "type": "object"
       },
+      "SeriesPoint": {
+        "properties": {
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "p25": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P25"
+          },
+          "p75": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P75"
+          },
+          "periodStart": {
+            "format": "date",
+            "title": "Periodstart",
+            "type": "string"
+          },
+          "provisional": {
+            "title": "Provisional",
+            "type": "boolean"
+          },
+          "suppressed": {
+            "title": "Suppressed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "periodStart",
+          "n",
+          "median",
+          "p25",
+          "p75",
+          "provisional",
+          "suppressed"
+        ],
+        "title": "SeriesPoint",
+        "type": "object"
+      },
       "Source": {
         "properties": {
           "name": {
@@ -1980,6 +2438,46 @@
           "distanceM"
         ],
         "title": "StopValue",
+        "type": "object"
+      },
+      "SubArea": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "slug",
+          "n",
+          "median"
+        ],
+        "title": "SubArea",
         "type": "object"
       },
       "Suggestion": {
@@ -2456,6 +2954,178 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/areas/{slug}": {
+      "get": {
+        "description": "An area with its parents, shape, latest complete 12 months against Ireland's, what is\nknown about it, and its busiest sub-areas.",
+        "operationId": "area_detail_api_v1_areas__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[a-z0-9_-]+$",
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AreaDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Area Detail",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/api/v1/areas/{slug}/distribution": {
+      "get": {
+        "description": "How many market sales fell in each price band over the latest complete 12 months, with\nIreland's shares for comparison. Bands with fewer than 5 sales are not given.",
+        "operationId": "distribution_api_v1_areas__slug__distribution_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[a-z0-9_-]+$",
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Distribution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Distribution",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/api/v1/areas/{slug}/stats": {
+      "get": {
+        "description": "The area's series from `area_stats`, with Ireland's for the same periods. Periods with\nfewer than 5 sales keep their count and have no prices; the latest two months are\nprovisional. Small Areas and townlands have quarters and years only.",
+        "operationId": "area_stats_api_v1_areas__slug__stats_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[a-z0-9_-]+$",
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "periodKind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "month",
+                    "quarter",
+                    "year",
+                    "rolling_12m"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Periodkind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "segment",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "new",
+                "second_hand"
+              ],
+              "title": "Segment",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AreaStatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Area Stats",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
     "/api/v1/auth/forgot-password": {
       "post": {
         "operationId": "forgot_password_api_v1_auth_forgot_password_post",

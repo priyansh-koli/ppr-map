@@ -26,6 +26,10 @@ export type ViewPage = components["schemas"]["Page_ViewOut_"];
 export type SearchHistoryPage = components["schemas"]["Page_SearchHistoryOut_"];
 export type AreaRef = components["schemas"]["AreaRef"];
 export type Rules = components["schemas"]["Rules"];
+export type AreaDetail = components["schemas"]["AreaDetail"];
+export type AreaStats = components["schemas"]["AreaStatsOut"];
+export type SeriesPoint = components["schemas"]["SeriesPoint"];
+export type Distribution = components["schemas"]["Distribution"];
 export type StampDuty = components["schemas"]["StampDutyOut"];
 export type Affordability = components["schemas"]["AffordabilityOut"];
 export type CountyStat = components["schemas"]["CountyStat"];
@@ -157,6 +161,8 @@ export const api = {
   deleteMe: (password: string) => send<void>("DELETE", "/me", { password }),
 
   wishlist: () => get<WishlistItem[]>("/me/wishlist"),
+  saveArea: (areaSlug: string, note?: string) =>
+    send<WishlistItem>("POST", "/me/wishlist", { areaSlug, note }),
   saveProperty: (propertyId: string, note?: string) =>
     send<WishlistItem>("POST", "/me/wishlist", { propertyId, note }),
   noteWishlistItem: (id: number, note: string | null) =>
@@ -172,6 +178,13 @@ export const api = {
     get<SearchResults>(`/search?${query.toString()}`, init),
   autocomplete: (q: string, init?: RequestInit) =>
     get<Suggestion[]>(`/geocode/autocomplete?q=${encodeURIComponent(q)}`, init),
+
+  area: (slug: string, init?: RequestInit) =>
+    get<AreaDetail>(`/areas/${encodeURIComponent(slug)}`, init),
+  areaStats: (slug: string, query: URLSearchParams, init?: RequestInit) =>
+    get<AreaStats>(`/areas/${encodeURIComponent(slug)}/stats?${query.toString()}`, init),
+  areaDistribution: (slug: string, init?: RequestInit) =>
+    get<Distribution>(`/areas/${encodeURIComponent(slug)}/distribution`, init),
 
   rules: (init?: RequestInit) => get<Rules>("/tools/rules", init),
   stampDuty: (query: URLSearchParams, init?: RequestInit) =>

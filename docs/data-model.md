@@ -123,7 +123,7 @@ Raw responses are kept for 90 days, then dropped to save space.
 | column | type | notes |
 |---|---|---|
 | id | bigint PK | |
-| kind | enum `country, county, local_authority, electoral_division, small_area, townland, settlement, routing_key, dublin_district` | |
+| kind | enum `country, county, local_authority, electoral_division, small_area, townland, settlement, routing_key, dublin_district` | one `country` row, `ireland`, is made by the aggregate step from the counties (D-049) |
 | code | text | official code (e.g. SA GUID/code, ED code) |
 | name, name_ga | text | |
 | parent_id | bigint FK area null | county ← ED ← SA |

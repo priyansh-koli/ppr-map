@@ -350,9 +350,16 @@ export default async function Page({ params }: Props) {
         </h2>
         <ul className="grid gap-2 text-sm sm:grid-cols-2">
           {data.areas.map((a) => (
-            <li key={`${a.kind}-${a.slug}`} className="rounded-[10px] bg-surface-2 px-3 py-2">
-              <span className="block text-xs text-muted">{KIND_LABEL[a.kind] ?? a.kind}</span>
-              {a.name}
+            <li key={`${a.kind}-${a.slug}`}>
+              <Link
+                href={`/area/${a.slug}`}
+                className="block rounded-[10px] bg-surface-2 px-3 py-2 hover:bg-fill"
+              >
+                <span className="block text-xs text-muted">{KIND_LABEL[a.kind] ?? a.kind}</span>
+                <span className="text-ink underline decoration-line underline-offset-2">
+                  {a.kind === "small_area" ? `Small Area ${a.name}` : a.name}
+                </span>
+              </Link>
             </li>
           ))}
         </ul>
