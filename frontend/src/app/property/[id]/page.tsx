@@ -363,7 +363,17 @@ export default async function Page({ params }: Props) {
             </li>
           ))}
         </ul>
-        <p className="mt-4 font-mono text-xs text-muted">data version {data.dataVersion}</p>
+        <p className="mt-4 text-sm">
+          Something wrong, or would you rather this address was not shown?{" "}
+          <Link
+            className="text-accent underline"
+            href={`${ROUTES.report.path}?property=${data.id}`}
+          >
+            Tell us
+          </Link>
+          .
+        </p>
+        <p className="mt-2 font-mono text-xs text-muted">data version {data.dataVersion}</p>
       </Window>
     </article>
   );

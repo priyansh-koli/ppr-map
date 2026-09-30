@@ -27,6 +27,23 @@ export type SearchHistoryPage = components["schemas"]["Page_SearchHistoryOut_"];
 export type AreaRef = components["schemas"]["AreaRef"];
 export type Rules = components["schemas"]["Rules"];
 export type SavedSearch = components["schemas"]["SavedSearchOut"];
+export type ReportIn = components["schemas"]["ReportIn"];
+export type AdminOverview = components["schemas"]["AdminOverview"];
+export type IngestRun = components["schemas"]["IngestRunOut"];
+export type IngestRunDetail = components["schemas"]["IngestRunDetail"];
+export type AdminJob = components["schemas"]["Job"];
+export type QueueItem = components["schemas"]["QueueItem"];
+export type GeocodeFix = components["schemas"]["GeocodeFix"];
+export type GeocodeFixed = components["schemas"]["GeocodeFixed"];
+export type RemovalRequest = components["schemas"]["RemovalOut"];
+export type AdminUser = components["schemas"]["AdminUser"];
+export type AuditEntry = components["schemas"]["AuditEntry"];
+export interface PageOf<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
 export type AlertFrequency = SavedSearch["alertFrequency"];
 export type AreaDetail = components["schemas"]["AreaDetail"];
 export type AreaStats = components["schemas"]["AreaStatsOut"];
@@ -198,6 +215,35 @@ export const api = {
   deleteSavedSearch: (id: string) => send<void>("DELETE", `/me/saved-searches/${id}`),
   savedSearchCsvUrl: (id: string) => `/api/v1/me/saved-searches/${id}/export.csv`,
   unsubscribe: (token: string) => send<{ name: string }>("POST", "/alerts/unsubscribe", { token }),
+
+  report: (body: ReportIn) => send<{ reference: string }>("POST", "/reports", body),
+
+  admin: {
+    overview: () => get<AdminOverview>("/admin/overview"),
+    runs: (page = 1, kind?: string) =>
+      get<PageOf<IngestRun>>(`/admin/ingest-runs?page=${page}${kind ? `&kind=${kind}` : ""}`),
+    run: (id: number) => get<IngestRunDetail>(`/admin/ingest-runs/${id}`),
+    startRun: (step: string) => send<AdminJob>("POST", "/admin/ingest-runs", { step }),
+    jobs: () => get<AdminJob[]>("/admin/jobs"),
+    geocodeQueue: (kind: string, page = 1, county?: string) =>
+      get<PageOf<QueueItem>>(
+        `/admin/geocode/queue?kind=${kind}&page=${page}${county ? `&county=${county}` : ""}`,
+      ),
+    fixGeocode: (id: string, body: GeocodeFix) =>
+      send<GeocodeFixed>("PUT", `/admin/properties/${encodeURIComponent(id)}/geocode`, body),
+    removals: (status: string, page = 1) =>
+      get<PageOf<RemovalRequest>>(`/admin/removal-requests?status=${status}&page=${page}`),
+    decide: (id: string, status: string, decisionNote?: string) =>
+      send<RemovalRequest>("PATCH", `/admin/removal-requests/${id}`, { status, decisionNote }),
+    users: (q: string, page = 1) =>
+      get<PageOf<AdminUser>>(`/admin/users?page=${page}${q ? `&q=${encodeURIComponent(q)}` : ""}`),
+    changeUser: (id: string, body: { isActive?: boolean; roles?: string[]; password?: string }) =>
+      send<AdminUser>("PATCH", `/admin/users/${id}`, body),
+    audit: (page = 1, filters: Record<string, string> = {}) =>
+      get<PageOf<AuditEntry>>(
+        `/admin/audit-log?${new URLSearchParams({ ...filters, page: String(page) }).toString()}`,
+      ),
+  },
 
   rules: (init?: RequestInit) => get<Rules>("/tools/rules", init),
   stampDuty: (query: URLSearchParams, init?: RequestInit) =>

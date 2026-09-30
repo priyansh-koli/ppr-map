@@ -156,3 +156,33 @@ def search_alert(
         body,
         headers=(("List-Unsubscribe", f"<{unsubscribe}>"),),
     )
+
+
+REQUEST_KIND = {
+    "suppress_display": "stop showing an address",
+    "correct_location": "correct a location",
+    "correct_details": "correct a detail",
+}
+
+
+def report_received(to: str, reference: str, kind: str, address: str) -> Email:
+    return Email(
+        to,
+        f"We received your request ({reference})",
+        f"Thank you. We received your request to {REQUEST_KIND.get(kind, kind)}:\n\n"
+        f"  {address}\n\nIts reference is {reference}. We review requests by hand and will "
+        "email you when it is decided. You do not need to do anything else.\n\n"
+        "The sale itself stays on the Property Services Regulatory Authority's register, "
+        "which we cannot change: www.propertypriceregister.ie\n",
+    )
+
+
+def report_decided(to: str, reference: str, approved: bool, note: str | None) -> Email:
+    outcome = "approved" if approved else "not approved"
+    return Email(
+        to,
+        f"Your request {reference} was {outcome}",
+        f"Your request {reference} was {outcome}."
+        + (f"\n\nOur note: {note}" if note else "")
+        + "\n\nIf you have a question about it, reply to this email.\n",
+    )

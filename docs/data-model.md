@@ -250,7 +250,7 @@ Append-only. The app DB role has no UPDATE or DELETE on it.
 
 ### `removal_request`
 `id uuid, property_id FK null, submitted_address text, requester_email citext, requester_relationship enum(owner, occupant, other), reason text, request_type enum(suppress_display, correct_location, correct_details), status enum(new, in_review, approved, rejected, withdrawn), decided_by FK user null, decided_at, decision_note, created_at`
-Requester PII is deleted 12 months after closure.
+Requester PII (`requester_email`, `reason`) is deleted 12 months after closure by the daily housekeeping job (D-052).
 
 ## Privacy constraints encoded in the schema
 

@@ -64,6 +64,39 @@ def sync_permissions() -> None:
     typer.echo(f"Synced {len(stored_roles)} roles, {len(Perm)} permissions, {len(wanted)} grants.")
 
 
+@cli.command("grant-role")
+def grant_role(email: str, role: str = typer.Argument("admin", help="user, pro or admin")) -> None:
+    """Give an existing account a role, e.g. the first admin (later ones via /admin/users).
+    Recorded in the audit log with no actor, as a command-line change."""
+    if role not in ("user", "pro", "admin"):
+        raise typer.BadParameter("role must be user, pro or admin")
+    engine = sa.create_engine(get_settings().database_url)
+    with engine.begin() as conn:
+        uid = conn.execute(
+            sa.text("SELECT id FROM app_user WHERE email = :e AND deleted_at IS NULL"),
+            {"e": email},
+        ).scalar_one_or_none()
+        if uid is None:
+            raise typer.BadParameter(f"no account for {email}")
+        added = conn.execute(
+            sa.text(
+                "INSERT INTO user_role (user_id, role_id) SELECT :u, id FROM role WHERE name = :r "
+                "ON CONFLICT DO NOTHING RETURNING role_id"
+            ),
+            {"u": uid, "r": role},
+        ).first()
+        if added:
+            conn.execute(
+                sa.text(
+                    "INSERT INTO audit_log (action, target_kind, target_id, after) "
+                    "VALUES ('user.role.grant.cli', 'user', :u, CAST(:after AS jsonb))"
+                ),
+                {"u": str(uid), "after": json.dumps({"role": role})},
+            )
+    engine.dispose()
+    typer.echo(f"{email} {'now has' if added else 'already had'} the {role} role.")
+
+
 @cli.command("purge-deleted")
 def purge_deleted(days: int = 30) -> None:
     """Daily: delete accounts closed more than `days` ago, with everything they own (cascade),

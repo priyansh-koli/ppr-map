@@ -21,6 +21,134 @@
         "title": "Accepted",
         "type": "object"
       },
+      "AdminOverview": {
+        "properties": {
+          "dataVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataversion"
+          },
+          "lastRuns": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Lastruns",
+            "type": "array"
+          },
+          "lowConfidenceProperties": {
+            "title": "Lowconfidenceproperties",
+            "type": "integer"
+          },
+          "openRequests": {
+            "title": "Openrequests",
+            "type": "integer"
+          },
+          "routingKeyConflicts": {
+            "title": "Routingkeyconflicts",
+            "type": "integer"
+          },
+          "unverifiedUsers": {
+            "title": "Unverifiedusers",
+            "type": "integer"
+          },
+          "users": {
+            "title": "Users",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "users",
+          "unverifiedUsers",
+          "openRequests",
+          "lowConfidenceProperties",
+          "routingKeyConflicts",
+          "lastRuns",
+          "dataVersion"
+        ],
+        "title": "AdminOverview",
+        "type": "object"
+      },
+      "AdminUser": {
+        "properties": {
+          "closedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closedat"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "emailVerified": {
+            "title": "Emailverified",
+            "type": "boolean"
+          },
+          "fullName": {
+            "title": "Fullname",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "isActive": {
+            "title": "Isactive",
+            "type": "boolean"
+          },
+          "lastLoginAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastloginat"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "roles",
+          "emailVerified",
+          "isActive",
+          "createdAt",
+          "lastLoginAt",
+          "closedAt"
+        ],
+        "title": "AdminUser",
+        "type": "object"
+      },
       "AffordabilityOut": {
         "properties": {
           "allowance": {
@@ -464,6 +592,78 @@
         "title": "AreaStatsOut",
         "type": "object"
       },
+      "AuditEntry": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor"
+          },
+          "after": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "targetId": {
+            "title": "Targetid",
+            "type": "string"
+          },
+          "targetKind": {
+            "title": "Targetkind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "actor",
+          "action",
+          "targetKind",
+          "targetId",
+          "before",
+          "after",
+          "createdAt"
+        ],
+        "title": "AuditEntry",
+        "type": "object"
+      },
       "Bin": {
         "properties": {
           "fromEur": {
@@ -715,6 +915,76 @@
         "title": "GeocodeConfidence",
         "type": "string"
       },
+      "GeocodeFix": {
+        "properties": {
+          "confidence": {
+            "enum": [
+              "exact",
+              "street",
+              "locality"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "lat": {
+            "maximum": 55.5,
+            "minimum": 51.2,
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "maximum": -5.3,
+            "minimum": -10.8,
+            "title": "Lng",
+            "type": "number"
+          },
+          "note": {
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lat",
+          "lng",
+          "confidence",
+          "note"
+        ],
+        "title": "GeocodeFix",
+        "type": "object"
+      },
+      "GeocodeFixed": {
+        "properties": {
+          "areas": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Areas",
+            "type": "array"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "inReportedCounty": {
+            "title": "Inreportedcounty",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "confidence",
+          "inReportedCounty",
+          "areas"
+        ],
+        "title": "GeocodeFixed",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -835,6 +1105,249 @@
           "redis"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "IngestRunDetail": {
+        "properties": {
+          "finishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finishedat"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "rowErrors": {
+            "items": {
+              "$ref": "#/components/schemas/RowError"
+            },
+            "title": "Rowerrors",
+            "type": "array"
+          },
+          "rowsFailed": {
+            "title": "Rowsfailed",
+            "type": "integer"
+          },
+          "rowsInserted": {
+            "title": "Rowsinserted",
+            "type": "integer"
+          },
+          "rowsRead": {
+            "title": "Rowsread",
+            "type": "integer"
+          },
+          "rowsWithdrawn": {
+            "title": "Rowswithdrawn",
+            "type": "integer"
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceurl"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "title": "Startedat",
+            "type": "string"
+          },
+          "stats": {
+            "additionalProperties": true,
+            "title": "Stats",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "triggeredBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triggeredby"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "startedAt",
+          "finishedAt",
+          "sourceUrl",
+          "rowsRead",
+          "rowsInserted",
+          "rowsWithdrawn",
+          "rowsFailed",
+          "stats",
+          "triggeredBy",
+          "rowErrors"
+        ],
+        "title": "IngestRunDetail",
+        "type": "object"
+      },
+      "IngestRunOut": {
+        "properties": {
+          "finishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finishedat"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "rowsFailed": {
+            "title": "Rowsfailed",
+            "type": "integer"
+          },
+          "rowsInserted": {
+            "title": "Rowsinserted",
+            "type": "integer"
+          },
+          "rowsRead": {
+            "title": "Rowsread",
+            "type": "integer"
+          },
+          "rowsWithdrawn": {
+            "title": "Rowswithdrawn",
+            "type": "integer"
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceurl"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "title": "Startedat",
+            "type": "string"
+          },
+          "stats": {
+            "additionalProperties": true,
+            "title": "Stats",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "triggeredBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triggeredby"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "startedAt",
+          "finishedAt",
+          "sourceUrl",
+          "rowsRead",
+          "rowsInserted",
+          "rowsWithdrawn",
+          "rowsFailed",
+          "stats",
+          "triggeredBy"
+        ],
+        "title": "IngestRunOut",
+        "type": "object"
+      },
+      "Job": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "endedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endedat"
+          },
+          "enqueuedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enqueuedat"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "Job",
         "type": "object"
       },
       "LatestSale": {
@@ -1174,6 +1687,161 @@
           "counties"
         ],
         "title": "Overview",
+        "type": "object"
+      },
+      "Page_AdminUser_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminUser"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[AdminUser]",
+        "type": "object"
+      },
+      "Page_AuditEntry_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[AuditEntry]",
+        "type": "object"
+      },
+      "Page_IngestRunOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IngestRunOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[IngestRunOut]",
+        "type": "object"
+      },
+      "Page_QueueItem_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/QueueItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[QueueItem]",
+        "type": "object"
+      },
+      "Page_RemovalOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RemovalOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[RemovalOut]",
         "type": "object"
       },
       "Page_SearchHistoryOut_": {
@@ -1714,6 +2382,104 @@
         "title": "PropertySummary",
         "type": "object"
       },
+      "QueueItem": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "string"
+          },
+          "conflictM": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Distance from its routing key's median",
+            "title": "Conflictm"
+          },
+          "county": {
+            "title": "County",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "latestSale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latestsale"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "nSales": {
+            "title": "Nsales",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "address",
+          "county",
+          "confidence",
+          "method",
+          "lat",
+          "lng",
+          "locked",
+          "latestSale",
+          "nSales"
+        ],
+        "title": "QueueItem",
+        "type": "object"
+      },
       "RegisterIn": {
         "properties": {
           "acceptTerms": {
@@ -1778,6 +2544,274 @@
         "title": "RegisterIn",
         "type": "object"
       },
+      "RemovalDecision": {
+        "properties": {
+          "decisionNote": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decisionnote"
+          },
+          "status": {
+            "enum": [
+              "in_review",
+              "approved",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "RemovalDecision",
+        "type": "object"
+      },
+      "RemovalOut": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "decidedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decidedat"
+          },
+          "decidedBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decidedby"
+          },
+          "decisionNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decisionnote"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "propertyAddress": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propertyaddress"
+          },
+          "propertyId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propertyid"
+          },
+          "propertySuppressed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propertysuppressed"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "relationship": {
+            "title": "Relationship",
+            "type": "string"
+          },
+          "requestType": {
+            "title": "Requesttype",
+            "type": "string"
+          },
+          "requesterEmail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requesteremail"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "submittedAddress": {
+            "title": "Submittedaddress",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "propertyId",
+          "propertyAddress",
+          "propertySuppressed",
+          "submittedAddress",
+          "requesterEmail",
+          "relationship",
+          "reason",
+          "requestType",
+          "status",
+          "createdAt",
+          "decidedBy",
+          "decidedAt",
+          "decisionNote"
+        ],
+        "title": "RemovalOut",
+        "type": "object"
+      },
+      "ReportAccepted": {
+        "properties": {
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reference"
+        ],
+        "title": "ReportAccepted",
+        "type": "object"
+      },
+      "ReportIn": {
+        "properties": {
+          "address": {
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Address",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "propertyId": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propertyid"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "relationship": {
+            "enum": [
+              "owner",
+              "occupant",
+              "other"
+            ],
+            "title": "Relationship",
+            "type": "string"
+          },
+          "requestType": {
+            "enum": [
+              "suppress_display",
+              "correct_location",
+              "correct_details"
+            ],
+            "title": "Requesttype",
+            "type": "string"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Leave empty (a trap for bots)",
+            "title": "Website"
+          }
+        },
+        "required": [
+          "address",
+          "requestType",
+          "relationship"
+        ],
+        "title": "ReportIn",
+        "type": "object"
+      },
       "ResetIn": {
         "properties": {
           "password": {
@@ -1796,6 +2830,29 @@
           "password"
         ],
         "title": "ResetIn",
+        "type": "object"
+      },
+      "RowError": {
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "lineNo": {
+            "title": "Lineno",
+            "type": "integer"
+          },
+          "rawLine": {
+            "title": "Rawline",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lineNo",
+          "rawLine",
+          "error"
+        ],
+        "title": "RowError",
         "type": "object"
       },
       "Rules": {
@@ -1822,6 +2879,27 @@
           "sources"
         ],
         "title": "Rules",
+        "type": "object"
+      },
+      "RunRequest": {
+        "properties": {
+          "step": {
+            "enum": [
+              "ppr",
+              "gazetteer",
+              "geocode",
+              "enrich",
+              "aggregate",
+              "monthly"
+            ],
+            "title": "Step",
+            "type": "string"
+          }
+        },
+        "required": [
+          "step"
+        ],
+        "title": "RunRequest",
         "type": "object"
       },
       "Sale": {
@@ -2787,6 +3865,55 @@
         "title": "Unsubscribed",
         "type": "object"
       },
+      "UserChange": {
+        "properties": {
+          "isActive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isactive"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Your own password: needed to change roles",
+            "title": "Password"
+          },
+          "roles": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "user",
+                    "pro",
+                    "admin"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roles"
+          }
+        },
+        "title": "UserChange",
+        "type": "object"
+      },
       "UserType": {
         "enum": [
           "first_time_buyer",
@@ -3138,6 +4265,722 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/audit-log": {
+      "get": {
+        "operationId": "audit_log_api_v1_admin_audit_log_get",
+        "parameters": [
+          {
+            "description": "Email address",
+            "in": "query",
+            "name": "actor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Email address",
+              "title": "Actor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "targetKind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 50,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Targetkind"
+            }
+          },
+          {
+            "description": "Target id",
+            "in": "query",
+            "name": "target",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Target id",
+              "title": "Target"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Pagesize",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AuditEntry_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Log",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/geocode/queue": {
+      "get": {
+        "description": "Properties to check, most recently sold first: `conflict` (a precise point far from\nits Eircode routing key, D-035), `low` (placed only by routing key or county, or not at\nall), `locality` (town or townland), `locked` (already corrected by hand).",
+        "operationId": "geocode_queue_api_v1_admin_geocode_queue_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "default": "conflict",
+              "enum": [
+                "conflict",
+                "low",
+                "locality",
+                "locked"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "county",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[a-z]+$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "County"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Pagesize",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_QueueItem_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Geocode Queue",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/ingest-runs": {
+      "get": {
+        "description": "Every pipeline run, newest first: rows read, loaded and failed, and each step's stats\n(a geocode run's `stats.confidence` is its success by confidence level).",
+        "operationId": "ingest_runs_api_v1_admin_ingest_runs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Pagesize",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_IngestRunOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ingest Runs",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Queue a pipeline step (or `monthly`, all of them) for the worker (D-051).",
+        "operationId": "start_run_api_v1_admin_ingest_runs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Run",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/ingest-runs/{run_id}": {
+      "get": {
+        "operationId": "ingest_run_api_v1_admin_ingest_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestRunDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ingest Run",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/jobs": {
+      "get": {
+        "operationId": "recent_jobs_api_v1_admin_jobs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Job"
+                  },
+                  "title": "Response Recent Jobs Api V1 Admin Jobs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Recent Jobs",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/overview": {
+      "get": {
+        "operationId": "overview_api_v1_admin_overview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/properties/{property_id}/geocode": {
+      "put": {
+        "description": "Place a property by hand and lock it, so later geocoding runs leave it alone. Its\nhover card shows the new precision at once; distances and the map's price hexes follow\nat the next monthly run.",
+        "operationId": "fix_geocode_api_v1_admin_properties__property_id__geocode_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "property_id",
+            "required": true,
+            "schema": {
+              "title": "Property Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeocodeFix"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeocodeFixed"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fix Geocode",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/removal-requests": {
+      "get": {
+        "operationId": "removal_requests_api_v1_admin_removal_requests_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "open",
+              "enum": [
+                "open",
+                "new",
+                "in_review",
+                "approved",
+                "rejected",
+                "withdrawn",
+                "all"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Pagesize",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_RemovalOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Removal Requests",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/removal-requests/{request_id}": {
+      "patch": {
+        "description": "Take a request into review, or decide it. Approving a request to stop showing an\naddress hides the property from the map, search, lists and pages at once (its sales\nstay in area figures). A decided request cannot be changed; the requester is emailed.",
+        "operationId": "decide_removal_api_v1_admin_removal_requests__request_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemovalDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemovalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide Removal",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "operationId": "users_api_v1_admin_users_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Pagesize",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AdminUser_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Users",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{user_id}": {
+      "patch": {
+        "description": "Activate or deactivate an account, or change its roles. A role change needs your own\npassword again. Nobody can deactivate themselves, and the last active admin cannot lose\nthe role. Deactivating signs the account out everywhere.",
+        "operationId": "change_user_api_v1_admin_users__user_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUser"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change User",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/alerts/unsubscribe": {
       "post": {
         "description": "Switch off one saved search's alert from the link in its email, without signing in.",
@@ -5044,6 +6887,48 @@
         "summary": "Summary",
         "tags": [
           "properties"
+        ]
+      }
+    },
+    "/api/v1/reports": {
+      "post": {
+        "description": "Ask for an address to stop being shown, or for a location or detail to be corrected.\nThe answer is the same whether or not the property exists.",
+        "operationId": "report_api_v1_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Report",
+        "tags": [
+          "reports"
         ]
       }
     },

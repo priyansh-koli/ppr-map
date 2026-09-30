@@ -72,6 +72,7 @@ Run `make help` for the full list.
 | `make api-types` | regenerate `frontend/openapi.json` and the TypeScript API types after changing an endpoint |
 | `make e2e-stack` | Playwright against the running stack with real data (accounts read their emails from Mailpit) |
 | `python -m app.cli purge-deleted` | daily housekeeping: accounts closed over 30 days ago, expired sessions and email links, views and searches over 12 months old (the scheduler queues it daily) |
+| `python -m app.cli grant-role <email> admin` | give an account a role, e.g. the first admin (then use /admin/users) |
 | `python -m app.cli send-alerts --frequency on_data_update\|weekly` | email saved-search alerts now (the scheduler does this every 15 minutes and on Monday mornings) |
 | `make up` services `worker`, `scheduler` | RQ worker for pipeline steps, alerts and housekeeping; the scheduler queues them on their timetable (`SCHEDULE_PIPELINE=true` adds the monthly pipeline) |
 

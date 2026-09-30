@@ -15,7 +15,7 @@ export default function Page() {
       <PageHeader eyebrow="legal · draft" title={ROUTES.privacy.title} />
       <div className="window mt-8 space-y-4 p-6 leading-relaxed text-ink-2 sm:p-10">
         <DraftNotice />
-        <p>Version 2026-09-27.</p>
+        <p>Version 2026-09-30.</p>
 
         <h2 className={h2}>Using the map without an account</h2>
         <p>
@@ -53,13 +53,21 @@ export default function Page() {
             or when you sign out.
           </li>
           <li>
-            <span className="font-medium">History:</span> the properties you open, kept for 12
-            months. You can clear it, remove single entries, or switch it off in your settings.
+            <span className="font-medium">History:</span> the properties you open and the searches
+            you run, kept for 12 months. A search near your location is kept as &ldquo;near my
+            location&rdquo;, without the location. You can clear it, remove single entries, or
+            switch it off in your settings.
+          </li>
+          <li>
+            <span className="font-medium">Saved searches and alerts:</span> the searches you save,
+            and a record of each alert we send you. A saved search near your location keeps that
+            point, because its alerts need it. Alerts are sent only once you have confirmed your
+            email address, and every alert has a link to stop it.
           </li>
           <li>
             <span className="font-medium">Emails:</span> we send only what you need (confirming your
-            address, resetting your password, a notice when your password changes) and news only if
-            you opt in.
+            address, resetting your password, a notice when your password changes), the alerts you
+            ask for, and news only if you opt in.
           </li>
         </ul>
         <p>
@@ -95,8 +103,13 @@ export default function Page() {
         <p>
           Sale addresses and prices come from the Residential Property Price Register, which the
           Property Services Regulatory Authority publishes by law. We never combine it with any data
-          that could identify who bought or sold a home. If an address should not be shown, you can
-          ask us to correct or remove it.
+          that could identify who bought or sold a home. If an address should not be shown, you can{" "}
+          <Link className="text-accent underline" href={ROUTES.report.path}>
+            ask us to correct or remove it
+          </Link>
+          . For such a request we keep the address, your message and, if you give it, your email
+          address, to decide it and tell you the outcome. Your email and message are deleted 12
+          months after the request is decided.
         </p>
 
         <h2 className={h2}>Contact</h2>

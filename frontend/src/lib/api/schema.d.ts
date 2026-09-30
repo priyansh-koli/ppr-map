@@ -4,6 +4,221 @@
  */
 
 export interface paths {
+    "/api/v1/admin/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit Log */
+        get: operations["audit_log_api_v1_admin_audit_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/geocode/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Geocode Queue
+         * @description Properties to check, most recently sold first: `conflict` (a precise point far from
+         *     its Eircode routing key, D-035), `low` (placed only by routing key or county, or not at
+         *     all), `locality` (town or townland), `locked` (already corrected by hand).
+         */
+        get: operations["geocode_queue_api_v1_admin_geocode_queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/ingest-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ingest Runs
+         * @description Every pipeline run, newest first: rows read, loaded and failed, and each step's stats
+         *     (a geocode run's `stats.confidence` is its success by confidence level).
+         */
+        get: operations["ingest_runs_api_v1_admin_ingest_runs_get"];
+        put?: never;
+        /**
+         * Start Run
+         * @description Queue a pipeline step (or `monthly`, all of them) for the worker (D-051).
+         */
+        post: operations["start_run_api_v1_admin_ingest_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/ingest-runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ingest Run */
+        get: operations["ingest_run_api_v1_admin_ingest_runs__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent Jobs */
+        get: operations["recent_jobs_api_v1_admin_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_v1_admin_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/properties/{property_id}/geocode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Fix Geocode
+         * @description Place a property by hand and lock it, so later geocoding runs leave it alone. Its
+         *     hover card shows the new precision at once; distances and the map's price hexes follow
+         *     at the next monthly run.
+         */
+        put: operations["fix_geocode_api_v1_admin_properties__property_id__geocode_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/removal-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Removal Requests */
+        get: operations["removal_requests_api_v1_admin_removal_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/removal-requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Decide Removal
+         * @description Take a request into review, or decide it. Approving a request to stop showing an
+         *     address hides the property from the map, search, lists and pages at once (its sales
+         *     stay in area figures). A decided request cannot be changed; the requester is emailed.
+         */
+        patch: operations["decide_removal_api_v1_admin_removal_requests__request_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Users */
+        get: operations["users_api_v1_admin_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change User
+         * @description Activate or deactivate an account, or change its roles. A role change needs your own
+         *     password again. Nobody can deactivate themselves, and the last active admin cannot lose
+         *     the role. Deactivating signs the account out everywhere.
+         */
+        patch: operations["change_user_api_v1_admin_users__user_id__patch"];
+        trace?: never;
+    };
     "/api/v1/alerts/unsubscribe": {
         parameters: {
             query?: never;
@@ -642,6 +857,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report
+         * @description Ask for an address to stop being shown, or for a location or detail to be corrected.
+         *     The answer is the same whether or not the property exists.
+         */
+        post: operations["report_api_v1_reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -763,6 +999,52 @@ export interface components {
              * @constant
              */
             status: "accepted";
+        };
+        /** AdminOverview */
+        AdminOverview: {
+            /** Dataversion */
+            dataVersion: string | null;
+            /** Lastruns */
+            lastRuns: {
+                [key: string]: unknown;
+            }[];
+            /** Lowconfidenceproperties */
+            lowConfidenceProperties: number;
+            /** Openrequests */
+            openRequests: number;
+            /** Routingkeyconflicts */
+            routingKeyConflicts: number;
+            /** Unverifiedusers */
+            unverifiedUsers: number;
+            /** Users */
+            users: number;
+        };
+        /** AdminUser */
+        AdminUser: {
+            /** Closedat */
+            closedAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Email */
+            email: string;
+            /** Emailverified */
+            emailVerified: boolean;
+            /** Fullname */
+            fullName: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Isactive */
+            isActive: boolean;
+            /** Lastloginat */
+            lastLoginAt: string | null;
+            /** Roles */
+            roles: string[];
         };
         /** AffordabilityOut */
         AffordabilityOut: {
@@ -924,6 +1206,32 @@ export interface components {
              */
             segment: "all" | "new" | "second_hand";
         };
+        /** AuditEntry */
+        AuditEntry: {
+            /** Action */
+            action: string;
+            /** Actor */
+            actor: string | null;
+            /** After */
+            after: {
+                [key: string]: unknown;
+            } | null;
+            /** Before */
+            before: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Id */
+            id: number;
+            /** Targetid */
+            targetId: string;
+            /** Targetkind */
+            targetKind: string;
+        };
         /** Bin */
         Bin: {
             /** Fromeur */
@@ -1020,6 +1328,31 @@ export interface components {
          * @enum {string}
          */
         GeocodeConfidence: "exact" | "street" | "locality" | "routing_key" | "county" | "unmatched";
+        /** GeocodeFix */
+        GeocodeFix: {
+            /**
+             * Confidence
+             * @enum {string}
+             */
+            confidence: "exact" | "street" | "locality";
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /** Note */
+            note: string;
+        };
+        /** GeocodeFixed */
+        GeocodeFixed: {
+            /** Areas */
+            areas: string[];
+            /** Confidence */
+            confidence: string;
+            /** Id */
+            id: string;
+            /** Inreportedcounty */
+            inReportedCounty: boolean;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1071,6 +1404,85 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "error";
+        };
+        /** IngestRunDetail */
+        IngestRunDetail: {
+            /** Finishedat */
+            finishedAt: string | null;
+            /** Id */
+            id: number;
+            /** Kind */
+            kind: string;
+            /** Rowerrors */
+            rowErrors: components["schemas"]["RowError"][];
+            /** Rowsfailed */
+            rowsFailed: number;
+            /** Rowsinserted */
+            rowsInserted: number;
+            /** Rowsread */
+            rowsRead: number;
+            /** Rowswithdrawn */
+            rowsWithdrawn: number;
+            /** Sourceurl */
+            sourceUrl: string | null;
+            /**
+             * Startedat
+             * Format: date-time
+             */
+            startedAt: string;
+            /** Stats */
+            stats: {
+                [key: string]: unknown;
+            };
+            /** Status */
+            status: string;
+            /** Triggeredby */
+            triggeredBy: string | null;
+        };
+        /** IngestRunOut */
+        IngestRunOut: {
+            /** Finishedat */
+            finishedAt: string | null;
+            /** Id */
+            id: number;
+            /** Kind */
+            kind: string;
+            /** Rowsfailed */
+            rowsFailed: number;
+            /** Rowsinserted */
+            rowsInserted: number;
+            /** Rowsread */
+            rowsRead: number;
+            /** Rowswithdrawn */
+            rowsWithdrawn: number;
+            /** Sourceurl */
+            sourceUrl: string | null;
+            /**
+             * Startedat
+             * Format: date-time
+             */
+            startedAt: string;
+            /** Stats */
+            stats: {
+                [key: string]: unknown;
+            };
+            /** Status */
+            status: string;
+            /** Triggeredby */
+            triggeredBy: string | null;
+        };
+        /** Job */
+        Job: {
+            /** Description */
+            description?: string | null;
+            /** Endedat */
+            endedAt?: string | null;
+            /** Enqueuedat */
+            enqueuedAt?: string | null;
+            /** Id */
+            id: string;
+            /** Status */
+            status: string;
         };
         /** LatestSale */
         LatestSale: {
@@ -1220,6 +1632,61 @@ export interface components {
              * @description First month of the counties' 12-month window.
              */
             windowStart: string;
+        };
+        /** Page[AdminUser] */
+        Page_AdminUser_: {
+            /** Items */
+            items: components["schemas"]["AdminUser"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[AuditEntry] */
+        Page_AuditEntry_: {
+            /** Items */
+            items: components["schemas"]["AuditEntry"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[IngestRunOut] */
+        Page_IngestRunOut_: {
+            /** Items */
+            items: components["schemas"]["IngestRunOut"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[QueueItem] */
+        Page_QueueItem_: {
+            /** Items */
+            items: components["schemas"]["QueueItem"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[RemovalOut] */
+        Page_RemovalOut_: {
+            /** Items */
+            items: components["schemas"]["RemovalOut"][];
+            /** Page */
+            page: number;
+            /** Pagesize */
+            pageSize: number;
+            /** Total */
+            total: number;
         };
         /** Page[SearchHistoryOut] */
         Page_SearchHistoryOut_: {
@@ -1376,6 +1843,34 @@ export interface components {
             previousSales?: components["schemas"]["SaleBrief"][];
             vicinity: components["schemas"]["Vicinity"];
         };
+        /** QueueItem */
+        QueueItem: {
+            /** Address */
+            address: string;
+            /** Confidence */
+            confidence: string;
+            /**
+             * Conflictm
+             * @description Distance from its routing key's median
+             */
+            conflictM?: number | null;
+            /** County */
+            county: string;
+            /** Id */
+            id: string;
+            /** Lat */
+            lat: number | null;
+            /** Latestsale */
+            latestSale: string | null;
+            /** Lng */
+            lng: number | null;
+            /** Locked */
+            locked: boolean;
+            /** Method */
+            method: string | null;
+            /** Nsales */
+            nSales: number;
+        };
         /** RegisterIn */
         RegisterIn: {
             /**
@@ -1408,12 +1903,101 @@ export interface components {
             /** Termsversion */
             termsVersion: string;
         };
+        /** RemovalDecision */
+        RemovalDecision: {
+            /** Decisionnote */
+            decisionNote?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "in_review" | "approved" | "rejected";
+        };
+        /** RemovalOut */
+        RemovalOut: {
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Decidedat */
+            decidedAt: string | null;
+            /** Decidedby */
+            decidedBy: string | null;
+            /** Decisionnote */
+            decisionNote: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Propertyaddress */
+            propertyAddress: string | null;
+            /** Propertyid */
+            propertyId: string | null;
+            /** Propertysuppressed */
+            propertySuppressed: boolean | null;
+            /** Reason */
+            reason: string | null;
+            /** Reference */
+            reference: string;
+            /** Relationship */
+            relationship: string;
+            /** Requesttype */
+            requestType: string;
+            /** Requesteremail */
+            requesterEmail: string | null;
+            /** Status */
+            status: string;
+            /** Submittedaddress */
+            submittedAddress: string;
+        };
+        /** ReportAccepted */
+        ReportAccepted: {
+            /** Reference */
+            reference: string;
+        };
+        /** ReportIn */
+        ReportIn: {
+            /** Address */
+            address: string;
+            /** Email */
+            email?: string | null;
+            /** Propertyid */
+            propertyId?: string | null;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Relationship
+             * @enum {string}
+             */
+            relationship: "owner" | "occupant" | "other";
+            /**
+             * Requesttype
+             * @enum {string}
+             */
+            requestType: "suppress_display" | "correct_location" | "correct_details";
+            /**
+             * Website
+             * @description Leave empty (a trap for bots)
+             */
+            website?: string | null;
+        };
         /** ResetIn */
         ResetIn: {
             /** Password */
             password: string;
             /** Token */
             token: string;
+        };
+        /** RowError */
+        RowError: {
+            /** Error */
+            error: string;
+            /** Lineno */
+            lineNo: number;
+            /** Rawline */
+            rawLine: string;
         };
         /** Rules */
         Rules: {
@@ -1426,6 +2010,14 @@ export interface components {
             rulesVersion: string;
             /** Sources */
             sources: components["schemas"]["Source"][];
+        };
+        /** RunRequest */
+        RunRequest: {
+            /**
+             * Step
+             * @enum {string}
+             */
+            step: "ppr" | "gazetteer" | "geocode" | "enrich" | "aggregate" | "monthly";
         };
         /** Sale */
         Sale: {
@@ -1774,6 +2366,18 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** UserChange */
+        UserChange: {
+            /** Isactive */
+            isActive?: boolean | null;
+            /**
+             * Password
+             * @description Your own password: needed to change roles
+             */
+            password?: string | null;
+            /** Roles */
+            roles?: ("user" | "pro" | "admin")[] | null;
+        };
         /**
          * UserType
          * @enum {string}
@@ -1888,6 +2492,385 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    audit_log_api_v1_admin_audit_log_get: {
+        parameters: {
+            query?: {
+                /** @description Email address */
+                actor?: string | null;
+                targetKind?: string | null;
+                /** @description Target id */
+                target?: string | null;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AuditEntry_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    geocode_queue_api_v1_admin_geocode_queue_get: {
+        parameters: {
+            query?: {
+                kind?: "conflict" | "low" | "locality" | "locked";
+                county?: string | null;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_QueueItem_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ingest_runs_api_v1_admin_ingest_runs_get: {
+        parameters: {
+            query?: {
+                kind?: string | null;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_IngestRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_run_api_v1_admin_ingest_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ingest_run_api_v1_admin_ingest_runs__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestRunDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recent_jobs_api_v1_admin_jobs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"][];
+                };
+            };
+        };
+    };
+    overview_api_v1_admin_overview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOverview"];
+                };
+            };
+        };
+    };
+    fix_geocode_api_v1_admin_properties__property_id__geocode_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GeocodeFix"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeocodeFixed"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    removal_requests_api_v1_admin_removal_requests_get: {
+        parameters: {
+            query?: {
+                status?: "open" | "new" | "in_review" | "approved" | "rejected" | "withdrawn" | "all";
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_RemovalOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_removal_api_v1_admin_removal_requests__request_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemovalDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemovalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    users_api_v1_admin_users_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AdminUser_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_user_api_v1_admin_users__user_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     unsubscribe_api_v1_alerts_unsubscribe_post: {
         parameters: {
             query?: never;
@@ -3136,6 +4119,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PropertySummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_api_v1_reports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportAccepted"];
                 };
             };
             /** @description Validation Error */

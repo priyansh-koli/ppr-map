@@ -32,6 +32,11 @@ export function AccountMenu({ stacked = false }: { stacked?: boolean }) {
       <Link className={link} href={ROUTES.account.path}>
         Account
       </Link>
+      {me.permissions.includes("admin:audit") ? (
+        <Link className={link} href={ROUTES.admin.path}>
+          Admin
+        </Link>
+      ) : null}
       <button
         type="button"
         className={`${link} text-left disabled:opacity-60`}

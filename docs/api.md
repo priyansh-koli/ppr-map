@@ -88,7 +88,7 @@ The `sales` point layer carries: `id`, `price`, `date` (yyyymmdd int), `isNew`, 
 | GET | `/properties/{id}/comparables?radiusM=500&months=24` | same street plus nearby, market sales only; only `exact` and `street` confidence are used for the distance test |
 | GET | `/properties/{id}/planning?radiusM=250&years=5` | planning at this address plus nearby; no applicant fields exist to return |
 | GET | `/properties/{id}/estimate` | the D-020 index estimate: `{low, mid, high, method, basedOnSale, indexSeries}`, or 404 with a reason if ineligible |
-| POST | `/properties/{id}/report` | public correction or removal request → `removal_request` (rate limited, CAPTCHA-free honeypot) |
+| POST | `/reports` | **Built (Phase 5, D-052).** A public correction or removal request `{propertyId?, address, requestType, relationship, reason?, email?}` → `removal_request`, answered 202 with a reference (`R-…`); 5 an hour per IP; a hidden `website` field traps bots (answered as accepted, nothing stored); an acknowledgement is emailed if an address is given. |
 
 Summary shape (draft):
 ```json
@@ -141,13 +141,19 @@ Summary shape (draft):
 The property page's sales carry `vatEstimates` for VAT-exclusive prices (D-015): the price with VAT at the rate for the sale date, and a second figure at 9% where the home could be a qualifying apartment.
 
 ## Admin (requires `admin:*` permissions; every write is audit-logged)
+
+**Built in Phase 5** (D-052). The first admin is made with `python -m app.cli grant-role <email> admin`.
+
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/admin/ingest-runs` · GET `/admin/ingest-runs/{id}` (includes row errors) | |
-| POST | `/admin/ingest-runs` | `{kind}` triggers a run |
-| GET | `/admin/geocode/queue?confidence=&county=` | low-confidence properties and dedupe review candidates |
-| PUT | `/admin/properties/{id}/geocode` | `{lat, lng, confidence, note}` sets `geocode_locked` |
-| POST | `/admin/properties/merge` · `/admin/properties/{id}/split` | dedupe corrections |
-| GET/PATCH | `/admin/removal-requests` · `/admin/removal-requests/{id}` | approve suppresses the property |
-| GET/PATCH | `/admin/users` · `/admin/users/{id}` | activate or deactivate; change roles |
-| GET | `/admin/audit-log?actor=&target=` | |
+| GET | `/admin/overview` | open requests, locations to check, accounts, the latest run of each step, the data version |
+| GET | `/admin/ingest-runs?kind=&page=` · GET `/admin/ingest-runs/{id}` | every pipeline run with rows read, loaded, withdrawn and failed and its stats (a geocode run's success by confidence level); the detail adds up to 200 failed rows |
+| POST | `/admin/ingest-runs` | `{step: ppr | gazetteer | geocode | enrich | aggregate | monthly}` queues the step for the worker (202 with the job); 503 if the queue is down |
+| GET | `/admin/jobs` | recent pipeline jobs and their status |
+| GET | `/admin/geocode/queue?kind=conflict|low|locality|locked&county=&page=` | properties to check, most recently sold first; `conflict` is a precise point more than 25 km from its routing key's median (D-035) |
+| PUT | `/admin/properties/{id}/geocode` | `{lat, lng, confidence: exact|street|locality, note}` places a property by hand, re-joins its areas, locks it against later geocoding runs, and updates its hover card; says whether the point is in the county it was filed under |
+| GET/PATCH | `/admin/removal-requests?status=open|…` · `/admin/removal-requests/{id}` | `{status: in_review | approved | rejected, decisionNote}`; approving "stop showing" hides the property at once; a decided request cannot be changed; the requester is emailed the outcome |
+| GET/PATCH | `/admin/users?q=` · `/admin/users/{id}` | `{isActive?, roles?, password}`: role changes need the admin's own password; everyone keeps `user`; nobody can deactivate themselves; the last active admin cannot lose the role; deactivating signs the account out |
+| GET | `/admin/audit-log?actor=&targetKind=&target=` | newest first |
+
+Merging and splitting properties (dedupe corrections) are not built yet.

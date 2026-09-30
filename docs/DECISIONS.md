@@ -541,3 +541,16 @@ Everything below is **Proposed** until the Phase 0 review.
   - `scheduler`: APScheduler in Europe/Dublin time, which only queues jobs: alerts every 15 minutes and Mondays at 07:00, housekeeping daily at 03:30, and the monthly pipeline on the 2nd at 02:00 only with `SCHEDULE_PIPELINE=true` (off by default: it downloads the register and needs the geocoder).
   - Pipeline jobs live in the pipeline package (`ppr_pipeline.jobs.run`) and are queued by name, so the API never imports the pipeline. Runs started for an admin record them in `ingest_run.triggered_by`.
 - **Status:** Accepted (implementation of D-007).
+
+## D-052 Removal requests and the admin area
+
+- **Context:** the brief asks for a process for address removal and correction requests, and an admin area: ingest dashboard, manual geocode correction, request handling, and user management with role changes and an audit log.
+- **Choice:**
+  - **Requests** need no account (`POST /reports`, the `/report` page, linked from every property page). A hidden field traps simple bots without a CAPTCHA (no third-party script, D-021), and there are 5 an hour per IP. The requester gets a reference, and an email only if they give an address. Their email and message are deleted 12 months after the decision, by the daily housekeeping job.
+  - **Deciding:** approving "stop showing this address" sets `is_suppressed`, which hides the property from the map, search, lists, pages and hover cards at once; its sales stay in area figures, because the PPR itself is public and removing them would bend the statistics. A decided request is final (a new request can be made). The audit log records status changes only, never the requester's email or message.
+  - **Geocode review** lists what most needs a look: precise points far from their Eircode routing key, points placed only by routing key or county, and town-level ones, newest sales first. A correction re-joins the property's areas, locks it against later runs (`geocode_locked`), and changes its hover card at once; distances, price hexes and map tiles follow at the next runs. Admins are told to use only open or official sources for the point.
+  - **Users:** activating and deactivating (which signs the account out everywhere), and role changes with the admin's own password again. Everyone keeps `user`; nobody can deactivate themselves; the last active admin cannot lose the role (docs/permissions.md). The first admin is made on the command line (`grant-role`), which is itself audit-logged.
+  - **Ingest runs:** every run with its counts and stats, failed rows, and a form that queues a step for the worker (D-051), recording which admin asked.
+- **Not built:** merging and splitting properties (the dedupe corrections in docs/api.md). The pipeline does not collect merge candidates yet either (D-030); both wait until the owner wants them.
+- **Privacy policy:** updated (version 2026-09-30) for search history, saved searches, alerts and requests.
+- **Status:** Accepted (implementation detail).

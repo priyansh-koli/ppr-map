@@ -1,11 +1,13 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    admin,
     areas,
     auth,
     health,
     me,
     properties,
+    reports,
     saved_searches,
     search,
     stats,
@@ -22,3 +24,5 @@ router.include_router(search.router)
 router.include_router(tools.router)
 router.include_router(areas.router)
 router.include_router(saved_searches.router)
+router.include_router(reports.router)
+router.include_router(admin.router)

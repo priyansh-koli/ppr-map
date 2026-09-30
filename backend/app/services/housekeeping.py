@@ -23,6 +23,11 @@ EXPIRED = [
         "searches older than 12 months",
         "DELETE FROM search_history WHERE searched_at < now() - :keep",
     ),
+    (
+        "requesters' details on requests closed over 12 months ago",
+        "UPDATE removal_request SET requester_email = NULL, reason = NULL "
+        "WHERE closed_at < now() - :keep AND (requester_email IS NOT NULL OR reason IS NOT NULL)",
+    ),
 ]
 
 
