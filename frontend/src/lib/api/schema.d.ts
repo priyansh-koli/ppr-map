@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/v1/alerts/unsubscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unsubscribe
+         * @description Switch off one saved search's alert from the link in its email, without signing in.
+         */
+        post: operations["unsubscribe_api_v1_alerts_unsubscribe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/areas/{slug}": {
         parameters: {
             query?: never;
@@ -410,6 +430,71 @@ export interface paths {
          * @description Change the password; every other session is signed out and reset links stop working.
          */
         post: operations["change_password_api_v1_me_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/saved-searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Saved Searches */
+        get: operations["saved_searches_api_v1_me_saved_searches_get"];
+        put?: never;
+        /**
+         * Save Search
+         * @description Save a search. Its alerts cover sales filed from now on, not the register as it is.
+         */
+        post: operations["save_search_api_v1_me_saved_searches_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/saved-searches/{sid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Saved Search */
+        get: operations["saved_search_api_v1_me_saved_searches__sid__get"];
+        put?: never;
+        post?: never;
+        /** Delete Saved Search */
+        delete: operations["delete_saved_search_api_v1_me_saved_searches__sid__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Saved Search
+         * @description Rename, change the filters or the alert. Changing the filters starts its alerts
+         *     from the register as it is now.
+         */
+        patch: operations["update_saved_search_api_v1_me_saved_searches__sid__patch"];
+        trace?: never;
+    };
+    "/api/v1/me/saved-searches/{sid}/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Saved Search
+         * @description The search's matches as CSV, in its sort order, up to your role's row limit (500 for a
+         *     user). Each role also has a daily number of exports (docs/permissions.md).
+         */
+        get: operations["export_saved_search_api_v1_me_saved_searches__sid__export_csv_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1385,6 +1470,68 @@ export interface components {
             /** Vatexclusive */
             vatExclusive: boolean;
         };
+        /** SavedSearchIn */
+        SavedSearchIn: {
+            /**
+             * Alertfrequency
+             * @default off
+             * @enum {string}
+             */
+            alertFrequency: "off" | "on_data_update" | "weekly";
+            /** Name */
+            name: string;
+            /**
+             * Query
+             * @description The search's URL parameters, as on /search
+             */
+            query: {
+                [key: string]: string;
+            };
+        };
+        /** SavedSearchOut */
+        SavedSearchOut: {
+            /**
+             * Alertfrequency
+             * @enum {string}
+             */
+            alertFrequency: "off" | "on_data_update" | "weekly";
+            /**
+             * Alertsactive
+             * @description False while the email is unverified: nothing is sent until it is
+             */
+            alertsActive: boolean;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lastalertmatches */
+            lastAlertMatches: number | null;
+            /** Lastalertedat */
+            lastAlertedAt: string | null;
+            /** Name */
+            name: string;
+            /** Query */
+            query: {
+                [key: string]: string;
+            };
+        };
+        /** SavedSearchPatch */
+        SavedSearchPatch: {
+            /** Alertfrequency */
+            alertFrequency?: ("off" | "on_data_update" | "weekly") | null;
+            /** Name */
+            name?: string | null;
+            /** Query */
+            query?: {
+                [key: string]: string;
+            } | null;
+        };
         /** SchoolValue */
         SchoolValue: {
             /** Distancem */
@@ -1617,6 +1764,16 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** Unsubscribe */
+        Unsubscribe: {
+            /** Token */
+            token: string;
+        };
+        /** Unsubscribed */
+        Unsubscribed: {
+            /** Name */
+            name: string;
+        };
         /**
          * UserType
          * @enum {string}
@@ -1731,6 +1888,39 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    unsubscribe_api_v1_alerts_unsubscribe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Unsubscribe"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Unsubscribed"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     area_detail_api_v1_areas__slug__get: {
         parameters: {
             query?: never;
@@ -2472,6 +2662,185 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    saved_searches_api_v1_me_saved_searches_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSearchOut"][];
+                };
+            };
+        };
+    };
+    save_search_api_v1_me_saved_searches_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedSearchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSearchOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    saved_search_api_v1_me_saved_searches__sid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSearchOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_saved_search_api_v1_me_saved_searches__sid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_saved_search_api_v1_me_saved_searches__sid__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedSearchPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSearchOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_saved_search_api_v1_me_saved_searches__sid__export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
             };
             /** @description Validation Error */
             422: {

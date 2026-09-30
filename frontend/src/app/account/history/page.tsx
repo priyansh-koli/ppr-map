@@ -13,7 +13,7 @@ export default function Page() {
       <PageHeader
         eyebrow="your account"
         title={ROUTES.history.title}
-        lead="Property pages you opened in the last 12 months. You can turn this off."
+        lead="Property pages you opened and searches you ran in the last 12 months. You can turn this off."
       />
       <Window title="history · last 12 months" bodyClassName="p-5 sm:p-8">
         <RequireSignIn>

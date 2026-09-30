@@ -201,9 +201,18 @@ export const ROUTES = {
     path: "/account/saved-searches",
     samplePath: "/account/saved-searches",
     title: "Saved searches and alerts",
-    summary: "Get an email when a new sale matches your filters.",
+    summary:
+      "Searches you saved, with an email when newly filed sales match them, and a CSV download.",
     phase: 5,
     access: "user",
+  },
+  unsubscribe: {
+    path: "/alerts/unsubscribe",
+    samplePath: "/alerts/unsubscribe",
+    title: "Stop an alert",
+    summary: "Switch off the email alerts for one saved search, from the link in its email.",
+    phase: 5,
+    access: "public",
   },
   admin: {
     path: "/admin",

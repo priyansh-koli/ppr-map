@@ -19,10 +19,15 @@ class Email:
     to: str
     subject: str
     body: str
+    headers: tuple[tuple[str, str], ...] = ()
 
 
 class Mailer(Protocol):
-    async def send(self, email: Email) -> None: ...
+    async def send(self, email: Email) -> None:
+        """Send, logging a failure: for mail the user can ask for again."""
+
+    async def deliver(self, email: Email) -> None:
+        """Send, raising on failure: for callers that record the outcome (alerts)."""
 
 
 class SmtpMailer:
@@ -32,6 +37,8 @@ class SmtpMailer:
         msg["From"] = s.email_from
         msg["To"] = email.to
         msg["Subject"] = email.subject
+        for name, value in email.headers:
+            msg[name] = value
         msg.set_content(email.body)
         with smtplib.SMTP(s.smtp_host, s.smtp_port, timeout=10) as smtp:
             if s.smtp_user:
@@ -39,10 +46,13 @@ class SmtpMailer:
                 smtp.login(s.smtp_user, s.smtp_password)
             smtp.send_message(msg)
 
+    async def deliver(self, email: Email) -> None:
+        await asyncio.to_thread(self._send, email)
+
     async def send(self, email: Email) -> None:
         # A mail server that is down must not fail the request: the user can ask again.
         try:
-            await asyncio.to_thread(self._send, email)
+            await self.deliver(email)
         except (OSError, smtplib.SMTPException):
             log.exception("could not send %r to %s", email.subject, email.to)
 
@@ -105,4 +115,44 @@ def password_changed(to: str, name: str) -> Email:
         f"Hello {name},\n\nThe password for your PPR Map account was just changed, and you "
         "were signed out everywhere else.\n\nIf this was not you, reset it now: "
         f"{link('/forgot-password')}\n",
+    )
+
+
+def unsubscribe_link(token: str) -> str:
+    return link("/alerts/unsubscribe?token=" + token)
+
+
+def search_alert(
+    to: str,
+    name: str,
+    search_name: str,
+    total: int,
+    sales: list[tuple[str, str, str, str]],
+    search_path: str,
+    unsubscribe_token: str,
+) -> Email:
+    """New sales on the register that match a saved search. `sales` are (address, price,
+    date, property path), newest first; `total` may be larger than the list."""
+    lines = [f"- {a}\n  {p}, sold {d}\n  {link(path)}" for a, p, d, path in sales]
+    more = total - len(sales)
+    unsubscribe = unsubscribe_link(unsubscribe_token)
+    body = (
+        f"Hello {name},\n\n"
+        f"The Property Price Register has {total} new "
+        f"{'sale' if total == 1 else 'sales'} matching your saved search "
+        f'"{search_name}":\n\n'
+        + "\n\n".join(lines)
+        + "\n\n"
+        + (f"...and {more} more. " if more > 0 else "")
+        + f"See them all: {link(search_path)}\n\n"
+        "Sales are filed with the register weeks after they close, so some may be months "
+        "old. The latest two months of the register are provisional.\n\n"
+        f"Change or stop this alert: {link('/account/saved-searches')}\n"
+        f"Stop this alert in one click: {unsubscribe}\n"
+    )
+    return Email(
+        to,
+        f"{total} new {'sale' if total == 1 else 'sales'}: {search_name}",
+        body,
+        headers=(("List-Unsubscribe", f"<{unsubscribe}>"),),
     )

@@ -520,3 +520,24 @@ Everything below is **Proposed** until the Phase 0 review.
   - **Links:** county tiles on the home page, the property page's area list and the area page's parents and children all link to area pages; each area links to its sales on the map and in search, and can be saved to the wishlist.
 - **Not done:** a CSO comparison on area pages waits for the CSO index, which the price estimate loads (D-020).
 - **Status:** Accepted (implementation detail).
+
+## D-050 Saved searches and alerts: "new" means newly filed, and only verified addresses
+
+- **Context:** the brief asks for saved searches with email alerts "when a new sale matches my filters", weekly or on each data update, and email verification before alerts are active. D-042 left open that unverified accounts hold the full `user` role.
+- **What "new" means:** the PPR is filed weeks after a sale closes, and the register is re-published whole (D-001). A sale is new to a search when the ingest run that first saw it (`sale.first_seen_run_id`) is later than the run the search was last checked against (`saved_search.alerted_through_run_id`, migration 0009). A new saved search starts from the register as it is, so its first alert is not the whole back catalogue. The email says a new sale may be months old.
+- **When:** only after the data is complete: the newest PPR ingest that a later aggregate run followed. Before geocoding, a new property has no location and matches nothing.
+- **Frequencies:** "on each data update" (the scheduler checks every 15 minutes; nothing is due until an update completes) and "weekly" (Mondays 07:00, Irish time, covering any updates that week). Both send nothing when nothing new matches.
+- **Who:** active accounts with a verified email and `alert:receive`; the job checks, not only the UI. Saving searches and setting alerts are allowed before verification, and the pages say alerts wait for it.
+- **At most once:** `alert_delivery` is unique on (search, update), claimed before the email is sent, so two runs cannot double-send; a failed send is recorded as `failed` and not retried automatically.
+- **Unsubscribe:** each email has a one-click link (and a `List-Unsubscribe` header) with an HMAC token for that search. The page asks before switching it off, so a mail scanner opening the link changes nothing.
+- **CSV export:** the matches in the search's order, capped by role (500 rows and 10 a day for a user; docs/permissions.md), with the PSRA notice and the ODbL notice for coordinates (R-06) as leading `#` lines, and formula-like cells quoted.
+- **Status:** Accepted (implementation detail; closes the alerts item of D-042).
+
+## D-051 Jobs: RQ workers and a scheduler that only queues
+
+- **Context:** D-007 chose RQ plus APScheduler; until now the worker container slept. Alerts, the daily purge (D-041) and admin-triggered pipeline runs need it.
+- **Choice:**
+  - `worker`: `rq worker pipeline default`. Pipeline steps run on `pipeline` (6-hour timeout), alerts and housekeeping on `default`. It mounts `data/`, so it uses the same downloads as the `make` targets.
+  - `scheduler`: APScheduler in Europe/Dublin time, which only queues jobs: alerts every 15 minutes and Mondays at 07:00, housekeeping daily at 03:30, and the monthly pipeline on the 2nd at 02:00 only with `SCHEDULE_PIPELINE=true` (off by default: it downloads the register and needs the geocoder).
+  - Pipeline jobs live in the pipeline package (`ppr_pipeline.jobs.run`) and are queued by name, so the API never imports the pipeline. Runs started for an admin record them in `ingest_run.triggered_by`.
+- **Status:** Accepted (implementation of D-007).

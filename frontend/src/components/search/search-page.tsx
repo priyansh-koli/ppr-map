@@ -31,6 +31,7 @@ import { mapHref, placesOnly, withSuggestion } from "@/lib/search";
 
 import { PlaceSearch } from "./place-search";
 import { ResultsMap } from "./results-map";
+import { SaveSearch } from "./save-search";
 import { SearchFilters } from "./search-filters";
 
 const PAGE_SIZE = 25;
@@ -400,6 +401,14 @@ export function SearchPage() {
                   ))}
                 </select>
               </label>
+              <SaveSearch
+                query={Object.fromEntries(new URLSearchParams(historyQuery))}
+                suggestedName={
+                  filters.area.map((a) => names[a] ?? slugLabel(a)).join(", ") ||
+                  describeSearch(Object.fromEntries(filterQuery), names)
+                }
+                geolocated={geolocated}
+              />
               <Link
                 href={mapHref(filterQuery, data?.bbox ?? null)}
                 className="btn btn-secondary btn-sm"

@@ -219,6 +219,7 @@ class Sale(Base, CreatedAtMixin):
         sa.Index("ix_sale_property_id_sale_date", "property_id", sa.text("sale_date DESC")),
         sa.Index("ix_sale_sale_date_brin", "sale_date", postgresql_using="brin"),
         sa.Index("ix_sale_price_eur", "price_eur"),
+        sa.Index("ix_sale_first_seen_run_id", "first_seen_run_id"),
         sa.Index(
             "ix_sale_market_sale_date",
             "sale_date",

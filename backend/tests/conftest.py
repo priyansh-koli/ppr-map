@@ -188,6 +188,9 @@ class Outbox:
     async def send(self, email: Email) -> None:
         self.sent.append(email)
 
+    async def deliver(self, email: Email) -> None:
+        self.sent.append(email)
+
     def token_for(self, to: str) -> str:
         body = next(e.body for e in reversed(self.sent) if e.to == to and "token=" in e.body)
         match = re.search(r"token=([\w-]+)", body)

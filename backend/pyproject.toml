@@ -16,6 +16,9 @@ dependencies = [
   "redis>=5.2",
   "typer>=0.12",
   "pyyaml>=6",
+  "rq>=2.12",  # background jobs (D-007)
+  "apscheduler>=3.11,<4",  # the scheduler that queues them
+  "tzdata",  # Europe/Dublin in slim images
 ]
 
 [project.optional-dependencies]
@@ -66,5 +69,5 @@ plugins = ["pydantic.mypy"]
 exclude = ["alembic/versions/"]
 
 [[tool.mypy.overrides]]
-module = ["geoalchemy2.*"]
+module = ["geoalchemy2.*", "apscheduler.*"]
 ignore_missing_imports = true

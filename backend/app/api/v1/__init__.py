@@ -1,6 +1,16 @@
 from fastapi import APIRouter
 
-from app.api.v1 import areas, auth, health, me, properties, search, stats, tools
+from app.api.v1 import (
+    areas,
+    auth,
+    health,
+    me,
+    properties,
+    saved_searches,
+    search,
+    stats,
+    tools,
+)
 
 router = APIRouter()
 router.include_router(health.router)
@@ -11,3 +21,4 @@ router.include_router(stats.router)
 router.include_router(search.router)
 router.include_router(tools.router)
 router.include_router(areas.router)
+router.include_router(saved_searches.router)

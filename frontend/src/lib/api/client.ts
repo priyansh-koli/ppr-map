@@ -26,6 +26,8 @@ export type ViewPage = components["schemas"]["Page_ViewOut_"];
 export type SearchHistoryPage = components["schemas"]["Page_SearchHistoryOut_"];
 export type AreaRef = components["schemas"]["AreaRef"];
 export type Rules = components["schemas"]["Rules"];
+export type SavedSearch = components["schemas"]["SavedSearchOut"];
+export type AlertFrequency = SavedSearch["alertFrequency"];
 export type AreaDetail = components["schemas"]["AreaDetail"];
 export type AreaStats = components["schemas"]["AreaStatsOut"];
 export type SeriesPoint = components["schemas"]["SeriesPoint"];
@@ -185,6 +187,17 @@ export const api = {
     get<AreaStats>(`/areas/${encodeURIComponent(slug)}/stats?${query.toString()}`, init),
   areaDistribution: (slug: string, init?: RequestInit) =>
     get<Distribution>(`/areas/${encodeURIComponent(slug)}/distribution`, init),
+
+  savedSearches: () => get<SavedSearch[]>("/me/saved-searches"),
+  saveSearch: (name: string, query: Record<string, string>, alertFrequency: AlertFrequency) =>
+    send<SavedSearch>("POST", "/me/saved-searches", { name, query, alertFrequency }),
+  updateSavedSearch: (
+    id: string,
+    body: { name?: string; query?: Record<string, string>; alertFrequency?: AlertFrequency },
+  ) => send<SavedSearch>("PATCH", `/me/saved-searches/${id}`, body),
+  deleteSavedSearch: (id: string) => send<void>("DELETE", `/me/saved-searches/${id}`),
+  savedSearchCsvUrl: (id: string) => `/api/v1/me/saved-searches/${id}/export.csv`,
+  unsubscribe: (token: string) => send<{ name: string }>("POST", "/alerts/unsubscribe", { token }),
 
   rules: (init?: RequestInit) => get<Rules>("/tools/rules", init),
   stampDuty: (query: URLSearchParams, init?: RequestInit) =>

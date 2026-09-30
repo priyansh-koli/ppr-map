@@ -63,8 +63,9 @@
 | GET | `/me/wishlist/compare?ids=a,b,c,d` | up to 4 items |
 | GET/DELETE | `/me/history/views` · DELETE `/me/history/views/{id}` | |
 | GET/DELETE | `/me/history/searches` · DELETE `/me/history/searches/{id}` | |
-| GET/POST | `/me/saved-searches` · GET/PATCH/DELETE `/me/saved-searches/{id}` | alerts are set with `alertFrequency` |
-| GET | `/me/saved-searches/{id}/export.csv` | row cap by role |
+| GET/POST | `/me/saved-searches` · GET/PATCH/DELETE `/me/saved-searches/{id}` | **Built (Phase 5, D-050).** `{name, query, alertFrequency: off | on_data_update | weekly}`; `query` is the search's URL parameters, validated like `/search`. At most 50 per user. `alertsActive` is false until the email is verified. Changing `query` restarts its alerts from the register as it is. |
+| GET | `/me/saved-searches/{id}/export.csv` | **Built (Phase 5).** The matches in the search's order, up to 500 rows for a user (50,000 for pro and admin), 10 exports a day (100). Leading `#` lines carry the PSRA and ODbL notices (R-06); a cell starting with `= + - @` is quoted against spreadsheet formulas. |
+| POST | `/alerts/unsubscribe` | **Built (Phase 5).** `{token}` from an alert email's link switches that alert off without signing in; the token is an HMAC of the saved search's id. |
 | GET/POST/DELETE | `/me/api-keys` | Pro only |
 
 ## Map

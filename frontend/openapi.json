@@ -1936,6 +1936,163 @@
         "title": "SaleFlags",
         "type": "object"
       },
+      "SavedSearchIn": {
+        "properties": {
+          "alertFrequency": {
+            "default": "off",
+            "enum": [
+              "off",
+              "on_data_update",
+              "weekly"
+            ],
+            "title": "Alertfrequency",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "query": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The search's URL parameters, as on /search",
+            "title": "Query",
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "query"
+        ],
+        "title": "SavedSearchIn",
+        "type": "object"
+      },
+      "SavedSearchOut": {
+        "properties": {
+          "alertFrequency": {
+            "enum": [
+              "off",
+              "on_data_update",
+              "weekly"
+            ],
+            "title": "Alertfrequency",
+            "type": "string"
+          },
+          "alertsActive": {
+            "description": "False while the email is unverified: nothing is sent until it is",
+            "title": "Alertsactive",
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lastAlertMatches": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastalertmatches"
+          },
+          "lastAlertedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastalertedat"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "query": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Query",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "query",
+          "alertFrequency",
+          "alertsActive",
+          "createdAt",
+          "lastAlertedAt",
+          "lastAlertMatches"
+        ],
+        "title": "SavedSearchOut",
+        "type": "object"
+      },
+      "SavedSearchPatch": {
+        "properties": {
+          "alertFrequency": {
+            "anyOf": [
+              {
+                "enum": [
+                  "off",
+                  "on_data_update",
+                  "weekly"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alertfrequency"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          }
+        },
+        "title": "SavedSearchPatch",
+        "type": "object"
+      },
       "SchoolValue": {
         "properties": {
           "distanceM": {
@@ -2603,6 +2760,33 @@
         "title": "TokenIn",
         "type": "object"
       },
+      "Unsubscribe": {
+        "properties": {
+          "token": {
+            "maxLength": 100,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "Unsubscribe",
+        "type": "object"
+      },
+      "Unsubscribed": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "Unsubscribed",
+        "type": "object"
+      },
       "UserType": {
         "enum": [
           "first_time_buyer",
@@ -2954,6 +3138,49 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/alerts/unsubscribe": {
+      "post": {
+        "description": "Switch off one saved search's alert from the link in its email, without signing in.",
+        "operationId": "unsubscribe_api_v1_alerts_unsubscribe_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Unsubscribe"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unsubscribed"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsubscribe",
+        "tags": [
+          "me",
+          "alerts"
+        ]
+      }
+    },
     "/api/v1/areas/{slug}": {
       "get": {
         "description": "An area with its parents, shape, latest complete 12 months against Ireland's, what is\nknown about it, and its busiest sub-areas.",
@@ -3919,6 +4146,240 @@
           }
         },
         "summary": "Change Password",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/saved-searches": {
+      "get": {
+        "operationId": "saved_searches_api_v1_me_saved_searches_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SavedSearchOut"
+                  },
+                  "title": "Response Saved Searches Api V1 Me Saved Searches Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Saved Searches",
+        "tags": [
+          "me"
+        ]
+      },
+      "post": {
+        "description": "Save a search. Its alerts cover sales filed from now on, not the register as it is.",
+        "operationId": "save_search_api_v1_me_saved_searches_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedSearchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedSearchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Search",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/saved-searches/{sid}": {
+      "delete": {
+        "operationId": "delete_saved_search_api_v1_me_saved_searches__sid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Saved Search",
+        "tags": [
+          "me"
+        ]
+      },
+      "get": {
+        "operationId": "saved_search_api_v1_me_saved_searches__sid__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedSearchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Saved Search",
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "description": "Rename, change the filters or the alert. Changing the filters starts its alerts\nfrom the register as it is now.",
+        "operationId": "update_saved_search_api_v1_me_saved_searches__sid__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedSearchPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedSearchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Saved Search",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/saved-searches/{sid}/export.csv": {
+      "get": {
+        "description": "The search's matches as CSV, in its sort order, up to your role's row limit (500 for a\nuser). Each role also has a daily number of exports (docs/permissions.md).",
+        "operationId": "export_saved_search_api_v1_me_saved_searches__sid__export_csv_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Saved Search",
         "tags": [
           "me"
         ]

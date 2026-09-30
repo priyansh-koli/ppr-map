@@ -55,18 +55,35 @@ services:
       redis: { condition: service_healthy }
 
   worker:
+    # RQ workers (D-007, D-051): pipeline steps on `pipeline`, alerts and housekeeping on
+    # `default`. The pipeline reads and writes the same data/ folder as the `make` targets.
     build: { context: .., dockerfile: backend/Dockerfile }
     env_file: ../.env
     environment: *container-env
     restart: unless-stopped
     # tini as PID 1, so `docker compose stop` does not wait out the 10 s kill timeout.
     init: true
+    command: ["rq", "worker", "pipeline", "default", "--url", "redis://redis:6379/0", "--with-scheduler"]
     volumes:
-      - pipeline-data:/srv/data
-    # RQ workers and the APScheduler process are added in Phase 2 (D-007).
-    command: ["python", "-c", "print('worker: nothing to run until Phase 2'); import time; time.sleep(10**9)"]
+      - ../backend/app:/srv/backend/app:ro
+      - ../config:/srv/config:ro
+      - ../data:/srv/data
     depends_on:
       db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  scheduler:
+    # Queues alerts (every 15 min and Monday mornings), daily housekeeping and, with
+    # SCHEDULE_PIPELINE=true, the monthly pipeline. It only queues; the worker runs them.
+    build: { context: .., dockerfile: backend/Dockerfile }
+    env_file: ../.env
+    environment: *container-env
+    restart: unless-stopped
+    init: true
+    command: ["python", "-m", "app.cli", "scheduler"]
+    volumes:
+      - ../backend/app:/srv/backend/app:ro
+    depends_on:
       redis: { condition: service_healthy }
 
   martin:
@@ -129,5 +146,4 @@ services:
 
 volumes:
   db-data:
-  pipeline-data:
   nominatim-data:

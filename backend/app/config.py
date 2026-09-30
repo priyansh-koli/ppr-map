@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     csrf_secret: str = Field(default="", repr=False)
     ip_hash_salt: str = Field(default="", repr=False)
     ppr_config_dir: Path = REPO_CONFIG_DIR
+    # The scheduler queues the monthly pipeline only when this is on (it downloads the
+    # register and needs the geocoder): off in development, on in production.
+    schedule_pipeline: bool = False
 
     @model_validator(mode="after")
     def _secrets_in_production(self) -> Self:

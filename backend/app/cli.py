@@ -64,44 +64,44 @@ def sync_permissions() -> None:
     typer.echo(f"Synced {len(stored_roles)} roles, {len(Perm)} permissions, {len(wanted)} grants.")
 
 
-# Daily housekeeping (D-041): what is past its retention period, as (label, statement).
-EXPIRED = [
-    (
-        "expired sessions",
-        "DELETE FROM user_session WHERE expires_at < now() OR last_seen_at < now() - :idle",
-    ),
-    (
-        "used or expired email links",
-        "DELETE FROM email_verification_token WHERE used_at IS NOT NULL OR expires_at < now()",
-    ),
-    (
-        "used or expired reset links",
-        "DELETE FROM password_reset_token WHERE used_at IS NOT NULL OR expires_at < now()",
-    ),
-    ("views older than 12 months", "DELETE FROM view_history WHERE viewed_at < now() - :keep"),
-]
-
-
 @cli.command("purge-deleted")
 def purge_deleted(days: int = 30) -> None:
     """Daily: delete accounts closed more than `days` ago, with everything they own (cascade),
     and everything else past its retention period (sessions, email links, view history)."""
-    from app.api.v1.me import HISTORY_KEEP
-    from app.auth.sessions import IDLE
+    from app.services.housekeeping import purge_expired
 
-    engine = sa.create_engine(get_settings().database_url)
-    with engine.begin() as conn:
-        n = conn.execute(
-            sa.text(
-                "DELETE FROM app_user WHERE deleted_at IS NOT NULL "
-                "AND deleted_at < now() - make_interval(days => :d)"
-            ),
-            {"d": days},
-        ).rowcount
-        typer.echo(f"Purged {n} closed accounts.")
-        for label, sql in EXPIRED:
-            n = conn.execute(sa.text(sql), {"idle": IDLE, "keep": HISTORY_KEEP}).rowcount
-            typer.echo(f"Purged {n} {label}.")
+    for label, n in purge_expired(days).items():
+        typer.echo(f"Purged {n} {label}.")
+
+
+@cli.command("send-alerts")
+def send_alerts(
+    frequency: str = typer.Option(
+        "on_data_update", help="on_data_update (after each register update) or weekly"
+    ),
+) -> None:
+    """Email saved-search alerts for sales filed since each search was last checked (D-050)."""
+    from app.jobs import send_alerts_job
+
+    if frequency not in ("on_data_update", "weekly"):
+        raise typer.BadParameter("frequency must be on_data_update or weekly")
+    r = send_alerts_job(frequency)
+    typer.echo(
+        f"Checked {r['checked']} saved searches: {r['sent']} alerts sent, "
+        f"{r['no_matches']} without new sales, {r['failed']} failed, {r['skipped']} skipped."
+    )
+
+
+@cli.command("scheduler")
+def scheduler() -> None:
+    """Queue alerts, housekeeping and (with SCHEDULE_PIPELINE=true) the monthly pipeline on
+    their timetable; RQ workers run them (D-051)."""
+    import logging
+
+    from app.jobs import scheduler as run_scheduler
+
+    logging.basicConfig(level=logging.INFO)
+    run_scheduler()
 
 
 @cli.command("openapi")

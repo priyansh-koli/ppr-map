@@ -222,6 +222,12 @@ class SavedSearch(Base, TimestampMixin):
         pg_enum(AlertFrequency, "alert_frequency"), default=AlertFrequency.OFF
     )
     last_alerted_data_version: Mapped[str | None] = mapped_column(sa.Text)
+    alerted_through_run_id: Mapped[int | None] = mapped_column(
+        sa.BigInteger, comment="PPR ingest run already checked; later runs' sales are new"
+    )
+    last_alerted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+
+    __table_args__ = (sa.Index("ix_saved_search_alert_frequency", "alert_frequency"),)
 
 
 class AlertDelivery(Base):

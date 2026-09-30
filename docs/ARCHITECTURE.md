@@ -72,7 +72,7 @@ The brief's stack is kept, with these adjustments:
 | API | FastAPI, Python 3.12, SQLAlchemy 2 (async), Alembic, Pydantic v2 | none |
 | DB | PostgreSQL 16 + PostGIS 3, plus `pg_trgm` and `citext` extensions; H3 computed in Python (D-024) | adds extensions (D-006, D-009) |
 | Tiles | Martin with a PostGIS function source | Martin chosen over `ST_AsMVT`-in-FastAPI (D-004) |
-| Jobs | RQ workers + one APScheduler process | picks RQ (D-007) |
+| Jobs | RQ workers + one APScheduler process that only queues (D-051) | picks RQ (D-007) |
 | Geocoder | Self-hosted Nominatim (Ireland extract), batch only | new component (D-003) |
 | Auth | Opaque server-side sessions, argon2id | drops JWT refresh (D-008) |
 | Local dev | Docker Compose (`infra/docker-compose.yml`): PostGIS, Redis, API, worker, Martin, Next.js, Caddy (one origin, D-026), Mailpit; Nominatim behind an opt-in profile | adds services |
