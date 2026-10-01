@@ -38,6 +38,9 @@ def test_register_verify_and_sign_in(db: sa.Engine, outbox: Outbox, redis: FakeR
     # The same email again: the same answer, and an email saying so, not a second account.
     assert register(client, "aoife@example.ie").json() == res.json()
     assert outbox.sent[-1].subject == "You already have a PPR Map account"
+    # Never confirmed: the notice says how to finish, by a reset, and carries no link token.
+    assert "never confirmed" in outbox.sent[-1].body
+    assert "token=" not in outbox.sent[-1].body
     with db.connect() as conn:
         users = conn.execute(sa.text("SELECT count(*) FROM app_user")).scalar_one()
         consents = conn.execute(sa.text("SELECT count(*) FROM consent_record")).scalar_one()
@@ -46,6 +49,8 @@ def test_register_verify_and_sign_in(db: sa.Engine, outbox: Outbox, redis: FakeR
     token = outbox.token_for("aoife@example.ie")
     assert client.post("/api/v1/auth/verify-email", json={"token": token}).status_code == 200
     assert client.post("/api/v1/auth/verify-email", json={"token": token}).status_code == 400
+    register(client, "aoife@example.ie")
+    assert "never confirmed" not in outbox.sent[-1].body
 
     wrong = client.post(
         "/api/v1/auth/login", json={"email": "aoife@example.ie", "password": "nope"}

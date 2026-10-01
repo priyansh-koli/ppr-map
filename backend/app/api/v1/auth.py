@@ -117,16 +117,17 @@ async def register(
         )
     ).scalar_one_or_none()
     if user_id is None:
-        closed_at = (
+        closed_at, verified_at = (
             await db.execute(
-                sa.text("SELECT deleted_at FROM app_user WHERE email = :e"), {"e": email}
+                sa.text("SELECT deleted_at, email_verified_at FROM app_user WHERE email = :e"),
+                {"e": email},
             )
-        ).scalar_one_or_none()
+        ).one()
         await db.rollback()
         notice = (
             mail.account_closed(email, (closed_at + PURGE_AFTER).date())
             if closed_at is not None
-            else mail.already_registered(email)
+            else mail.already_registered(email, verified=verified_at is not None)
         )
         background.add_task(mailer.send, notice)
         return Accepted(message=CHECK_EMAIL)

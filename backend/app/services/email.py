@@ -75,13 +75,23 @@ def verify_email(to: str, name: str, token: str) -> Email:
     )
 
 
-def already_registered(to: str) -> Email:
+def already_registered(to: str, verified: bool) -> Email:
+    # Unconfirmed: a reset proves control of the address and counts as confirming it, and
+    # it voids the password whoever registered first chose. Never a verify link here: that
+    # would confirm an account someone else may hold the password for.
+    unconfirmed = (
+        ""
+        if verified
+        else "It was never confirmed. To finish, choose a new password here; that confirms "
+        f"your email at the same time: {link('/forgot-password')}\n\n"
+    )
     return Email(
         to,
         "You already have a PPR Map account",
         "Someone, probably you, tried to create a PPR Map account with this email address, "
         "but one already exists.\n\n"
-        f"Sign in: {link('/login')}\nForgot your password? {link('/forgot-password')}\n\n"
+        + unconfirmed
+        + f"Sign in: {link('/login')}\nForgot your password? {link('/forgot-password')}\n\n"
         "If this was not you, you can ignore this email.\n",
     )
 

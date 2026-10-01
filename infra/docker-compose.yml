@@ -121,6 +121,11 @@ services:
   mailpit:
     # Catches all outgoing email in development: http://localhost:8025
     image: axllent/mailpit:v1.31.2
+    environment:
+      # On disk, so a verification or reset link survives a restart (it lives in memory otherwise).
+      MP_DATABASE: /data/mailpit.db
+    volumes:
+      - mailpit-data:/data
     ports:
       - "127.0.0.1:8025:8025"
       - "127.0.0.1:1025:1025"
@@ -146,4 +151,5 @@ services:
 
 volumes:
   db-data:
+  mailpit-data:
   nominatim-data:
