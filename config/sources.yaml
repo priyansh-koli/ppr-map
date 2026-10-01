@@ -1,6 +1,8 @@
 # Every external dataset the pipeline may touch (D-016, D-022).
 # `use: false` sources are documented here so nobody adds them by accident.
 # `verified` = licence and access checked at the source on `checked_on`.
+# `loaded` = the pipeline loads it and the site shows what it holds; `use: true` alone only
+# allows it. The /sources page lists loaded sources as in use and the rest as planned (D-055).
 # Licence details and env vars: docs/external-services.md.
 
 sources:
@@ -12,6 +14,7 @@ sources:
     attribution: "Contains Residential Property Price Register data © Property Services Regulatory Authority."
     cadence: weekly check, monthly full run
     use: true
+    loaded: true
     verified: true
     checked_on: 2026-09-26
 
@@ -23,6 +26,7 @@ sources:
     attribution: "Contains National Transport Authority data (CC BY 4.0)."
     cadence: weekly
     use: true
+    loaded: true
     verified: true
     checked_on: 2026-09-26
 
@@ -34,6 +38,7 @@ sources:
     attribution: "© OpenStreetMap contributors (ODbL)."
     cadence: monthly
     use: true
+    loaded: true
     verified: true  # downloaded and md5-checked for Nominatim and amenities (D-032)
     checked_on: 2026-09-26
 
@@ -45,6 +50,7 @@ sources:
     attribution: "Contains National Planning Application data, Department of Housing, Local Government and Heritage (CC BY 4.0)."
     cadence: weekly
     use: true
+    loaded: false
     verified: true
     checked_on: 2026-09-26
     # D-017: request ONLY these fields. Applicant name/address fields must never be fetched.
@@ -85,6 +91,7 @@ sources:
     attribution: "Contains National Housing Development Survey data, Department of Housing, Local Government and Heritage (CC BY-SA 4.0)."
     cadence: static (the surveys ended in 2017; 2013 onwards dropped the coordinates)
     use: true
+    loaded: true
     verified: true
     checked_on: 2026-09-29
     # Used only as a geocoding reference for estate names (D-046); share-alike, see there.
@@ -100,6 +107,7 @@ sources:
     attribution: "Contains zoning data, Department of Housing, Local Government and Heritage (CC BY 4.0). Not statutory zoning."
     cadence: quarterly check
     use: true
+    loaded: false
     verified: true
     checked_on: 2026-09-26
 
@@ -111,6 +119,7 @@ sources:
     attribution: "Source: Central Statistics Office (CC BY 4.0)."
     cadence: per table release
     use: true
+    loaded: false
     verified: true  # CJA07 fetched; other table IDs confirmed in Phase 2
     checked_on: 2026-09-26
 
@@ -122,6 +131,7 @@ sources:
     attribution: "Residential Property Price Index: Central Statistics Office (CC BY 4.0)."
     cadence: monthly (about six weeks after the month)
     use: true
+    loaded: true
     verified: true  # fetched 2026-09-30: 20 series, Jan 2005 (regions Jan 2010) to Jul 2026
     checked_on: 2026-09-30
     # Region composition from the CSO's RPPI background notes (D-053).
@@ -134,6 +144,7 @@ sources:
     attribution: "Pobal HP Deprivation Index (Haase and Pratschke), 2022 (CC BY 4.0)."
     cadence: per census
     use: true
+    loaded: true
     verified: true
     checked_on: 2026-09-26
     datasets:  # the CSV the data.gov.ie record links to (checked 2026-09-27)
@@ -154,6 +165,7 @@ sources:
     attribution: "Contains Tailte Éireann data."
     cadence: per release
     use: true
+    loaded: true
     verified: true
     checked_on: 2026-09-26
 
@@ -165,6 +177,7 @@ sources:
     attribution: "Contains EPA radon data (CC BY 4.0)."
     cadence: rare
     use: true
+    loaded: false
     verified: false  # download format to confirm in Phase 2
     checked_on: null
 
@@ -176,6 +189,7 @@ sources:
     attribution: "Contains EPA noise mapping data."
     cadence: every 5 years
     use: true
+    loaded: false
     verified: false
     checked_on: null
 
@@ -187,6 +201,7 @@ sources:
     attribution: "Contains Department of Education data."
     cadence: annual
     use: true
+    loaded: false
     verified: false  # gov.ie blocked automated fetch; confirm coordinates manually
     checked_on: null
 
@@ -195,32 +210,36 @@ sources:
     url: "https://www.floodinfo.ie/open-spatial-data-portal/"
     licence: CC BY-NC-ND 4.0
     use: false
-    reason: "Non-commercial, no-derivatives licence (D-010). Deep-link to floodinfo.ie instead."
+    # D-010. Shown on the /sources page, so written for the public.
+    reason: "Its licence allows no commercial use and no derived works, so property pages link to floodinfo.ie instead."
 
   daft:
     name: daft.ie
     url: "https://www.daft.ie"
     licence: proprietary; terms forbid scraping and building databases
     use: false
-    reason: "D-016 / D-023."
+    # D-016, D-023
+    reason: "Its terms forbid scraping its listings and building databases from them."
 
   landdirect:
     name: landdirect.ie (Land Registry)
     url: "https://www.landdirect.ie"
     licence: terms forbid automated access and reuse; folios name owners
     use: false
-    reason: "D-016; owner names are off-limits."
+    # D-016
+    reason: "Its terms forbid automated access and reuse, and its folios name owners, which we never show."
 
   propertymap_ie:
     name: propertymap.ie
     url: "https://propertymap.ie"
     licence: listing content is agents'/portals' copyright
     use: false
-    reason: "D-016."
+    # D-016
+    reason: "Its listings belong to the agents and portals that wrote them."
 
   opw_state_property:
     name: OPW Property Mapping Register Viewer
     url: "https://maps.opw.ie/property/"
     licence: restricted to public-service bodies
     use: false
-    reason: "Not public; not residential."
+    reason: "It is open only to public-service bodies, and it covers state property, not homes."

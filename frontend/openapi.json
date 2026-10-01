@@ -1819,6 +1819,39 @@
         "title": "MonthCount",
         "type": "object"
       },
+      "NotUsedOut": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "url",
+          "licence",
+          "reason"
+        ],
+        "title": "NotUsedOut",
+        "type": "object"
+      },
       "Overview": {
         "properties": {
           "counties": {
@@ -3754,6 +3787,71 @@
         "title": "Source",
         "type": "object"
       },
+      "SourceOut": {
+        "properties": {
+          "attribution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution"
+          },
+          "cadence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cadence"
+          },
+          "checkedOn": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkedon"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "url",
+          "licence",
+          "attribution",
+          "cadence",
+          "checkedOn"
+        ],
+        "title": "SourceOut",
+        "type": "object"
+      },
       "Sourced_SchoolValue_": {
         "properties": {
           "asOf": {
@@ -3866,6 +3964,38 @@
           "source"
         ],
         "title": "Sourced[str]",
+        "type": "object"
+      },
+      "Sources": {
+        "properties": {
+          "inUse": {
+            "items": {
+              "$ref": "#/components/schemas/SourceOut"
+            },
+            "title": "Inuse",
+            "type": "array"
+          },
+          "notUsed": {
+            "items": {
+              "$ref": "#/components/schemas/NotUsedOut"
+            },
+            "title": "Notused",
+            "type": "array"
+          },
+          "planned": {
+            "items": {
+              "$ref": "#/components/schemas/SourceOut"
+            },
+            "title": "Planned",
+            "type": "array"
+          }
+        },
+        "required": [
+          "inUse",
+          "planned",
+          "notUsed"
+        ],
+        "title": "Sources",
         "type": "object"
       },
       "StampDutyOut": {
@@ -7748,6 +7878,28 @@
         "summary": "Search",
         "tags": [
           "search"
+        ]
+      }
+    },
+    "/api/v1/sources": {
+      "get": {
+        "description": "Each data source, its licence and attribution, and the ones we will not use.",
+        "operationId": "sources_api_v1_sources_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sources"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Sources",
+        "tags": [
+          "meta"
         ]
       }
     },

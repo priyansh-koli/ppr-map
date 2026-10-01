@@ -19,6 +19,15 @@ def test_blocked_sources_stay_blocked() -> None:
     sources = load_sources()
     for key in ("opw_flood", "daft", "landdirect", "propertymap_ie", "opw_state_property"):
         assert sources[key].use is False, key
+        assert sources[key].loaded is False, key
+
+
+def test_unverified_sources_are_not_shown_as_loaded() -> None:
+    """The /sources page lists loaded sources as in use (D-055); a licence still to confirm
+    must not appear there."""
+    for key, src in load_sources().items():
+        if src.loaded:
+            assert src.verified, key
 
 
 def test_planning_never_requests_applicant_fields() -> None:

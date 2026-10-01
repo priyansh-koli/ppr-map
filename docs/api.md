@@ -27,7 +27,7 @@
 |---|---|---|
 | GET | `/health` | liveness: DB and Redis ping |
 | GET | `/meta` | **Built (Phase 3).** `{dataVersion, pprMaxSaleDate, provisionalFrom, lastIngestAt}`, used by the status pill in the header |
-| GET | `/sources` | licences and attributions for each data source |
+| GET | `/sources` | **Built (Phase 5,** D-055**).** `{inUse, planned, notUsed}` from `config/sources.yaml`: each source's name, URL, licence, attribution, refresh cadence and licence check date (null until verified); ruled-out ones with the reason. 503 if the file does not load |
 
 ## Stats
 

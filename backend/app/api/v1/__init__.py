@@ -10,12 +10,14 @@ from app.api.v1 import (
     reports,
     saved_searches,
     search,
+    sources,
     stats,
     tools,
 )
 
 router = APIRouter()
 router.include_router(health.router)
+router.include_router(sources.router)
 router.include_router(properties.router)
 router.include_router(auth.router)
 router.include_router(me.router)

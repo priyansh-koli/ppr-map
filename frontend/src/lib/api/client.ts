@@ -54,6 +54,8 @@ export type Affordability = components["schemas"]["AffordabilityOut"];
 export type CountyStat = components["schemas"]["CountyStat"];
 export type PriceEstimate = components["schemas"]["PriceEstimate"];
 export type Comparables = components["schemas"]["Comparables"];
+export type Sources = components["schemas"]["Sources"];
+export type SourceInfo = components["schemas"]["SourceOut"];
 
 /** The GitHub Pages preview (D-034) is static: there is no API or tile server behind it. */
 export const STATIC_PREVIEW = process.env.NEXT_PUBLIC_STATIC_PREVIEW === "1";
@@ -156,6 +158,7 @@ type Accepted = components["schemas"]["Accepted"];
 
 export const api = {
   meta: (init?: RequestInit) => get<Meta>("/meta", init),
+  sources: (init?: RequestInit) => get<Sources>("/sources", init),
   overview: (init?: RequestInit) => get<Overview>("/stats/overview", init),
   summary: (id: string, init?: RequestInit) =>
     get<PropertySummary>(`/properties/${encodeURIComponent(id)}/summary`, init),

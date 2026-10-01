@@ -944,6 +944,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sources
+         * @description Each data source, its licence and attribution, and the ones we will not use.
+         */
+        get: operations["sources_api_v1_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stats/overview": {
         parameters: {
             query?: never;
@@ -1724,6 +1744,19 @@ export interface components {
              */
             sales: number;
         };
+        /** NotUsedOut */
+        NotUsedOut: {
+            /** Key */
+            key: string;
+            /** Licence */
+            licence: string;
+            /** Name */
+            name: string;
+            /** Reason */
+            reason: string;
+            /** Url */
+            url: string;
+        };
         /** Overview */
         Overview: {
             /**
@@ -2397,6 +2430,23 @@ export interface components {
              */
             verifiedOn: string;
         };
+        /** SourceOut */
+        SourceOut: {
+            /** Attribution */
+            attribution: string | null;
+            /** Cadence */
+            cadence: string | null;
+            /** Checkedon */
+            checkedOn: string | null;
+            /** Key */
+            key: string;
+            /** Licence */
+            licence: string;
+            /** Name */
+            name: string;
+            /** Url */
+            url: string;
+        };
         /** Sourced[SchoolValue] */
         Sourced_SchoolValue_: {
             /** Asof */
@@ -2430,6 +2480,15 @@ export interface components {
             source: string;
             /** Value */
             value: string;
+        };
+        /** Sources */
+        Sources: {
+            /** Inuse */
+            inUse: components["schemas"]["SourceOut"][];
+            /** Notused */
+            notUsed: components["schemas"]["NotUsedOut"][];
+            /** Planned */
+            planned: components["schemas"]["SourceOut"][];
         };
         /** StampDutyOut */
         StampDutyOut: {
@@ -4460,6 +4519,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sources_api_v1_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sources"];
                 };
             };
         };

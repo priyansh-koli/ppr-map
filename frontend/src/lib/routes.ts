@@ -95,7 +95,7 @@ export const ROUTES = {
     title: "Data sources and methodology",
     summary:
       "Where every number comes from, its licence, how locations are estimated, and what the data cannot tell you.",
-    phase: 2,
+    phase: 5,
     access: "public",
   },
   report: {

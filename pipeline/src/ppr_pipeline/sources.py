@@ -22,6 +22,7 @@ class Source(BaseModel):
     url: str
     licence: str
     use: bool
+    loaded: bool = False  # the site shows data from it (the /sources page, D-055)
     format: str | None = None
     attribution: str | None = None
     cadence: str | None = None
@@ -38,6 +39,8 @@ class Source(BaseModel):
             raise ValueError("sources in use need an attribution line")
         if not self.use and not self.reason:
             raise ValueError("unused sources must say why")
+        if self.loaded and not self.use:
+            raise ValueError("a source we must not use cannot be loaded")
         if self.verified and self.checked_on is None:
             raise ValueError("verified sources need checked_on")
         if self.out_fields and self.forbidden_fields:
