@@ -112,6 +112,7 @@ export function Overview() {
 const STEPS: [string, string][] = [
   ["aggregate", "Rebuild aggregates (2 min)"],
   ["enrich", "Reload stops, amenities and deprivation"],
+  ["benchmarks", "Load the CSO price index (for estimates)"],
   ["gazetteer", "Rebuild the street gazetteer (8 min)"],
   ["geocode", "Geocode new properties (needs the geocoder)"],
   ["ppr", "Download and load the register"],

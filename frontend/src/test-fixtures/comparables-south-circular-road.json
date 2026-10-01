@@ -1,0 +1,230 @@
+{
+    "available": true,
+    "reason": null,
+    "radiusM": 500,
+    "months": 24,
+    "total": 165,
+    "medianEur": 585000.0,
+    "items": [
+        {
+            "id": "55kv3gtv56mq",
+            "address": "33 South Circular Road, Dublin 8",
+            "confidence": "exact",
+            "date": "2026-03-20",
+            "priceEur": 750000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 54,
+            "sameStreet": true
+        },
+        {
+            "id": "ql62zpdxxhz4",
+            "address": "Apt 1, 59 South Circular Road, Portobello",
+            "confidence": "exact",
+            "date": "2025-06-16",
+            "priceEur": 600000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 68,
+            "sameStreet": true
+        },
+        {
+            "id": "nxa2k2mttrb7",
+            "address": "Flats 1-6, 20 SOUTH CIRCULAR RD, DUBLIN 8",
+            "confidence": "exact",
+            "date": "2025-06-11",
+            "priceEur": 760000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 111,
+            "sameStreet": true
+        },
+        {
+            "id": "3qoxnpgv5z6o",
+            "address": "10 South Circular Road, Dublin 8",
+            "confidence": "exact",
+            "date": "2025-10-03",
+            "priceEur": 920000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 149,
+            "sameStreet": true
+        },
+        {
+            "id": "llrtxstygvjs",
+            "address": "Apt 1, 8 South Circular Rd, Dublin 8",
+            "confidence": "exact",
+            "date": "2024-12-19",
+            "priceEur": 999999.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 155,
+            "sameStreet": true
+        },
+        {
+            "id": "vq66q65htii2",
+            "address": "2 South Circular Road, Dublin 8",
+            "confidence": "exact",
+            "date": "2024-10-24",
+            "priceEur": 775000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 178,
+            "sameStreet": true
+        },
+        {
+            "id": "xz2f7fgs3wr5",
+            "address": "21 Kingsland Parade, South Circular Rd, Portobello Dublin 8",
+            "confidence": "exact",
+            "date": "2026-05-29",
+            "priceEur": 540000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 235,
+            "sameStreet": true
+        },
+        {
+            "id": "nfk4iwblmvs5",
+            "address": "38 Martin St, South Circular Rd, Portobello Dublin 8",
+            "confidence": "exact",
+            "date": "2025-10-31",
+            "priceEur": 550000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 285,
+            "sameStreet": true
+        },
+        {
+            "id": "efngyssle7q4",
+            "address": "Apt 1, 117 South Circular Rd, Dublin 8",
+            "confidence": "exact",
+            "date": "2024-10-21",
+            "priceEur": 750000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 292,
+            "sameStreet": true
+        },
+        {
+            "id": "hzacp42j5ws7",
+            "address": "Flat 4, 123 South Circular Rd, Dublin 8",
+            "confidence": "exact",
+            "date": "2026-06-10",
+            "priceEur": 1150000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 322,
+            "sameStreet": true
+        },
+        {
+            "id": "wc2nelvhgryo",
+            "address": "138 South Circular Rd, Dublin 8, Dublin",
+            "confidence": "exact",
+            "date": "2026-04-23",
+            "priceEur": 648297.5,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 359,
+            "sameStreet": true
+        },
+        {
+            "id": "3amylm5dg4eo",
+            "address": "39 Avenue Rd, Portobello, Dublin 8",
+            "confidence": "street",
+            "date": "2025-11-26",
+            "priceEur": 1300000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 62,
+            "sameStreet": false
+        },
+        {
+            "id": "xc2on4jgw65y",
+            "address": "Unit 1, 5 Victoria St, Dublin 8",
+            "confidence": "exact",
+            "date": "2026-01-26",
+            "priceEur": 1220000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 64,
+            "sameStreet": false
+        },
+        {
+            "id": "gsrptceswubq",
+            "address": "44 Rathgar Road, 2 Church Avenue, 58 South Circular Road",
+            "confidence": "exact",
+            "date": "2024-12-17",
+            "priceEur": 2625000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 85,
+            "sameStreet": false
+        },
+        {
+            "id": "d5ookjtyoqpu",
+            "address": "6 Bloomfield Cottages, Portobello, Dublin 8",
+            "confidence": "street",
+            "date": "2025-10-10",
+            "priceEur": 500000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 89,
+            "sameStreet": false
+        },
+        {
+            "id": "ogw42gxzujqr",
+            "address": "9 Kingsland Park Ave, Dublin 8, Dublin",
+            "confidence": "exact",
+            "date": "2024-10-31",
+            "priceEur": 506000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 129,
+            "sameStreet": false
+        },
+        {
+            "id": "fxx6zx452f6b",
+            "address": "26 Long Lane, Portobello, Dublin 8",
+            "confidence": "street",
+            "date": "2026-08-24",
+            "priceEur": 825000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 140,
+            "sameStreet": false
+        },
+        {
+            "id": "3mytc7x76tp5",
+            "address": "28 St Kevins Rd, Portobello, Dublin 8",
+            "confidence": "street",
+            "date": "2025-09-11",
+            "priceEur": 865000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 140,
+            "sameStreet": false
+        },
+        {
+            "id": "6a6m4ilyitu2",
+            "address": "Apt 12, Portobello Dock, Portobello Dublin 8",
+            "confidence": "street",
+            "date": "2025-07-11",
+            "priceEur": 470000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 140,
+            "sameStreet": false
+        },
+        {
+            "id": "4izs74he3alg",
+            "address": "17 Kingland Parade, Portobello, Dublin 8",
+            "confidence": "street",
+            "date": "2024-12-03",
+            "priceEur": 595000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 140,
+            "sameStreet": false
+        }
+    ]
+}

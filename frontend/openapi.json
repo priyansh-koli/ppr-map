@@ -412,6 +412,16 @@
             "title": "Pointbased",
             "type": "boolean"
           },
+          "priceIndex": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PriceIndex"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
@@ -700,6 +710,165 @@
           "n"
         ],
         "title": "Bin",
+        "type": "object"
+      },
+      "Calibration": {
+        "description": "How far repeat sales in this series landed from what the index implied.",
+        "properties": {
+          "highPct": {
+            "description": "90th percentile, in % against the index",
+            "title": "Highpct",
+            "type": "number"
+          },
+          "lowPct": {
+            "description": "10th percentile, in % against the index",
+            "title": "Lowpct",
+            "type": "number"
+          },
+          "medianPct": {
+            "title": "Medianpct",
+            "type": "number"
+          },
+          "pairs": {
+            "title": "Pairs",
+            "type": "integer"
+          },
+          "pooled": {
+            "description": "True when the series had too few pairs: all of Ireland's",
+            "title": "Pooled",
+            "type": "boolean"
+          },
+          "yearsBetween": {
+            "enum": [
+              "0-3y",
+              "3-7y",
+              "7y+"
+            ],
+            "title": "Yearsbetween",
+            "type": "string"
+          }
+        },
+        "required": [
+          "yearsBetween",
+          "pairs",
+          "pooled",
+          "lowPct",
+          "medianPct",
+          "highPct"
+        ],
+        "title": "Calibration",
+        "type": "object"
+      },
+      "Comparable": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/GeocodeConfidence"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "distanceM": {
+            "title": "Distancem",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "isNew": {
+            "title": "Isnew",
+            "type": "boolean"
+          },
+          "priceEur": {
+            "title": "Priceeur",
+            "type": "number"
+          },
+          "sameStreet": {
+            "title": "Samestreet",
+            "type": "boolean"
+          },
+          "vatExclusive": {
+            "title": "Vatexclusive",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "address",
+          "confidence",
+          "date",
+          "priceEur",
+          "isNew",
+          "vatExclusive",
+          "distanceM",
+          "sameStreet"
+        ],
+        "title": "Comparable",
+        "type": "object"
+      },
+      "Comparables": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Comparable"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "medianEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Of the sales filed with VAT included",
+            "title": "Medianeur"
+          },
+          "months": {
+            "title": "Months",
+            "type": "integer"
+          },
+          "radiusM": {
+            "title": "Radiusm",
+            "type": "integer"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "available",
+          "radiusM",
+          "months",
+          "total",
+          "items"
+        ],
+        "title": "Comparables",
         "type": "object"
       },
       "County": {
@@ -1105,6 +1274,29 @@
           "redis"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "IndexSeries": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "source": {
+            "default": "CSO Residential Property Price Index (CC BY 4.0)",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "IndexSeries",
         "type": "object"
       },
       "IngestRunDetail": {
@@ -2002,6 +2194,151 @@
         "title": "PriceChange",
         "type": "object"
       },
+      "PriceEstimate": {
+        "properties": {
+          "basedOn": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SaleBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calibration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Calibration"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "eligible": {
+            "title": "Eligible",
+            "type": "boolean"
+          },
+          "highEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Higheur"
+          },
+          "indexChangePct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Indexchangepct"
+          },
+          "indexMonth": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Indexmonth"
+          },
+          "lowEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loweur"
+          },
+          "method": {
+            "default": "The price at its last market sale, moved by the CSO's price index for its region and type from the month of that sale to the latest month published. The range is where 8 in 10 repeat sales in that region landed against the same index. A home that was improved or run down since its sale will differ. Information, not a valuation.",
+            "title": "Method",
+            "type": "string"
+          },
+          "midEur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mideur"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "series": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IndexSeries"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "eligible"
+        ],
+        "title": "PriceEstimate",
+        "type": "object"
+      },
+      "PriceIndex": {
+        "description": "The CSO's index for the area's region: its change over the latest 12 months.",
+        "properties": {
+          "change12mPct": {
+            "title": "Change12Mpct",
+            "type": "number"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "month": {
+            "format": "date",
+            "title": "Month",
+            "type": "string"
+          },
+          "source": {
+            "default": "CSO Residential Property Price Index (CC BY 4.0)",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "month",
+          "change12mPct"
+        ],
+        "title": "PriceIndex",
+        "type": "object"
+      },
       "Profile-Input": {
         "properties": {
           "budgetMax": {
@@ -2889,6 +3226,7 @@
               "gazetteer",
               "geocode",
               "enrich",
+              "benchmarks",
               "aggregate",
               "monthly"
             ],
@@ -6840,6 +7178,132 @@
           }
         },
         "summary": "Property Detail",
+        "tags": [
+          "properties"
+        ]
+      }
+    },
+    "/api/v1/properties/{property_id}/comparables": {
+      "get": {
+        "description": "Market sales of other homes on the same street or within `radiusM`, in the last\n`months` of the register: same street first, then nearest. Only for homes placed at their\nhouse or street, and only against others placed as precisely.",
+        "operationId": "comparables_api_v1_properties__property_id__comparables_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "property_id",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+              "title": "Property Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "radiusM",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "maximum": 2000,
+              "minimum": 100,
+              "title": "Radiusm",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "months",
+            "required": false,
+            "schema": {
+              "default": 24,
+              "maximum": 60,
+              "minimum": 6,
+              "title": "Months",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comparables"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Comparables",
+        "tags": [
+          "properties"
+        ]
+      }
+    },
+    "/api/v1/properties/{property_id}/estimate": {
+      "get": {
+        "description": "What the CSO price index implies the home's last market sale would fetch now, with the\nrange repeat sales in its region landed in (D-020, D-053). When no estimate can be given,\n`eligible` is false and `reason` says why.",
+        "operationId": "price_estimate_api_v1_properties__property_id__estimate_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "property_id",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+              "title": "Property Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceEstimate"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Price Estimate",
         "tags": [
           "properties"
         ]

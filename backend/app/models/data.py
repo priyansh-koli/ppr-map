@@ -477,3 +477,20 @@ class BenchmarkSeries(Base):
     value: Mapped[Decimal] = mapped_column(sa.Numeric)
     unit: Mapped[str] = mapped_column(sa.Text)
     as_of: Mapped[date] = mapped_column(sa.Date)
+
+
+class EstimateCalibration(Base):
+    """How far repeat sales landed from what the CSO index implied, per series and band of
+    years between the sales (D-053): the price estimate's range."""
+
+    __tablename__ = "estimate_calibration"
+
+    series_key: Mapped[str] = mapped_column(sa.Text, primary_key=True)
+    gap_band: Mapped[str] = mapped_column(sa.Text, primary_key=True)
+    n: Mapped[int] = mapped_column(sa.Integer)
+    p10: Mapped[Decimal] = mapped_column(sa.Numeric)
+    p50: Mapped[Decimal] = mapped_column(sa.Numeric)
+    p90: Mapped[Decimal] = mapped_column(sa.Numeric)
+    computed_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), server_default=sa.func.now()
+    )

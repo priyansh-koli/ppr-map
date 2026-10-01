@@ -837,6 +837,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/properties/{property_id}/comparables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Comparables
+         * @description Market sales of other homes on the same street or within `radiusM`, in the last
+         *     `months` of the register: same street first, then nearest. Only for homes placed at their
+         *     house or street, and only against others placed as precisely.
+         */
+        get: operations["comparables_api_v1_properties__property_id__comparables_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/properties/{property_id}/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Price Estimate
+         * @description What the CSO price index implies the home's last market sale would fetch now, with the
+         *     range repeat sales in its region landed in (D-020, D-053). When no estimate can be given,
+         *     `eligible` is false and `reason` says why.
+         */
+        get: operations["price_estimate_api_v1_properties__property_id__estimate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/properties/{property_id}/summary": {
         parameters: {
             query?: never;
@@ -1144,6 +1188,7 @@ export interface components {
              * @description True for Small Areas and EDs: only sales placed at their house or street can be counted in them
              */
             pointBased: boolean;
+            priceIndex?: components["schemas"]["PriceIndex"] | null;
             /** Slug */
             slug: string;
             /** Source */
@@ -1243,6 +1288,79 @@ export interface components {
             n: number | null;
             /** Toeur */
             toEur: number | null;
+        };
+        /**
+         * Calibration
+         * @description How far repeat sales in this series landed from what the index implied.
+         */
+        Calibration: {
+            /**
+             * Highpct
+             * @description 90th percentile, in % against the index
+             */
+            highPct: number;
+            /**
+             * Lowpct
+             * @description 10th percentile, in % against the index
+             */
+            lowPct: number;
+            /** Medianpct */
+            medianPct: number;
+            /** Pairs */
+            pairs: number;
+            /**
+             * Pooled
+             * @description True when the series had too few pairs: all of Ireland's
+             */
+            pooled: boolean;
+            /**
+             * Yearsbetween
+             * @enum {string}
+             */
+            yearsBetween: "0-3y" | "3-7y" | "7y+";
+        };
+        /** Comparable */
+        Comparable: {
+            /** Address */
+            address: string;
+            confidence: components["schemas"]["GeocodeConfidence"];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Distancem */
+            distanceM: number;
+            /** Id */
+            id: string;
+            /** Isnew */
+            isNew: boolean;
+            /** Priceeur */
+            priceEur: number;
+            /** Samestreet */
+            sameStreet: boolean;
+            /** Vatexclusive */
+            vatExclusive: boolean;
+        };
+        /** Comparables */
+        Comparables: {
+            /** Available */
+            available: boolean;
+            /** Items */
+            items: components["schemas"]["Comparable"][];
+            /**
+             * Medianeur
+             * @description Of the sales filed with VAT included
+             */
+            medianEur?: number | null;
+            /** Months */
+            months: number;
+            /** Radiusm */
+            radiusM: number;
+            /** Reason */
+            reason?: string | null;
+            /** Total */
+            total: number;
         };
         /**
          * County
@@ -1404,6 +1522,18 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "error";
+        };
+        /** IndexSeries */
+        IndexSeries: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Source
+             * @default CSO Residential Property Price Index (CC BY 4.0)
+             */
+            source: string;
         };
         /** IngestRunDetail */
         IngestRunDetail: {
@@ -1750,6 +1880,51 @@ export interface components {
             /** Previouspriceeur */
             previousPriceEur: number;
         };
+        /** PriceEstimate */
+        PriceEstimate: {
+            basedOn?: components["schemas"]["SaleBrief"] | null;
+            calibration?: components["schemas"]["Calibration"] | null;
+            /** Eligible */
+            eligible: boolean;
+            /** Higheur */
+            highEur?: number | null;
+            /** Indexchangepct */
+            indexChangePct?: number | null;
+            /** Indexmonth */
+            indexMonth?: string | null;
+            /** Loweur */
+            lowEur?: number | null;
+            /**
+             * Method
+             * @default The price at its last market sale, moved by the CSO's price index for its region and type from the month of that sale to the latest month published. The range is where 8 in 10 repeat sales in that region landed against the same index. A home that was improved or run down since its sale will differ. Information, not a valuation.
+             */
+            method: string;
+            /** Mideur */
+            midEur?: number | null;
+            /** Reason */
+            reason?: string | null;
+            series?: components["schemas"]["IndexSeries"] | null;
+        };
+        /**
+         * PriceIndex
+         * @description The CSO's index for the area's region: its change over the latest 12 months.
+         */
+        PriceIndex: {
+            /** Change12Mpct */
+            change12mPct: number;
+            /** Label */
+            label: string;
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /**
+             * Source
+             * @default CSO Residential Property Price Index (CC BY 4.0)
+             */
+            source: string;
+        };
         /** Profile */
         "Profile-Input": {
             /** Budgetmax */
@@ -2017,7 +2192,7 @@ export interface components {
              * Step
              * @enum {string}
              */
-            step: "ppr" | "gazetteer" | "geocode" | "enrich" | "aggregate" | "monthly";
+            step: "ppr" | "gazetteer" | "geocode" | "enrich" | "benchmarks" | "aggregate" | "monthly";
         };
         /** Sale */
         Sale: {
@@ -4088,6 +4263,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PropertyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    comparables_api_v1_properties__property_id__comparables_get: {
+        parameters: {
+            query?: {
+                radiusM?: number;
+                months?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                property_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comparables"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    price_estimate_api_v1_properties__property_id__estimate_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceEstimate"];
                 };
             };
             /** @description Validation Error */

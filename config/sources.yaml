@@ -114,6 +114,18 @@ sources:
     verified: true  # CJA07 fetched; other table IDs confirmed in Phase 2
     checked_on: 2026-09-26
 
+  cso_rppi:
+    name: CSO Residential Property Price Index, monthly (PxStat table HPM09)
+    url: "https://ws.cso.ie/public/api.restful/PxStat.Data.Cube_API.ReadDataset/HPM09/CSV/1.0/en"
+    format: CSV via REST (index, base 2015 = 100)
+    licence: CC BY 4.0
+    attribution: "Residential Property Price Index: Central Statistics Office (CC BY 4.0)."
+    cadence: monthly (about six weeks after the month)
+    use: true
+    verified: true  # fetched 2026-09-30: 20 series, Jan 2005 (regions Jan 2010) to Jul 2026
+    checked_on: 2026-09-30
+    # Region composition from the CSO's RPPI background notes (D-053).
+
   pobal_hp_2022:
     name: Pobal HP Deprivation Index 2022, Electoral Division level
     url: "https://data.gov.ie/dataset/pobal-hp-deprivation-index-scores-2022"

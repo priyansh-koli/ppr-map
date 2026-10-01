@@ -1,0 +1,27 @@
+{
+    "eligible": true,
+    "reason": null,
+    "lowEur": 534000.0,
+    "midEur": 659000.0,
+    "highEur": 961000.0,
+    "basedOn": {
+        "date": "2016-04-06",
+        "priceEur": 382000.0
+    },
+    "series": {
+        "key": "06",
+        "label": "Dublin - houses",
+        "source": "CSO Residential Property Price Index (CC BY 4.0)"
+    },
+    "indexMonth": "2026-07-01",
+    "indexChangePct": 72.4,
+    "calibration": {
+        "yearsBetween": "7y+",
+        "pairs": 4463,
+        "pooled": false,
+        "lowPct": -18.9,
+        "medianPct": 3.0,
+        "highPct": 46.0
+    },
+    "method": "The price at its last market sale, moved by the CSO's price index for its region and type from the month of that sale to the latest month published. The range is where 8 in 10 repeat sales in that region landed against the same index. A home that was improved or run down since its sale will differ. Information, not a valuation."
+}

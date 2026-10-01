@@ -23,12 +23,14 @@ from app.schemas.areas import (
     Distribution,
     Headline,
     PeriodKindName,
+    PriceIndex,
     SegmentName,
     SeriesPoint,
     SubArea,
 )
 from app.schemas.properties import AreaRef
 from app.services import areas as q
+from app.services import rppi
 
 router = APIRouter(prefix="/areas", tags=["areas"], dependencies=[Depends(require(Perm.AREA_READ))])
 Session = Annotated[AsyncSession, Depends(get_session)]
@@ -131,7 +133,9 @@ async def area_detail(slug: Slug, session: Session) -> AreaDetail:
     """An area with its parents, shape, latest complete 12 months against Ireland's, what is
     known about it, and its busiest sub-areas."""
     meta = await _meta(session)
-    if (hit := _cache.get(("area", slug, meta.data_version))) is not None:
+    # The CSO index can be reloaded on its own (an admin's "benchmarks" run), between aggregates.
+    key = ("area", slug, meta.data_version, await q.index_version(session))
+    if (hit := _cache.get(key)) is not None:
         return hit  # type: ignore[no-any-return]
     row = await q.area(session, slug)
     if row is None:
@@ -155,6 +159,14 @@ async def area_detail(slug: Slug, session: Session) -> AreaDetail:
     child_kind, child_rows = await q.children(
         session, area_id, kind, child_period, child_start, CHILDREN_SHOWN
     )
+    county = row[5] if kind == "county" else next((p[2] for p in parents if p[0] == "county"), None)
+    code = "00" if kind == "country" else rppi.REGION_HOUSES.get(county or "")
+    price_index = None
+    if code is not None and (found := await q.index_change(session, rppi.series_key(code))):
+        label = "National - all residential properties" if code == "00" else rppi.SERIES[code]
+        price_index = PriceIndex(
+            label=label, month=found[0], change12m_pct=round(float(found[1]) * 100, 1)
+        )
     result = AreaDetail(
         kind=kind,
         name=row[2],
@@ -176,11 +188,12 @@ async def area_detail(slug: Slug, session: Session) -> AreaDetail:
         ],
         children_kind=child_kind if child_rows else None,
         period_kinds=q.period_kinds(kind),
+        price_index=price_index,
         point_based=kind in ("small_area", "electoral_division"),
         source=row[6],
         data_version=meta.data_version,
     )
-    return _cache.put(("area", slug, meta.data_version), result)  # type: ignore[no-any-return]
+    return _cache.put(key, result)  # type: ignore[no-any-return]
 
 
 # The register starts in January 2010, so a 12-month window ending before December 2010 holds

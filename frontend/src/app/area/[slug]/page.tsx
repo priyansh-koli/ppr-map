@@ -57,9 +57,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : pageMetadata("area");
 }
 
+function signedPct(pct: number): string {
+  return `${pct > 0 ? "+" : pct < 0 ? "−" : ""}${Math.abs(pct).toLocaleString("en-IE")}%`;
+}
+
 function change(pct: number | null | undefined): string {
   if (pct === null || pct === undefined) return "no comparison";
-  return `${pct > 0 ? "+" : pct < 0 ? "−" : ""}${Math.abs(pct).toLocaleString("en-IE")}% on the year before`;
+  return `${signedPct(pct)} on the year before`;
 }
 
 /** The map explorer framed on the area, with only its sales. */
@@ -177,6 +181,21 @@ export default async function Page({ params }: Props) {
             complete period: prices are not shown for fewer than 5 sales.
           </p>
         )}
+        {data.priceIndex ? (
+          <p className="mt-4 rounded-[10px] bg-surface-2 px-4 py-3 text-sm text-ink-2">
+            <span className="font-medium text-ink">CSO price index</span>, {data.priceIndex.label}:{" "}
+            <strong className="font-semibold text-ink">
+              {signedPct(data.priceIndex.change12mPct)}
+            </strong>{" "}
+            in the 12 months to {formatMonth(data.priceIndex.month)}
+            {h?.changePct != null ? `, against ${signedPct(h.changePct)} for the median here` : ""}.
+            The index allows for the mix of homes sold; a median does not, so the two can differ
+            when different homes happen to sell.
+            <span className="mt-1 block font-mono text-[0.7rem] text-muted">
+              {data.priceIndex.source}
+            </span>
+          </p>
+        ) : null}
         <p className="mt-4 text-xs text-muted">
           Market sales only: not those filed as below full market price, bulk or portfolio sales, or
           possible repeat filings. The latest two months are provisional and left out here.

@@ -8,7 +8,7 @@
 
 | Code | Meaning |
 |---|---|
-| `map:read` | tiles, property summary and detail, comparables |
+| `map:read` | tiles, property summary and detail, comparables, the index estimate |
 | `search:read` | search and autocomplete |
 | `area:read` | area pages and stats |
 | `tools:use` | calculators |

@@ -43,6 +43,15 @@ class SubArea(ApiModel):
     median: Money | None
 
 
+class PriceIndex(ApiModel):
+    """The CSO's index for the area's region: its change over the latest 12 months."""
+
+    label: str
+    month: date
+    change12m_pct: float = Field(alias="change12mPct")
+    source: str = "CSO Residential Property Price Index (CC BY 4.0)"
+
+
 class AreaDetail(ApiModel):
     kind: str
     name: str
@@ -58,6 +67,7 @@ class AreaDetail(ApiModel):
     children: list[SubArea]
     children_kind: str | None
     period_kinds: list[PeriodKindName] = Field(description="Series this area has")
+    price_index: PriceIndex | None = None
     point_based: bool = Field(
         description="True for Small Areas and EDs: only sales placed at their house or street "
         "can be counted in them"

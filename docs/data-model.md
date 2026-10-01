@@ -185,7 +185,10 @@ Polygons for radon grid, noise contours and GZT zoning, in the same shape as `ar
 
 ### `benchmark_series`
 CSO RPPI, CSO routing-key medians and RTB rents.
-`source text, series_key text (e.g. rppi:dublin:house, median:A94, rent:galway_city:3bed:house), period date, value numeric, unit text, as_of` · PK `(source, series_key, period)`.
+`source text, series_key text (e.g. rppi:06 for the CSO's "Dublin - houses", median:A94, rent:galway_city:3bed:house), period date, value numeric, unit text, as_of` · PK `(source, series_key, period)`. The RPPI (source `cso_rppi`, table HPM09) is loaded by `ppr ingest cso_rppi` (D-053).
+
+### `estimate_calibration`
+How far repeat sales landed from what the RPPI implied (D-053): `series_key text, gap_band text (0-3y, 3-7y, 7y+), n int, p10, p50, p90 numeric (ln of actual / implied), computed_at` · PK `(series_key, gap_band)`. Rebuilt with the RPPI; `series_key = 'all'` pools every series.
 
 ### `property_summary`
 The precomputed hover payload.

@@ -13,6 +13,8 @@ from app.config import get_settings
 
 from ppr_pipeline import cli
 from ppr_pipeline.aggregate import aggregate
+from ppr_pipeline.benchmarks import download as benchmark_download
+from ppr_pipeline.benchmarks import load_rppi
 from ppr_pipeline.db import get_engine
 from ppr_pipeline.enrich.run import enrich
 from ppr_pipeline.geocode.gazetteer import build_gazetteer
@@ -43,6 +45,11 @@ def _enrich() -> dict[str, Any]:
     return enrich(get_engine(), load_sources(), cli.DATA_DIR, progress=print)
 
 
+def _benchmarks() -> dict[str, Any]:
+    src = load_sources()["cso_rppi"]
+    return load_rppi(get_engine(), benchmark_download(src.url), src.url, progress=print)
+
+
 def _aggregate() -> dict[str, Any]:
     return aggregate(get_engine(), progress=print)
 
@@ -52,10 +59,11 @@ STEPS: dict[str, Callable[[], dict[str, Any]]] = {
     "gazetteer": _gazetteer,
     "geocode": _geocode,
     "enrich": _enrich,
+    "benchmarks": _benchmarks,
     "aggregate": _aggregate,
 }
 # The monthly run, in order (the Makefile's `make pipeline`).
-MONTHLY = ["ppr", "gazetteer", "geocode", "enrich", "aggregate"]
+MONTHLY = ["ppr", "gazetteer", "geocode", "enrich", "benchmarks", "aggregate"]
 
 
 def run(step: str, triggered_by: str | None = None) -> dict[str, Any]:

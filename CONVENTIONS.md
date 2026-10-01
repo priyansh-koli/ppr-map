@@ -65,8 +65,9 @@ Run `make help` for the full list.
 | `make gazetteer` | rebuild the local street gazetteer from the OSM extract, official places and the DHLGH housing surveys (about 8 min; D-046) |
 | `make geocode` | geocode new properties with the D-003 cascade (`ppr geocode --refresh` redoes all; `--limit N` for a trial) |
 | `make enrich` | reload GTFS stops, OSM amenities and schools, Pobal deprivation; recompute vicinity values |
+| `make benchmarks` | load the CSO price index (HPM09) and recompute the estimate's calibration (D-053; seconds) |
 | `make aggregate` | rebuild `area_stats`, `price_hex` and `property_summary` |
-| `make pipeline` | the monthly run: ingest, gazetteer, geocode, enrich, aggregate |
+| `make pipeline` | the monthly run: ingest, gazetteer, geocode, enrich, benchmarks, aggregate |
 | `make basemap` | download the Ireland basemap, terrain, fonts and sprites into `data/basemap` (served at `/basemap/`) |
 | `make terrain` | only the elevation tiles for hill shading and the 3D view (55 MB; the map stays flat without them) |
 | `make api-types` | regenerate `frontend/openapi.json` and the TypeScript API types after changing an endpoint |

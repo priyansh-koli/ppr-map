@@ -1,0 +1,98 @@
+{
+    "available": true,
+    "reason": null,
+    "radiusM": 500,
+    "months": 24,
+    "total": 99,
+    "medianEur": 595000.0,
+    "items": [
+        {
+            "id": "xdm2nkw6wtfw",
+            "address": "86 Southmede, Ballinteer Road, Dublin 16",
+            "confidence": "street",
+            "date": "2026-05-19",
+            "priceEur": 535000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 0,
+            "sameStreet": true
+        },
+        {
+            "id": "2yhv4xq4lfwz",
+            "address": "3 Clonlea Wood, Ballinteer Road, Dublin 16",
+            "confidence": "street",
+            "date": "2025-09-19",
+            "priceEur": 850000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 0,
+            "sameStreet": true
+        },
+        {
+            "id": "khoffqmack33",
+            "address": "77 Lynwood, Ballinteer Road, Dublin 16",
+            "confidence": "street",
+            "date": "2025-09-11",
+            "priceEur": 885000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 0,
+            "sameStreet": true
+        },
+        {
+            "id": "37feax5c72yo",
+            "address": "1 Derrickbawn Court, Ballinteer Rd, Dublin 16",
+            "confidence": "street",
+            "date": "2025-07-03",
+            "priceEur": 375000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 0,
+            "sameStreet": true
+        },
+        {
+            "id": "hfbj6cy3sayo",
+            "address": "122 Southmede, Ballinteer Rd, Dundrum Dublin 16",
+            "confidence": "street",
+            "date": "2026-08-18",
+            "priceEur": 459000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 408,
+            "sameStreet": true
+        },
+        {
+            "id": "mcsabtoxly7r",
+            "address": "Apt 2 Southmede, Ballinteer Rd, Dundrum",
+            "confidence": "street",
+            "date": "2026-08-13",
+            "priceEur": 400000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 408,
+            "sameStreet": true
+        },
+        {
+            "id": "o3wqybxyfhaj",
+            "address": "10 Southmede, Ballinteer Rd, Dundrum Dublin 16",
+            "confidence": "street",
+            "date": "2026-05-27",
+            "priceEur": 535000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 408,
+            "sameStreet": true
+        },
+        {
+            "id": "hzq43hvsdprr",
+            "address": "60 Southmede, Ballinteer Rd, Dundrum Dublin 16",
+            "confidence": "street",
+            "date": "2026-03-25",
+            "priceEur": 515000.0,
+            "isNew": false,
+            "vatExclusive": false,
+            "distanceM": 408,
+            "sameStreet": true
+        }
+    ]
+}

@@ -7,6 +7,8 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.services import rppi
+
 # Display shapes are simplified further for the page, by kind (degrees).
 SIMPLIFY = {
     "country": 0.01,
@@ -171,3 +173,25 @@ async def distribution(
     for bucket, n in (await session.execute(sa.text(sql), params)).all():
         counts[min(max(int(bucket), 1), len(BIN_EDGES)) - 1] += int(n)
     return counts
+
+
+INDEX_CHANGE = """
+SELECT now.period, now.value / before.value - 1
+FROM benchmark_series now
+JOIN benchmark_series before ON before.source = now.source
+     AND before.series_key = now.series_key
+     AND before.period = (now.period - interval '12 months')::date
+WHERE now.source = :source AND now.series_key = :key
+ORDER BY now.period DESC LIMIT 1
+"""
+
+
+async def index_change(session: AsyncSession, key: str) -> Any:
+    params = {"source": rppi.SOURCE, "key": key}
+    return (await session.execute(sa.text(INDEX_CHANGE), params)).one_or_none()
+
+
+async def index_version(session: AsyncSession) -> str:
+    """The latest load of the CSO index, so cached area pages follow a reload."""
+    sql = "SELECT max(id) FROM ingest_run WHERE kind = 'benchmarks' AND status = 'succeeded'"
+    return str((await session.execute(sa.text(sql))).scalar())

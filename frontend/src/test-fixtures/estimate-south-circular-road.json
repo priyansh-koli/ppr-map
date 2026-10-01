@@ -1,0 +1,13 @@
+{
+    "eligible": false,
+    "reason": "It sold in the last six months, so that sale is the best guide to its price.",
+    "lowEur": null,
+    "midEur": null,
+    "highEur": null,
+    "basedOn": null,
+    "series": null,
+    "indexMonth": null,
+    "indexChangePct": null,
+    "calibration": null,
+    "method": "The price at its last market sale, moved by the CSO's price index for its region and type from the month of that sale to the latest month published. The range is where 8 in 10 repeat sales in that region landed against the same index. A home that was improved or run down since its sale will differ. Information, not a valuation."
+}

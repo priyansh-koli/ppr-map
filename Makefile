@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr gazetteer geocode enrich aggregate pipeline osm-extract basemap terrain geocoder test test-db lint format typecheck api-types e2e e2e-stack e2e-pages ci
+.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr gazetteer geocode enrich benchmarks aggregate pipeline osm-extract basemap terrain geocoder test test-db lint format typecheck api-types e2e e2e-stack e2e-pages ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -79,10 +79,13 @@ geocode: ## Geocode new properties (needs `make geocoder`; the first full run ta
 enrich: ## Reload stops, amenities and deprivation; recompute vicinity values
 	set -a; source .env; set +a; .venv/bin/ppr enrich
 
+benchmarks: ## Load the CSO price index and recompute the estimate's calibration (D-053)
+	set -a; source .env; set +a; .venv/bin/ppr ingest cso_rppi
+
 aggregate: ## Rebuild area stats, price hexes and hover summaries
 	set -a; source .env; set +a; .venv/bin/ppr aggregate
 
-pipeline: ingest-ppr gazetteer geocode enrich aggregate ## The monthly run, in order
+pipeline: ingest-ppr gazetteer geocode enrich benchmarks aggregate ## The monthly run, in order
 
 OSM_PBF := data/osm/ireland-and-northern-ireland-latest.osm.pbf
 OSM_URL := https://download.geofabrik.de/europe/ireland-and-northern-ireland-latest.osm.pbf

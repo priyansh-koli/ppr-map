@@ -89,3 +89,50 @@ async def series(session: AsyncSession, area_ids: list[int], since: Any) -> tupl
         return None, []
     rows = (await session.execute(sa.text(SERIES), {"area_id": area.id, "since": since})).all()
     return area, list(rows)
+
+
+# Market sales near a precisely placed property (brief: "same street and within 500 m,
+# last 24 months"). Distances only between exact and street points (D-035). Addresses that
+# share a street or estate part are on the same street (address_street_parts, migration 0010).
+COMPARABLES = """
+WITH me AS MATERIALIZED (
+    SELECT id, geom, address_street_parts(address_normalised) AS streets FROM property
+    WHERE public_id = :id AND NOT is_suppressed AND geocode_confidence IN ('exact', 'street')
+), nearby AS MATERIALIZED (
+    SELECT DISTINCT ON (p.id) p.public_id, p.address_display, p.geocode_confidence::text AS conf,
+           s.sale_date, s.price_eur, s.is_new, s.vat_exclusive,
+           round(ST_Distance(p.geom::geography, me.geom::geography))::int AS distance_m,
+           address_street_parts(p.address_normalised) && me.streets AS same_street
+    FROM me, property p JOIN sale s ON s.property_id = p.id
+    WHERE p.id <> me.id AND NOT p.is_suppressed
+      AND p.geocode_confidence IN ('exact', 'street')
+      AND p.geom && ST_Expand(me.geom, :deg)
+      AND ST_DWithin(p.geom::geography, me.geom::geography, :radius)
+      AND s.sale_date > :since
+      AND s.withdrawn_at IS NULL AND NOT s.not_full_market_price
+      AND s.bulk_group_id IS NULL AND NOT s.is_possible_duplicate
+    ORDER BY p.id, s.sale_date DESC, s.id DESC
+), summary AS MATERIALIZED (
+    SELECT count(*) AS total,
+           percentile_cont(0.5) WITHIN GROUP (ORDER BY price_eur)
+               FILTER (WHERE NOT vat_exclusive) AS median
+    FROM nearby
+)
+SELECT n.*, summary.total, summary.median
+FROM nearby n, summary
+ORDER BY n.same_street DESC, n.distance_m, n.sale_date DESC
+LIMIT :limit
+"""
+
+
+async def comparables(
+    session: AsyncSession, public_id: str, radius_m: int, since: Any, limit: int
+) -> list[Any]:
+    params = {
+        "id": public_id,
+        "radius": radius_m,
+        "deg": radius_m / 111_000 * 1.8,  # a degree of longitude is ~67 km at 53° N
+        "since": since,
+        "limit": limit,
+    }
+    return list((await session.execute(sa.text(COMPARABLES), params)).all())

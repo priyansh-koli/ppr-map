@@ -6,10 +6,19 @@ import { RecordView } from "@/components/auth/record-view";
 import { SaveButton } from "@/components/auth/save-button";
 import { PlaceholderPage, pageMetadata } from "@/components/placeholder-page";
 import { AreaTrend } from "@/components/property/area-trend";
+import { ComparableSales } from "@/components/property/comparable-sales";
+import { PriceEstimateCard } from "@/components/property/price-estimate";
 import { ConfidenceChip } from "@/components/ui/confidence-chip";
 import { PageHeader } from "@/components/ui/page-header";
 import { Window } from "@/components/ui/window";
-import { api, ApiError, type PropertyDetail, STATIC_PREVIEW } from "@/lib/api/client";
+import {
+  api,
+  ApiError,
+  type Comparables,
+  type PriceEstimate,
+  type PropertyDetail,
+  STATIC_PREVIEW,
+} from "@/lib/api/client";
 import {
   CONFIDENCE_LABEL,
   CONFIDENCE_NOTE,
@@ -35,6 +44,15 @@ async function load(id: string): Promise<PropertyDetail | "unavailable" | null> 
     if (e instanceof ApiError && e.status === 404) return null;
     return "unavailable";
   }
+}
+
+/** The estimate and comparables are extras: if either fails, the page shows without it. */
+async function loadExtras(id: string): Promise<[PriceEstimate | null, Comparables | null]> {
+  const quiet = <T,>(p: Promise<T>) => p.catch(() => null);
+  return Promise.all([
+    quiet(api.estimate(id, { cache: "no-store" })),
+    quiet(api.comparables(id, { cache: "no-store" })),
+  ]);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -124,7 +142,7 @@ function Sourced({
 export default async function Page({ params }: Props) {
   const { id } = await params;
   if (STATIC_PREVIEW) return <PlaceholderPage routeKey="property" detail={`ID: ${id}`} />;
-  const data = await load(id);
+  const [data, [estimate, comparables]] = await Promise.all([load(id), loadExtras(id)]);
   if (data === null) notFound();
   if (data === "unavailable") {
     return (
@@ -256,6 +274,35 @@ export default async function Page({ params }: Props) {
             ))}
           </ul>
         </section>
+      ) : null}
+
+      {estimate ? (
+        <Window
+          title="estimate · CSO price index"
+          labelledBy="estimate-heading"
+          bodyClassName="p-5 sm:p-7"
+        >
+          <h2 id="estimate-heading" className="font-display text-2xl font-bold text-ink">
+            Price now, by the index
+          </h2>
+          <PriceEstimateCard estimate={estimate} />
+        </Window>
+      ) : null}
+
+      {comparables ? (
+        <Window
+          title="comparables · market sales nearby"
+          labelledBy="comparables-heading"
+          bodyClassName="p-5 sm:p-7"
+        >
+          <h2 id="comparables-heading" className="font-display text-2xl font-bold text-ink">
+            Sales nearby
+          </h2>
+          <ComparableSales
+            comparables={comparables}
+            searchHref={`${ROUTES.search.path}?near=${loc.lat.toFixed(5)},${loc.lng.toFixed(5)}&radiusM=${comparables.radiusM}`}
+          />
+        </Window>
       ) : null}
 
       <Window

@@ -7,7 +7,7 @@ from typing import Annotated
 import typer
 from app.config import get_settings
 
-from ppr_pipeline import boundaries
+from ppr_pipeline import benchmarks, boundaries
 from ppr_pipeline.aggregate import aggregate as rebuild_aggregates
 from ppr_pipeline.db import get_engine
 from ppr_pipeline.enrich.run import enrich as enrich_all
@@ -67,6 +67,12 @@ def ingest(
         counts = boundaries.ingest_boundaries(get_engine(), directory, src.url)
         for name, n in counts.items():
             typer.echo(f"  {name}: {n}")
+        return
+    if kind == "cso_rppi":
+        payload = file.read_bytes() if file else benchmarks.download(src.url)
+        summary_ = benchmarks.load_rppi(get_engine(), payload, src.url, progress=typer.echo)
+        for name, value in summary_.items():
+            typer.echo(f"  {name}: {value}")
         return
     if kind != "ppr":
         _todo()

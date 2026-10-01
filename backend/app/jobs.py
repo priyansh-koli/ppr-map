@@ -26,7 +26,7 @@ from app.config import get_settings
 
 log = logging.getLogger(__name__)
 TIMEZONE = "Europe/Dublin"
-PIPELINE_STEPS = ("ppr", "gazetteer", "geocode", "enrich", "aggregate", "monthly")
+PIPELINE_STEPS = ("ppr", "gazetteer", "geocode", "enrich", "benchmarks", "aggregate", "monthly")
 PIPELINE_TIMEOUT_S = 6 * 3600
 
 

@@ -309,3 +309,64 @@ class PropertyDetail(ApiModel):
     area_series: AreaSeries | None
     caveats: list[str]
     data_version: str
+
+
+# --- estimate and comparables (D-053) ------------------------------------------------------
+
+
+class IndexSeries(ApiModel):
+    key: str
+    label: str
+    source: str = "CSO Residential Property Price Index (CC BY 4.0)"
+
+
+class Calibration(ApiModel):
+    """How far repeat sales in this series landed from what the index implied."""
+
+    years_between: Literal["0-3y", "3-7y", "7y+"]
+    pairs: int
+    pooled: bool = Field(description="True when the series had too few pairs: all of Ireland's")
+    low_pct: float = Field(description="10th percentile, in % against the index")
+    median_pct: float
+    high_pct: float = Field(description="90th percentile, in % against the index")
+
+
+class PriceEstimate(ApiModel):
+    eligible: bool
+    reason: str | None = None
+    low_eur: Money | None = None
+    mid_eur: Money | None = None
+    high_eur: Money | None = None
+    based_on: SaleBrief | None = None
+    series: IndexSeries | None = None
+    index_month: date | None = None
+    index_change_pct: float | None = None
+    calibration: Calibration | None = None
+    method: str = Field(
+        "The price at its last market sale, moved by the CSO's price index for its region and "
+        "type from the month of that sale to the latest month published. The range is where "
+        "8 in 10 repeat sales in that region landed against the same index. A home that was "
+        "improved or run down since its sale will differ. Information, not a valuation."
+    )
+
+
+class Comparable(ApiModel):
+    id: str
+    address: str
+    confidence: GeocodeConfidence
+    date: date
+    price_eur: Money
+    is_new: bool
+    vat_exclusive: bool
+    distance_m: int
+    same_street: bool
+
+
+class Comparables(ApiModel):
+    available: bool
+    reason: str | None = None
+    radius_m: int
+    months: int
+    total: int
+    median_eur: Money | None = Field(None, description="Of the sales filed with VAT included")
+    items: list[Comparable]

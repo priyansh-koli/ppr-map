@@ -52,6 +52,8 @@ export type Distribution = components["schemas"]["Distribution"];
 export type StampDuty = components["schemas"]["StampDutyOut"];
 export type Affordability = components["schemas"]["AffordabilityOut"];
 export type CountyStat = components["schemas"]["CountyStat"];
+export type PriceEstimate = components["schemas"]["PriceEstimate"];
+export type Comparables = components["schemas"]["Comparables"];
 
 /** The GitHub Pages preview (D-034) is static: there is no API or tile server behind it. */
 export const STATIC_PREVIEW = process.env.NEXT_PUBLIC_STATIC_PREVIEW === "1";
@@ -161,6 +163,10 @@ export const api = {
     get<PropertyList>(`/properties?${query.toString()}`, init),
   property: (id: string, init?: RequestInit) =>
     get<PropertyDetail>(`/properties/${encodeURIComponent(id)}`, init),
+  estimate: (id: string, init?: RequestInit) =>
+    get<PriceEstimate>(`/properties/${encodeURIComponent(id)}/estimate`, init),
+  comparables: (id: string, init?: RequestInit) =>
+    get<Comparables>(`/properties/${encodeURIComponent(id)}/comparables`, init),
 
   policies: () => get<Policies>("/auth/policies"),
   register: (body: RegisterIn) => send<Accepted>("POST", "/auth/register", body),

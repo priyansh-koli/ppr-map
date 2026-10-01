@@ -133,7 +133,7 @@ class IngestRunDetail(IngestRunOut):
 
 
 class RunRequest(ApiModel):
-    step: Literal["ppr", "gazetteer", "geocode", "enrich", "aggregate", "monthly"]
+    step: Literal["ppr", "gazetteer", "geocode", "enrich", "benchmarks", "aggregate", "monthly"]
 
 
 class Job(ApiModel):
