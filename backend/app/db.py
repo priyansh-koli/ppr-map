@@ -13,7 +13,14 @@ from app.config import get_settings
 
 @lru_cache
 def get_engine() -> AsyncEngine:
-    return create_async_engine(get_settings().database_url, pool_pre_ping=True)
+    # psycopg prepares a statement on its sixth run, and Postgres may then plan it once for
+    # any parameters. The map filters (`tile_matching_sales`) are only fast when planned with
+    # their values: a generic plan took 6 s instead of 36 ms for an area's list (D-054).
+    return create_async_engine(
+        get_settings().database_url,
+        pool_pre_ping=True,
+        connect_args={"options": "-c plan_cache_mode=force_custom_plan"},
+    )
 
 
 @lru_cache

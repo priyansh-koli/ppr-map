@@ -165,6 +165,40 @@ def test_impossible_dates_fall_back_to_the_default(db: sa.Engine) -> None:
         assert tile('{"dateFrom": "2025-02-30"}') == tile("{}")
 
 
+def test_area_tiles_stay_planned_with_their_filters(db: sa.Engine) -> None:
+    """From a connection's sixth call a cached generic plan made an area's tiles take over
+    30 s each, and Martin reuses its connections (D-054)."""
+    with db.connect() as conn:
+        config = conn.execute(
+            sa.text("SELECT proconfig FROM pg_proc WHERE proname = 'sales_tiles'")
+        ).scalar_one()
+        assert "plan_cache_mode=force_custom_plan" in config
+        slug = conn.execute(
+            sa.text(
+                "SELECT a.slug FROM area a JOIN property p ON p.settlement_id = a.id"
+                " WHERE a.kind = 'settlement' GROUP BY a.slug ORDER BY count(*) DESC LIMIT 1"
+            )
+        ).scalar_one()
+        sql = sa.text("SELECT sales_tiles(10, 492, 334, CAST(:p AS json))")
+        params = json.dumps({"area": slug})
+        tiles = {bytes(conn.execute(sql, {"p": params}).scalar_one()) for _ in range(8)}
+    assert len(tiles) == 1 and b"cells" in tiles.pop()
+
+
+async def test_api_connections_plan_with_their_parameters(test_db_url: str) -> None:
+    """psycopg prepares repeated statements; the list and /search must still be planned with
+    their filters (D-054)."""
+    from app.db import get_engine
+
+    engine = get_engine()
+    try:
+        async with engine.connect() as conn:
+            mode = await conn.scalar(sa.text("SHOW plan_cache_mode"))
+    finally:
+        await engine.dispose()
+    assert mode == "force_custom_plan"
+
+
 def test_overview(api: TestClient) -> None:
     from app.api.v1 import stats
 
