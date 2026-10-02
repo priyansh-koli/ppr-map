@@ -49,6 +49,15 @@ CHECK_EMAIL = "Check your email to continue."
 PURGE_AFTER = timedelta(days=30)
 
 
+def check_email(message: str = CHECK_EMAIL) -> str:
+    """A reply that sends mail. In development it says where to read it: Mailpit, not the
+    real inbox the user typed."""
+    inbox = get_settings().mail_inbox_url
+    if not inbox:
+        return message
+    return f"{message} In development no email leaves this computer: read it in Mailpit at {inbox}."
+
+
 def _ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
@@ -130,7 +139,7 @@ async def register(
             else mail.already_registered(email, verified=verified_at is not None)
         )
         background.add_task(mailer.send, notice)
-        return Accepted(message=CHECK_EMAIL)
+        return Accepted(message=check_email())
     await db.execute(
         sa.text(
             "INSERT INTO user_role (user_id, role_id) SELECT :u, id FROM role WHERE name = 'user'"
@@ -177,7 +186,7 @@ async def register(
     token = await _issue_verification(db, user_id)
     await db.commit()
     background.add_task(mailer.send, mail.verify_email(email, body.full_name, token))
-    return Accepted(message=CHECK_EMAIL)
+    return Accepted(message=check_email())
 
 
 @router.post("/verify-email", response_model=Accepted)
@@ -216,7 +225,7 @@ async def resend_verification(
     token = await _issue_verification(db, user.id)
     await db.commit()
     background.add_task(mailer.send, mail.verify_email(user.email, user.full_name, token))
-    return Accepted(message=CHECK_EMAIL)
+    return Accepted(message=check_email())
 
 
 @router.post("/login", response_model=Me)
@@ -300,7 +309,9 @@ async def forgot_password(
         )
         await db.commit()
         background.add_task(mailer.send, mail.reset_password(email, row[1], token))
-    return Accepted(message="If that email has an account, a reset link is on its way.")
+    return Accepted(
+        message=check_email("If that email has an account, a reset link is on its way.")
+    )
 
 
 @router.post("/reset-password", response_model=Accepted)

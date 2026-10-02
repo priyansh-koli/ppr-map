@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = Field(default="", repr=False)
     email_from: str = "PPR Map <no-reply@localhost>"
+    # Development only: where caught mail can be read (Mailpit). "Check your email" replies
+    # point there, since nothing reaches a real inbox.
+    mail_inbox_url: str = ""
     session_secret: str = Field(default="", repr=False)
     csrf_secret: str = Field(default="", repr=False)
     ip_hash_salt: str = Field(default="", repr=False)

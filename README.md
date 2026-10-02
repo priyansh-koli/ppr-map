@@ -18,6 +18,8 @@ make migrate      # schema + roles/permissions
 open http://localhost:8080
 ```
 
+In development no email leaves your computer: verification, password reset and alert emails are caught by Mailpit at http://localhost:8025, whatever address you register with.
+
 To fill the map with real data (first run: about 2 hours, mostly geocoding):
 
 ```bash

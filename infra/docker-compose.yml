@@ -16,6 +16,7 @@ services:
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
     ports:
       - "127.0.0.1:5432:5432"
+    restart: unless-stopped
     healthcheck:
       # -h: during first-run init Postgres answers on the unix socket before it listens on TCP.
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${POSTGRES_USER:-pprmap} -d ${POSTGRES_DB:-pprmap}"]
@@ -27,6 +28,7 @@ services:
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
       - "127.0.0.1:6379:6379"
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -41,6 +43,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
+      MAIL_INBOX_URL: http://localhost:8025
       NOMINATIM_URL: http://nominatim:8080
     restart: unless-stopped
     # Behind Caddy: trust X-Forwarded-For so the API sees the client IP (rate limits, IP hashing).
@@ -129,6 +132,7 @@ services:
     ports:
       - "127.0.0.1:8025:8025"
       - "127.0.0.1:1025:1025"
+    restart: unless-stopped
 
   nominatim:
     # Batch geocoder (D-003). Opt-in: `make geocoder` (needs Docker memory >= 12 GB).

@@ -117,7 +117,7 @@ export function RegisterForm() {
           privacyVersion: policies.privacyVersion,
           marketingOptIn: form.get("marketing") === "on",
         });
-        setDone(`${res.message} The link works for 24 hours.`);
+        setDone(`${res.message} It should arrive within a minute; its link works for 24 hours.`);
       } catch (err) {
         setError({ message: messageOf(err), field: fieldOf(err) });
       }
