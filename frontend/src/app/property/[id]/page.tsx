@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { RecordView } from "@/components/auth/record-view";
 import { SaveButton } from "@/components/auth/save-button";
-import { PlaceholderPage, pageMetadata } from "@/components/placeholder-page";
+import { pageMetadata, StaticPreviewPage } from "@/components/placeholder-page";
 import { AreaTrend } from "@/components/property/area-trend";
 import { ComparableSales } from "@/components/property/comparable-sales";
 import { PriceEstimateCard } from "@/components/property/price-estimate";
@@ -32,7 +32,7 @@ import { ROUTES } from "@/lib/routes";
 type Props = { params: Promise<{ id: string }> };
 
 // The static export (D-034) needs every path at build time; it only has the sample URL from
-// `routes.ts` and shows the placeholder. The server build renders any id on request.
+// `routes.ts` and says it needs the data server. The server build renders any id on request.
 export function generateStaticParams() {
   return [{ id: "example" }];
 }
@@ -141,7 +141,7 @@ function Sourced({
 
 export default async function Page({ params }: Props) {
   const { id } = await params;
-  if (STATIC_PREVIEW) return <PlaceholderPage routeKey="property" detail={`ID: ${id}`} />;
+  if (STATIC_PREVIEW) return <StaticPreviewPage routeKey="property" detail={`ID: ${id}`} />;
   const [data, [estimate, comparables]] = await Promise.all([load(id), loadExtras(id)]);
   if (data === null) notFound();
   if (data === "unavailable") {

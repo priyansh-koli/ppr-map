@@ -13,34 +13,22 @@ export function pageMetadata(key: RouteKey): Metadata {
   return { title, description: route.summary };
 }
 
-const ACCESS_LABEL = {
-  public: "Public",
-  user: "Signed-in users",
-  admin: "Admins only",
-} as const;
-
-export function PlaceholderPage({ routeKey, detail }: { routeKey: RouteKey; detail?: string }) {
+/**
+ * A page made from register data, in the static Pages preview (D-034): there is no API to
+ * render it from, so it shows its header and says why the rest is missing.
+ */
+export function StaticPreviewPage({ routeKey, detail }: { routeKey: RouteKey; detail?: string }) {
   const route = ROUTES[routeKey];
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-12 sm:py-16">
       <PageHeader eyebrow={detail} title={route.title} lead={route.summary} />
-      <Window title={`roadmap · phase ${route.phase}`} bodyClassName="p-5 sm:p-6">
+      <Window title="layout preview" bodyClassName="p-5 sm:p-6">
         <p className="font-display text-2xl italic leading-snug text-ink">
-          Not built yet: this page arrives in Phase {route.phase}.
+          This page is made from the register data, and the data server is not part of this preview.
         </p>
-        <dl className="mt-4 flex flex-wrap gap-2 text-sm">
-          <div className="chip">
-            <dt className="sr-only">Arrives in</dt>
-            <dd>Arrives in Phase {route.phase}</dd>
-          </div>
-          <div className="chip">
-            <dt className="sr-only">Access</dt>
-            <dd>{ACCESS_LABEL[route.access]}</dd>
-          </div>
-        </dl>
         <p className="mt-5">
-          <Link href={ROUTES.map.path} className="btn btn-secondary btn-sm">
-            Meanwhile, open the map
+          <Link href={ROUTES.sources.path} className="btn btn-secondary btn-sm">
+            Read where the data comes from
           </Link>
         </p>
       </Window>

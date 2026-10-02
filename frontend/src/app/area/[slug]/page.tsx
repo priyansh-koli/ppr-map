@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { AreaTrends, PriceDistribution } from "@/components/area/area-charts";
 import { AreaOutline } from "@/components/area/area-outline";
 import { SaveButton } from "@/components/auth/save-button";
-import { PlaceholderPage, pageMetadata } from "@/components/placeholder-page";
+import { pageMetadata, StaticPreviewPage } from "@/components/placeholder-page";
 import { Window } from "@/components/ui/window";
 import { type AreaDetail, api, ApiError, STATIC_PREVIEW } from "@/lib/api/client";
 import { formatDate, formatEur, formatMonth } from "@/lib/format";
@@ -14,7 +14,7 @@ import { ROUTES } from "@/lib/routes";
 type Props = { params: Promise<{ slug: string }> };
 
 // The static export (D-034) needs every path at build time. It pre-renders the sample URL
-// from `routes.ts` and shows the placeholder; the server build renders any slug on request.
+// from `routes.ts` and says it needs the data server; the server build renders any slug.
 export function generateStaticParams() {
   return [{ slug: "dublin" }];
 }
@@ -86,7 +86,7 @@ function searchHref(a: AreaDetail): string {
 
 export default async function Page({ params }: Props) {
   const { slug } = await params;
-  if (STATIC_PREVIEW) return <PlaceholderPage routeKey="area" detail={`Area: ${slug}`} />;
+  if (STATIC_PREVIEW) return <StaticPreviewPage routeKey="area" detail={`Area: ${slug}`} />;
   const data = await load(slug);
   if (data === null) notFound();
   if (data === "unavailable") {

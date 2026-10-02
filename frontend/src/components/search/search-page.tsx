@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useSession } from "@/components/auth/session";
+import { StaticPreviewPage } from "@/components/placeholder-page";
 import { ConfidenceChip } from "@/components/ui/confidence-chip";
 import { Window } from "@/components/ui/window";
 import {
@@ -250,14 +251,7 @@ export function SearchPage() {
     );
   };
 
-  if (STATIC_PREVIEW) {
-    return (
-      <p className="mx-auto max-w-3xl px-4 py-10 text-muted">
-        Search needs the data server, which this static preview does not have. Run the app locally (
-        <code>make up</code>) to search every sale.
-      </p>
-    );
-  }
+  if (STATIC_PREVIEW) return <StaticPreviewPage routeKey="search" />;
 
   const loading = result.key !== apiKey;
   // While a new search runs, the previous results stay on screen, marked as updating.

@@ -11,8 +11,6 @@ export interface RouteDef {
   samplePath: string;
   title: string;
   summary: string;
-  /** Phase in which the real feature lands (docs: phase plan). */
-  phase: 1 | 2 | 3 | 4 | 5;
   access: Access;
 }
 
@@ -24,7 +22,6 @@ export const ROUTES = {
     title: "Ireland’s home sales, on the record.",
     summary:
       "Every residential sale on the Property Price Register since 2010, on a map, with honest locations, sale history and neighbourhood context.",
-    phase: 3,
     access: "public",
   },
   map: {
@@ -33,7 +30,6 @@ export const ROUTES = {
     title: "Map explorer",
     summary:
       "Clustered sales at low zoom, individual sales up close, hover or tap for details. A synced list view gives keyboard access.",
-    phase: 3,
     access: "public",
   },
   search: {
@@ -42,7 +38,6 @@ export const ROUTES = {
     title: "Search sales",
     summary:
       "Filter by county, area, Eircode routing key, radius, price, date, new or second-hand, and market-sale flags. Every search has a shareable URL.",
-    phase: 5,
     access: "public",
   },
   property: {
@@ -51,7 +46,6 @@ export const ROUTES = {
     title: "Property",
     summary:
       "Full sale history, comparable nearby sales, vicinity, planning, environment, area stats, sources and caveats.",
-    phase: 3,
     access: "public",
   },
   area: {
@@ -60,7 +54,6 @@ export const ROUTES = {
     title: "Area",
     summary:
       "Median price over time, sales volume, price distribution, and comparison with national and CSO figures.",
-    phase: 5,
     access: "public",
   },
   tools: {
@@ -68,7 +61,6 @@ export const ROUTES = {
     samplePath: "/tools",
     title: "Tools",
     summary: "Stamp duty and mortgage affordability calculators.",
-    phase: 5,
     access: "public",
   },
   stampDuty: {
@@ -77,7 +69,6 @@ export const ROUTES = {
     title: "Stamp duty calculator",
     summary:
       "Stamp duty on a home at today's rates, band by band. Rates checked against Revenue; information only.",
-    phase: 5,
     access: "public",
   },
   affordability: {
@@ -86,7 +77,6 @@ export const ROUTES = {
     title: "Mortgage affordability",
     summary:
       "What the Central Bank mortgage measures let you borrow and spend. Information only, not financial advice.",
-    phase: 5,
     access: "public",
   },
   sources: {
@@ -95,7 +85,6 @@ export const ROUTES = {
     title: "Data sources and methodology",
     summary:
       "Where every number comes from, its licence, how locations are estimated, and what the data cannot tell you.",
-    phase: 5,
     access: "public",
   },
   report: {
@@ -103,7 +92,6 @@ export const ROUTES = {
     samplePath: "/report",
     title: "Report an error or request removal",
     summary: "Ask us to correct a location or detail, or to stop displaying an address.",
-    phase: 5,
     access: "public",
   },
   privacy: {
@@ -111,7 +99,6 @@ export const ROUTES = {
     samplePath: "/privacy",
     title: "Privacy policy",
     summary: "What we collect, why, how long we keep it, and your rights under GDPR.",
-    phase: 4,
     access: "public",
   },
   terms: {
@@ -119,7 +106,6 @@ export const ROUTES = {
     samplePath: "/terms",
     title: "Terms of use",
     summary: "Terms for using this site and its data.",
-    phase: 4,
     access: "public",
   },
   login: {
@@ -127,7 +113,6 @@ export const ROUTES = {
     samplePath: "/login",
     title: "Sign in",
     summary: "Sign in with your email and password.",
-    phase: 4,
     access: "public",
   },
   register: {
@@ -136,7 +121,6 @@ export const ROUTES = {
     title: "Create an account",
     summary:
       "Required: full name, email, password, confirmation you are 18+, and acceptance of the Terms and Privacy Policy. Everything else is optional.",
-    phase: 4,
     access: "public",
   },
   verifyEmail: {
@@ -144,7 +128,6 @@ export const ROUTES = {
     samplePath: "/verify-email",
     title: "Verify your email",
     summary: "Alerts switch on once your email address is verified.",
-    phase: 4,
     access: "public",
   },
   forgotPassword: {
@@ -152,7 +135,6 @@ export const ROUTES = {
     samplePath: "/forgot-password",
     title: "Forgot password",
     summary: "We will email you a reset link.",
-    phase: 4,
     access: "public",
   },
   resetPassword: {
@@ -160,7 +142,6 @@ export const ROUTES = {
     samplePath: "/reset-password",
     title: "Reset password",
     summary: "Choose a new password.",
-    phase: 4,
     access: "public",
   },
   account: {
@@ -169,7 +150,6 @@ export const ROUTES = {
     title: "Account settings",
     summary:
       "Profile, password, notification preferences, history on or off, download your data, delete your account.",
-    phase: 4,
     access: "user",
   },
   wishlist: {
@@ -177,7 +157,6 @@ export const ROUTES = {
     samplePath: "/account/wishlist",
     title: "Wishlist",
     summary: "Saved properties and areas with private notes.",
-    phase: 4,
     access: "user",
   },
   compare: {
@@ -185,7 +164,6 @@ export const ROUTES = {
     samplePath: "/account/wishlist/compare",
     title: "Compare",
     summary: "Compare up to four saved properties or areas side by side.",
-    phase: 4,
     access: "user",
   },
   history: {
@@ -194,7 +172,6 @@ export const ROUTES = {
     title: "History",
     summary:
       "Recently viewed properties and past searches. Clear all, delete items, or turn history off.",
-    phase: 4,
     access: "user",
   },
   savedSearches: {
@@ -203,7 +180,6 @@ export const ROUTES = {
     title: "Saved searches and alerts",
     summary:
       "Searches you saved, with an email when newly filed sales match them, and a CSV download.",
-    phase: 5,
     access: "user",
   },
   unsubscribe: {
@@ -211,7 +187,6 @@ export const ROUTES = {
     samplePath: "/alerts/unsubscribe",
     title: "Stop an alert",
     summary: "Switch off the email alerts for one saved search, from the link in its email.",
-    phase: 5,
     access: "public",
   },
   admin: {
@@ -219,7 +194,6 @@ export const ROUTES = {
     samplePath: "/admin",
     title: "Admin",
     summary: "Data operations, user management and the audit log.",
-    phase: 5,
     access: "admin",
   },
   adminIngestRuns: {
@@ -227,7 +201,6 @@ export const ROUTES = {
     samplePath: "/admin/ingest-runs",
     title: "Ingest runs",
     summary: "Rows loaded, rows failed, geocode success by confidence level. Queue a run.",
-    phase: 5,
     access: "admin",
   },
   adminGeocode: {
@@ -235,7 +208,6 @@ export const ROUTES = {
     samplePath: "/admin/geocode",
     title: "Geocode review",
     summary: "Check doubtful locations and correct them by hand; a corrected one is locked.",
-    phase: 5,
     access: "admin",
   },
   adminRemovals: {
@@ -243,7 +215,6 @@ export const ROUTES = {
     samplePath: "/admin/removal-requests",
     title: "Removal and correction requests",
     summary: "Review and decide requests; approved removals hide the address from public views.",
-    phase: 5,
     access: "admin",
   },
   adminUsers: {
@@ -251,7 +222,6 @@ export const ROUTES = {
     samplePath: "/admin/users",
     title: "Users",
     summary: "Activate, deactivate and change roles. Every change is audit-logged.",
-    phase: 5,
     access: "admin",
   },
   adminAudit: {
@@ -259,7 +229,6 @@ export const ROUTES = {
     samplePath: "/admin/audit-log",
     title: "Audit log",
     summary: "Append-only record of administrative actions.",
-    phase: 5,
     access: "admin",
   },
 } as const satisfies Record<string, RouteDef>;
