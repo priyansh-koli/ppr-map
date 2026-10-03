@@ -1,0 +1,38 @@
+name: Pages redirect
+
+# The preview moved to Vercel (D-056). GitHub Pages now only redirects the old address,
+# https://priyansh-koli.github.io/ppr-map/<path>, to the same path on https://ppr-map.vercel.app.
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/pages-redirect/**
+      - .github/workflows/pages-redirect.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      # GitHub Pages answers every unknown path with 404.html, so one page covers them all.
+      - run: cp .github/pages-redirect/index.html .github/pages-redirect/404.html
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: .github/pages-redirect
+      - id: deployment
+        uses: actions/deploy-pages@v5

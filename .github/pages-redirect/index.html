@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  The preview moved to Vercel (D-056). GitHub Pages serves this file as index.html and 404.html,
+  so every old address, https://priyansh-koli.github.io/ppr-map/<path>, lands on the same
+  path at https://ppr-map.vercel.app. Deployed by .github/workflows/pages-redirect.yml.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>PPR Map has moved</title>
+    <link rel="canonical" href="https://ppr-map.vercel.app/" />
+    <script>
+      location.replace(
+        "https://ppr-map.vercel.app" +
+          location.pathname.replace(/^\/ppr-map(?=\/|$)/, "") +
+          location.search +
+          location.hash,
+      );
+    </script>
+    <noscript><meta http-equiv="refresh" content="0; url=https://ppr-map.vercel.app/" /></noscript>
+  </head>
+  <body>
+    <p>PPR Map has moved to <a href="https://ppr-map.vercel.app/">ppr-map.vercel.app</a>.</p>
+  </body>
+</html>
