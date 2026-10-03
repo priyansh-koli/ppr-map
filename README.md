@@ -4,7 +4,7 @@ The Property Price Register, made usable: every residential sale in Ireland sinc
 
 **Status:** Phase 4 (accounts) is ready for review: registration with email confirmation, sign-in, password reset, account settings, wishlist and compare, history, data export and deletion (D-041). Phase 3 built the map, property pages and API (D-038 to D-040); Phase 2 the data pipeline (D-035 to D-037).
 
-**Live preview:** https://priyansh-koli.github.io/ppr-map/ is the frontend as a static site, rebuilt after CI passes on `main` (D-034). It has no API or database yet, so it shows the page scaffold only.
+**Live preview:** the frontend as a static site on Vercel, deployed from `main` (D-056; it replaced the GitHub Pages preview of D-034). It has no API or database yet, so it shows the page scaffold only.
 
 ## Quick start
 

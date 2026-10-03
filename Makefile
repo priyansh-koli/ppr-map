@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr gazetteer geocode enrich benchmarks aggregate pipeline osm-extract basemap terrain geocoder test test-db lint format typecheck api-types e2e e2e-stack e2e-pages ci
+.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr gazetteer geocode enrich benchmarks aggregate pipeline osm-extract basemap terrain geocoder test test-db lint format typecheck api-types e2e e2e-stack e2e-static ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -162,7 +162,7 @@ e2e: ## Playwright smoke tests over every route
 e2e-stack: ## Playwright against the running stack with real data (make up + pipeline + basemap)
 	cd frontend && E2E_STACK=1 npx playwright test
 
-e2e-pages: ## The same tests against the GitHub Pages static export, under /ppr-map
-	cd frontend && STATIC_EXPORT=1 PAGES_BASE_PATH=/ppr-map npm run build && E2E_BASE_PATH=/ppr-map npm run test:e2e
+e2e-static: ## The same tests against the static export, as Vercel serves the preview
+	cd frontend && STATIC_EXPORT=1 npm run build && E2E_STATIC=1 npm run test:e2e
 
 ci: lint typecheck test ## What CI runs (minus the database and e2e jobs)

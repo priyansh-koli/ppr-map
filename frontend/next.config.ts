@@ -4,14 +4,13 @@ import type { NextConfig } from "next";
 // For `npm run dev` on the host, proxy API calls to a locally running FastAPI.
 const API_ORIGIN = process.env.INTERNAL_API_ORIGIN || "http://localhost:8000";
 
-// STATIC_EXPORT=1 builds the public GitHub Pages preview (D-034): plain HTML in `out/`, served
-// under PAGES_BASE_PATH (e.g. `/ppr-map`), with no API behind it, so no rewrites.
+// STATIC_EXPORT=1 builds the public preview on Vercel (D-056, set in vercel.json): plain HTML
+// in `out/`, with no API behind it, so no rewrites.
 const STATIC_EXPORT = process.env.STATIC_EXPORT === "1";
 
 const nextConfig: NextConfig = STATIC_EXPORT
   ? {
       output: "export",
-      basePath: process.env.PAGES_BASE_PATH ?? "",
       trailingSlash: true,
       poweredByHeader: false,
       images: { unoptimized: true },

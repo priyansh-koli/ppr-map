@@ -125,6 +125,7 @@ There are no joins and no third-party calls on this path.
 
 ## Deployment (not decided yet: see open questions)
 
+- **Public preview:** the frontend's static export runs on Vercel (D-056), with no API behind it. The rest below is still open.
 - **Minimum footprint:** one VM with 4 vCPU and 16 GB RAM, running Postgres, API, Martin, workers and Redis, plus Nominatim during batch runs only.
 - **Storage:** object storage and a CDN for basemap tiles and static assets. Managed Postgres is optional.
 - **Estimated DB size:** under 10 GB, covering about 810k sales, 700k properties, POIs and boundaries.

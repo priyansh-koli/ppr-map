@@ -14,7 +14,7 @@ export function pageMetadata(key: RouteKey): Metadata {
 }
 
 /**
- * A page made from register data, in the static Pages preview (D-034): there is no API to
+ * A page made from register data, in the static preview (D-034, D-056): there is no API to
  * render it from, so it shows its header and says why the rest is missing.
  */
 export function StaticPreviewPage({ routeKey, detail }: { routeKey: RouteKey; detail?: string }) {

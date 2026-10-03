@@ -57,7 +57,7 @@ Run `make help` for the full list.
 | `make lint`, `make typecheck`, `make test` | what CI runs (no database needed) |
 | `make test-db` | backend and pipeline tests including live PostGIS checks (`alembic check`, audit trigger, PPR ingest) |
 | `make e2e` | Playwright smoke test over every route |
-| `make e2e-pages` | the same tests against the GitHub Pages static export under `/ppr-map` |
+| `make e2e-static` | the same tests against the static export, as Vercel serves the public preview (D-056) |
 | `.venv/bin/ppr sources --all` | list data sources, licences and blocked sources |
 | `.venv/bin/ppr ingest tailte_boundaries` | download and load counties, EDs, Small Areas, townlands, settlements (about 4 min) |
 | `make geocoder` | start self-hosted Nominatim (first run imports Ireland, about 20 min; Docker memory ≥ 12 GB) |

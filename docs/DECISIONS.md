@@ -275,6 +275,7 @@ Everything below is **Proposed** until the Phase 0 review.
 - **Limits:** Anything that needs the API (map data, sign-in, search, admin) cannot work on Pages. When Phase 3 adds live data, the full stack needs a real host (option b), and this preview is either retired or kept as a docs site.
 - **Status:** Accepted (owner request, 2026-09-27).
 - **Update 2026-09-27:** Pages now deploys only after CI passes on `main` (`workflow_run`), and first runs the Playwright route smoke tests against the export served under the base path (`E2E_BASE_PATH`, `e2e/serve-export.mjs`). Before, a commit that failed lint or e2e was still published, and nothing tested the base path.
+- **Update 2026-10-03:** superseded by D-056: the preview moved to Vercel, and the Pages workflow and base path are gone.
 
 ## D-035 Geocoding cascade as built, and what it achieved
 
@@ -580,3 +581,13 @@ Everything below is **Proposed** until the Phase 0 review.
 - **Options:** (a) list every `use: true` source as in use; (b) derive "in use" from `ingest_run`, whose kinds do not map one to one onto the file's keys (OSM feeds geocoding, amenities and schools); (c) a `loaded` flag per source in the file.
 - **Choice:** (c). `loaded: true` means the site shows data from the source; the pipeline refuses `loaded` without `use`, and a test refuses `loaded` without `verified`. `GET /api/v1/sources` reads the file and returns `inUse`, `planned` and `notUsed`; an unverified source has no check date. The page leads with the methodology (the register, how locations are placed, how prices are counted, the estimate, what the data cannot say), then the sources in use with their credit lines, the basemap and terrain credits, the planned sources and the ruled-out ones with their reasons. The `reason` lines of ruled-out sources are now written for the public; the decision numbers moved to comments. The static Pages preview has no API, so it shows the methodology without the list.
 - **Status:** Accepted (implementation detail).
+
+## D-056 The public preview moves to Vercel
+
+- **Context:** on 2026-10-03 the owner asked to move the site to Vercel. The live site is the static preview of D-034 on GitHub Pages; nothing else is hosted (Q-04 is open). Vercel runs Next.js and static files, not FastAPI, PostGIS, Redis, the RQ workers, Martin or Nominatim, so the data server still needs a host of its own.
+- **Options:** (a) the same static export on Vercel, built by Vercel's GitHub integration; (b) a Next.js server build on Vercel, which only helps once the API is reachable from the internet; (c) deploy from GitHub Actions with the Vercel CLI, which keeps D-034's "after CI" gate in the workflow but needs a Vercel token and project ids as repository secrets.
+- **Choice:** (a). `frontend/vercel.json` builds with `STATIC_EXPORT=1`, and the Vercel project's Root Directory is `frontend`. Every push to `main` is a production deployment; other branches and pull requests get preview deployments. Vercel serves the site at the domain root, so the `PAGES_BASE_PATH` base path is gone. `make e2e-static` and a CI job on `main` (`Static preview`) run the route smoke tests against the export as Vercel serves it (`E2E_STATIC=1`, `e2e/serve-export.mjs`). `.github/workflows/pages.yml` is removed, and GitHub Pages is switched off in the repository settings.
+- **Gate:** Vercel's Deployment Checks hold a production deployment until the selected GitHub checks pass (Frontend, Playwright smoke tests, Static preview). This replaces D-034's `workflow_run` gate.
+- **Why:** one-off setup in the Vercel dashboard, no secrets in the repository, preview deployments for branches, and the same tested export as before.
+- **Cost:** the Hobby plan is free but for non-commercial use only. Q-02's default assumes the product is commercial, so a commercial launch on Vercel needs the Pro plan (**PAID**, ask first) or another host. A server build (b) waits until the data server has a host (Q-04).
+- **Status:** Accepted (owner request, 2026-10-03).

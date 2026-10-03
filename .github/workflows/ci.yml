@@ -99,6 +99,35 @@ jobs:
         env:
           CI: "true"
 
+  # The public preview on Vercel is this static export (D-056). Vercel builds and deploys it
+  # itself; its Deployment Checks hold a production release until this job passes.
+  static-preview:
+    name: Static preview
+    if: github.ref == 'refs/heads/main'
+    needs: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+        env:
+          STATIC_EXPORT: "1"
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Smoke-test the export as Vercel serves it
+        run: npm run test:e2e
+        env:
+          CI: "true"
+          E2E_STATIC: "1"
+
   docker:
     name: Docker images
     runs-on: ubuntu-latest

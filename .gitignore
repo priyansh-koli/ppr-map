@@ -22,6 +22,8 @@ frontend/test-results/
 frontend/playwright-report/
 *.tsbuildinfo
 next-env.d.ts
+# Vercel CLI project link and build output (D-056)
+.vercel/
 
 # data (never commit downloaded datasets)
 data/

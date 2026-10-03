@@ -57,7 +57,7 @@ export type Comparables = components["schemas"]["Comparables"];
 export type Sources = components["schemas"]["Sources"];
 export type SourceInfo = components["schemas"]["SourceOut"];
 
-/** The GitHub Pages preview (D-034) is static: there is no API or tile server behind it. */
+/** The public preview on Vercel (D-034, D-056) is static: there is no API or tile server behind it. */
 export const STATIC_PREVIEW = process.env.NEXT_PUBLIC_STATIC_PREVIEW === "1";
 
 /** One entry of a 422 problem's `errors` (FastAPI request validation). */
