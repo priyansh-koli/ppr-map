@@ -102,7 +102,8 @@ function Details({ me, onSaved }: { me: Me; onSaved: () => void }) {
           name="budgetMin"
           type="number"
           min={0}
-          step={10000}
+          // Any whole euro: a step of 10,000 made €355,000 invalid and blocked the whole form.
+          step={1}
           defaultValue={me.profile.budgetMin ?? ""}
           errorId={errorFor("budgetMin")}
         />
@@ -111,7 +112,7 @@ function Details({ me, onSaved }: { me: Me; onSaved: () => void }) {
           name="budgetMax"
           type="number"
           min={0}
-          step={10000}
+          step={1}
           defaultValue={me.profile.budgetMax ?? ""}
           errorId={errorFor("budgetMax")}
         />

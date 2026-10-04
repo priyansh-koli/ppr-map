@@ -140,6 +140,8 @@ export function ResultsMap({
     };
   }, []);
 
+  // Keyed by value: the page passes a new circle object on every render (hovering a result
+  // re-renders it), and new tile URLs make MapLibre reload every tile (P1 #28).
   const queryKey = query.toString();
   useEffect(() => {
     const map = mapRef.current;
@@ -147,8 +149,16 @@ export function ResultsMap({
     (map.getSource("sales") as VectorTileSource).setTiles([
       tileUrl("sales", new URLSearchParams(queryKey), version),
     ]);
-    map.getSource<GeoJSONSource>("radius")?.setData(circleData(circle));
-  }, [queryKey, version, circle, ready]);
+  }, [queryKey, version, ready]);
+
+  const circleKey = circle ? `${circle.near}|${circle.radiusM}` : "";
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    const [near = "", radius = ""] = circleKey.split("|");
+    const shown = circleKey ? { near, radiusM: Number(radius) } : null;
+    map.getSource<GeoJSONSource>("radius")?.setData(circleData(shown));
+  }, [circleKey, ready]);
 
   const bboxKey = bbox?.join(",") ?? "";
   useEffect(() => {

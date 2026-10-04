@@ -3,7 +3,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { AreaStats, Distribution } from "@/lib/api/client";
 import { mockApi } from "@/test-fixtures/api";
 
-import { AreaTrends, periodLabel, PriceDistribution } from "./area-charts";
+import { AreaTrends, onAxis, periodLabel, PriceDistribution } from "./area-charts";
 import { outlinePath } from "./area-outline";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -62,6 +62,52 @@ describe("area charts", () => {
     expect(rows[2]).toHaveTextContent("€355,000");
     fireEvent.change(screen.getByLabelText("Periods"), { target: { value: "year" } });
     expect(String(fetch.mock.calls.at(-1)?.[0])).toContain("periodKind=year&segment=all");
+  });
+
+  it("leaves a gap for a period with no sales instead of joining across it", async () => {
+    // No row at all for July (no sales), as the API returns it.
+    const sparse: AreaStats = {
+      ...STATS,
+      periodKind: "month",
+      points: [point("2025-05-01", 40, 250000), point("2025-06-01", 41, 255000)].concat(
+        point("2025-08-01", 42, 262000),
+        point("2025-09-01", 44, 270000),
+      ),
+    };
+    const placed = onAxis("month", sparse.points, sparse.national);
+    expect(placed.axis).toEqual([
+      "2025-05-01",
+      "2025-06-01",
+      "2025-07-01",
+      "2025-08-01",
+      "2025-09-01",
+    ]);
+    expect(placed.area.map((p) => p.median)).toEqual([250000, 255000, null, 262000, 270000]);
+    expect(
+      onAxis("quarter", [point("2024-01-01", 9, 1), point("2024-10-01", 9, 1)], []).axis,
+    ).toHaveLength(4);
+
+    mockApi({ "GET /areas/carlow/stats": () => [200, sparse] });
+    const { container } = render(
+      <AreaTrends slug="carlow" name="Carlow" periodKinds={["month"]} />,
+    );
+    await screen.findByRole("img", { name: /Median price, Carlow and Ireland/ });
+    const lines = [...container.querySelectorAll('polyline[stroke="#2a78d6"]')];
+    // May-June and August-September: two lines, none drawn across July.
+    expect(lines).toHaveLength(2);
+  });
+
+  it("gives no chart when every period of the area is suppressed", async () => {
+    const hidden: AreaStats = {
+      ...STATS,
+      points: STATS.points.map((p) => ({ ...p, median: null, suppressed: true })),
+    };
+    mockApi({ "GET /areas/carlow/stats": () => [200, hidden] });
+    render(<AreaTrends slug="carlow" name="Carlow" periodKinds={["rolling_12m"]} />);
+    expect(
+      await screen.findByText(/Too few sales in Carlow for a price trend/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /Median price/ })).toBeNull();
   });
 
   it("hides price bands the API does not give", async () => {

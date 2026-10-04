@@ -2,7 +2,8 @@
 
 import functools
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Annotated
 
@@ -16,7 +17,7 @@ from ppr_pipeline.enrich.run import enrich as enrich_all
 from ppr_pipeline.geocode.gazetteer import build_gazetteer
 from ppr_pipeline.geocode.runner import geocode_properties
 from ppr_pipeline.ppr import ingest as ppr_ingest
-from ppr_pipeline.sources import load_sources
+from ppr_pipeline.sources import Source, load_sources
 
 DATA_DIR = Path(os.environ.get("DATA_DIR") or "data")
 
@@ -38,17 +39,22 @@ def sources(
         typer.echo(f"{key:20} {status:9} {checked:10} {src.licence}")
 
 
-def locked[**P, R](command: Callable[P, R]) -> Callable[P, R]:
+@contextmanager
+def _one_at_a_time() -> Iterator[None]:
     """Steps that write the data run one at a time (`pipeline_lock`)."""
+    try:
+        with pipeline_lock(get_engine()):
+            yield
+    except PipelineBusy as exc:
+        typer.echo(f"Not started: {exc}.", err=True)
+        raise typer.Exit(code=1) from exc
 
+
+def locked[**P, R](command: Callable[P, R]) -> Callable[P, R]:
     @functools.wraps(command)
     def run(*args: P.args, **kwargs: P.kwargs) -> R:
-        try:
-            with pipeline_lock(get_engine()):
-                return command(*args, **kwargs)
-        except PipelineBusy as exc:
-            typer.echo(f"Not started: {exc}.", err=True)
-            raise typer.Exit(code=1) from exc
+        with _one_at_a_time():
+            return command(*args, **kwargs)
 
     return run
 
@@ -59,7 +65,6 @@ def _todo() -> None:
 
 
 @app.command()
-@locked
 def ingest(
     kind: Annotated[str, typer.Argument(help="Source key from config/sources.yaml")],
     file: Annotated[
@@ -77,6 +82,13 @@ def ingest(
     if not src.use:
         typer.echo(f"Refusing to ingest '{kind}': {src.reason}", err=True)
         raise typer.Exit(code=1)
+    if kind not in ("tailte_boundaries", "cso_rppi", "ppr"):
+        _todo()
+    with _one_at_a_time():
+        _ingest(kind, src, file, force)
+
+
+def _ingest(kind: str, src: Source, file: Path | None, force: bool) -> None:
     if kind == "tailte_boundaries":
         directory = file or DATA_DIR / "raw" / "boundaries"
         if file is None:
@@ -92,9 +104,6 @@ def ingest(
         for name, value in summary_.items():
             typer.echo(f"  {name}: {value}")
         return
-    if kind != "ppr":
-        _todo()
-
     url = ppr_ingest.source_url()
     if file is not None:
         payload, url = file.read_bytes(), file.resolve().as_uri()

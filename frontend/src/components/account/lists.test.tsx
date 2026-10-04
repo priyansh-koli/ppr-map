@@ -114,6 +114,45 @@ describe("History", () => {
     expect(screen.queryByRole("button", { name: /Show more/ })).not.toBeInTheDocument();
   });
 
+  it("skips nothing after a Remove, and stops offering more at the end", async () => {
+    // A server holding five views, two a page, newest first.
+    let held = [1, 2, 3, 4, 5].map((id) => ({ ...VIEW, id, address: `${id} Main Street` }));
+    const { fetch } = mockApi({});
+    fetch.mockImplementation(async (input: RequestInfo | URL, init: RequestInit = {}) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname.endsWith("/searches")) return Response.json(page([]));
+      if (init.method === "DELETE") {
+        const id = Number(url.pathname.split("/").at(-1));
+        held = held.filter((v) => v.id !== id);
+        return new Response(null, { status: 204 });
+      }
+      const n = Number(url.searchParams.get("page") ?? 1);
+      return Response.json({
+        items: held.slice((n - 1) * 2, n * 2),
+        total: held.length,
+        page: n,
+        pageSize: 2,
+      });
+    });
+    render(<History />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Remove 1 Main Street from history" }),
+    );
+    await waitFor(() => expect(screen.queryByText("1 Main Street")).not.toBeInTheDocument());
+    // "3 Main Street" moved up onto page 1; reading page 2 next used to skip it.
+    fireEvent.click(await screen.findByRole("button", { name: "Show more (3 older)" }));
+    expect(await screen.findByRole("link", { name: "3 Main Street" })).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "Show more (2 older)" }));
+    expect(await screen.findByRole("link", { name: "5 Main Street" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual([
+      "2 Main Street",
+      "3 Main Street",
+      "4 Main Street",
+      "5 Main Street",
+    ]);
+    expect(screen.queryByRole("button", { name: /Show more/ })).not.toBeInTheDocument();
+  });
+
   it("keeps the list and says so when clearing fails", async () => {
     mockApi({
       "GET /me/history/views": () => [200, page([VIEW])],

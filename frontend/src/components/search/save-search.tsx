@@ -24,14 +24,20 @@ export function SaveSearch({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [frequency, setFrequency] = useState<AlertFrequency>("on_data_update");
-  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
+  const [saving, setSaving] = useState(false);
+  // The search that was saved: "Saved." holds for that search only, so a new search can be
+  // saved without a reload (P1 #33).
+  const [savedKey, setSavedKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const key = new URLSearchParams(
+    Object.entries(query).sort(([a], [b]) => a.localeCompare(b)),
+  ).toString();
   if (loading) return null;
   if (!me)
     return (
       <SignInLink className="text-sm text-accent underline">Sign in to save this search</SignInLink>
     );
-  if (state === "saved")
+  if (savedKey === key)
     return (
       <span className="text-sm">
         Saved.{" "}
@@ -59,14 +65,16 @@ export function SaveSearch({
       aria-label="Save this search"
       onSubmit={async (e) => {
         e.preventDefault();
-        setState("saving");
+        setSaving(true);
         setError(null);
         try {
           await api.saveSearch(name.trim(), query, frequency);
-          setState("saved");
+          setSavedKey(key);
+          setOpen(false);
         } catch (err) {
           setError(`Could not save: ${messageOf(err)}`);
-          setState("idle");
+        } finally {
+          setSaving(false);
         }
       }}
     >
@@ -108,11 +116,7 @@ export function SaveSearch({
         </p>
       ) : null}
       <div className="flex gap-2">
-        <button
-          type="submit"
-          className="btn btn-primary btn-sm"
-          disabled={state === "saving" || !name.trim()}
-        >
+        <button type="submit" className="btn btn-primary btn-sm" disabled={saving || !name.trim()}>
           Save
         </button>
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => setOpen(false)}>

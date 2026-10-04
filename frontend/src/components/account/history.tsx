@@ -15,27 +15,30 @@ interface PageOf<T> {
   items: T[];
   total: number;
   page: number;
+  pageSize: number;
 }
 
 /** A list read a page at a time, newest first, with "Show more" for the next page. */
-function usePaged<T extends { id: number }>(load: (page: number) => Promise<PageOf<T>>) {
+export function usePaged<T extends { id: number }>(load: (page: number) => Promise<PageOf<T>>) {
   const [items, setItems] = useState<T[] | null>(null);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(1);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     load(1)
       .then((p) => {
         setItems(p.items);
         setTotal(p.total);
+        setPageSize(Math.max(p.pageSize, 1));
       })
       .catch((e: unknown) => setError(messageOf(e)));
   }, [load]);
   const more = async () => {
-    const next = await load(page + 1);
-    setPage(page + 1);
+    // The page holding the first entry not shown yet, counted from what is shown rather than
+    // from the pages read: a Remove moves every later entry up by one, so "page + 1" skipped
+    // one, and "Show more" then never went away (P1 #30). The overlap is dropped.
+    const next = await load(Math.floor((items?.length ?? 0) / pageSize) + 1);
     setTotal(next.total);
-    // Keep what is shown; skip anything that moved onto this page since the last one.
     setItems((xs) => [...(xs ?? []), ...next.items.filter((n) => !xs?.some((x) => x.id === n.id))]);
   };
   const remove = (id: number) => {

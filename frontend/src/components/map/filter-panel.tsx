@@ -62,6 +62,40 @@ export function PriceInput({
   );
 }
 
+const DISTANCES = [250, 500, 1000, 2000];
+
+/** A maximum distance; a value from the URL that is not in the list is offered as well. */
+export function DistanceSelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number | null;
+  onChange: (v: number | null) => void;
+}) {
+  const options = value === null || DISTANCES.includes(value) ? DISTANCES : [...DISTANCES, value];
+  return (
+    <label className="block">
+      <span className="text-muted">{label}</span>
+      <select
+        className={input}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
+      >
+        <option value="">Any distance</option>
+        {[...options]
+          .sort((a, b) => a - b)
+          .map((d) => (
+            <option key={d} value={d}>
+              Within {formatDistance(d)}
+            </option>
+          ))}
+      </select>
+    </label>
+  );
+}
+
 export function FilterPanel({
   filters,
   onChange,
@@ -233,9 +267,25 @@ export function FilterPanel({
             <option value="exact">Exact address only</option>
             <option value="street">Street or better</option>
             <option value="locality">Town, village or townland or better</option>
+            <option value="routing_key">Eircode area or better</option>
             <option value="county">Everything, including county only</option>
           </select>
         </label>
+        <DistanceSelect
+          label="Nearest bus, Luas or rail stop"
+          value={filters.maxStopM}
+          onChange={(v) => set("maxStopM", v)}
+        />
+        <DistanceSelect
+          label="Nearest school"
+          value={filters.maxSchoolM}
+          onChange={(v) => set("maxSchoolM", v)}
+        />
+        {filters.maxStopM !== null || filters.maxSchoolM !== null ? (
+          <p className="text-xs text-muted">
+            Straight-line distances, known only for sales placed at their house or street.
+          </p>
+        ) : null}
         <label className="flex items-start gap-2">
           <input
             type="checkbox"

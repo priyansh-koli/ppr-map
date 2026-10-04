@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 import { CONFIDENCE_LABEL, formatDate, formatEur } from "@/lib/format";
 
-import type { ListState } from "./map-explorer";
+import type { ListState } from "./list-loader";
 
 /**
  * The list view synced with the map: the same sales, in text, reachable by keyboard.

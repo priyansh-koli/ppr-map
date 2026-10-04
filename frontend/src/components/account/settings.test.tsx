@@ -53,4 +53,14 @@ describe("AccountSettings", () => {
     expect(current).toHaveAttribute("aria-invalid", "true");
     expect(calls("POST /me/password")).toBe(1);
   });
+
+  it("accepts a budget that is not a round ten thousand", async () => {
+    mockApi({ "GET /me": () => [200, ME] });
+    renderSettings();
+    const from = (await screen.findByLabelText("Budget from (€)")) as HTMLInputElement;
+    fireEvent.change(from, { target: { value: "355000" } });
+    fireEvent.change(screen.getByLabelText("Budget to (€)"), { target: { value: "412500" } });
+    expect(from.validity.stepMismatch).toBe(false);
+    expect(from.closest("form")!.checkValidity()).toBe(true);
+  });
 });

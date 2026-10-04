@@ -178,6 +178,22 @@ def test_managing_users(db: sa.Engine) -> None:
     assert actions[:2] == ["user.change", "user.change"] and "user.role.grant.cli" in actions
 
 
+def test_user_search_matches_underscores_and_percents(db: sa.Engine) -> None:
+    """ "jane_doe@" found nothing: `_` and `%` were deleted from the search (P1 #32)."""
+    boss = admin(Outbox(), db, "boss2@example.ie")
+    for email in ("jane_doe@example.ie", "janexdoe@example.ie", "100%@example.ie"):
+        signed_in(Outbox(), FakeRedis(), email)
+
+    def found(q: str) -> list[str]:
+        items = boss.get("/api/v1/admin/users", params={"q": q}).json()["items"]
+        return sorted(i["email"] for i in items)
+
+    assert found("jane_doe@") == ["jane_doe@example.ie"]  # `_` is not "any character"
+    assert found("100%") == ["100%@example.ie"]
+    assert found("%") == ["100%@example.ie"]
+    assert found("\\") == []
+
+
 def test_ingest_runs_and_queueing(db: sa.Engine, monkeypatch: pytest.MonkeyPatch) -> None:
     boss = admin(Outbox(), db)
     runs = boss.get("/api/v1/admin/ingest-runs").json()

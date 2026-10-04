@@ -69,6 +69,27 @@ describe("PlaceSearch", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
+  it("never picks a suggestion for what was typed before", async () => {
+    const CORK: Suggestion = { kind: "county", label: "Cork", detail: "County", slug: "cork" };
+    // Answers depend on the query, which mockApi's routes do not see.
+    const { fetch } = mockApi({});
+    fetch.mockImplementation(async (input: RequestInfo | URL) => {
+      const q = new URL(String(input), "http://localhost").searchParams.get("q");
+      return new Response(JSON.stringify(q === "carl" ? [CARLOW] : [CORK]), { status: 200 });
+    });
+    const chosen = vi.fn();
+    render(<PlaceSearch onSelect={chosen} />);
+    const box = screen.getByRole("combobox");
+    fireEvent.change(box, { target: { value: "carl" } });
+    await screen.findByRole("option", { name: /Carlow/ });
+    // Carlow's suggestions are still showing when "cork" is typed and Enter pressed at once.
+    fireEvent.change(box, { target: { value: "cork" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+    expect(chosen).not.toHaveBeenCalled();
+    await waitFor(() => expect(chosen).toHaveBeenCalledWith(CORK));
+    expect(chosen).toHaveBeenCalledTimes(1);
+  });
+
   it("does not ask for one letter", async () => {
     const { calls } = mockApi({ "GET /geocode/autocomplete": () => [200, []] });
     render(<PlaceSearch onSelect={() => {}} />);

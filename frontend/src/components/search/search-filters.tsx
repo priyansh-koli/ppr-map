@@ -1,41 +1,11 @@
 "use client";
 
-import { PriceInput } from "@/components/map/filter-panel";
+import { DistanceSelect, PriceInput } from "@/components/map/filter-panel";
 import { type Filters, type MinConfidence, RADII, type SaleType, type Vat } from "@/lib/filters";
 import { formatDistance } from "@/lib/format";
 
 const input = "mt-0.5 w-full px-2.5 py-1.5";
 const legend = "font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted";
-const DISTANCES = [250, 500, 1000, 2000];
-
-function DistanceSelect({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number | null;
-  onChange: (v: number | null) => void;
-}) {
-  return (
-    <label className="block">
-      <span className="text-muted">{label}</span>
-      <select
-        className={input}
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
-      >
-        <option value="">Any distance</option>
-        {DISTANCES.map((d) => (
-          <option key={d} value={d}>
-            Within {formatDistance(d)}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
 /** Every search filter the brief lists, except the places, which are chosen above. */
 export function SearchFilters({
   filters,

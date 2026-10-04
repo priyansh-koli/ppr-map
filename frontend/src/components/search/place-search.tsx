@@ -36,7 +36,13 @@ export function PlaceSearch({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  // The text the suggestions shown answer: until the next answer arrives they are for what
+  // was typed before, and Enter must not pick one of them (P1 #27).
+  const [itemsFor, setItemsFor] = useState("");
   const request = useRef<AbortController | null>(null);
+  // Enter pressed before the current text's suggestions came: take the first when they do.
+  const enterPending = useRef(false);
+  const chooseRef = useRef<(s: Suggestion) => void>(() => {});
 
   useEffect(() => {
     const q = text.trim();
@@ -53,7 +59,15 @@ export function PlaceSearch({
         .autocomplete(q, { signal: r.signal })
         .then((found) => {
           if (r.signal.aborted) return;
+          if (enterPending.current) {
+            enterPending.current = false;
+            if (found[0]) {
+              chooseRef.current(found[0]);
+              return;
+            }
+          }
           setItems(found);
+          setItemsFor(q);
           setActive(found.length ? 0 : -1);
           setStatus("idle");
         })
@@ -67,11 +81,16 @@ export function PlaceSearch({
   useEffect(() => () => request.current?.abort(), []);
 
   const choose = (s: Suggestion) => {
+    enterPending.current = false;
     onSelect(s);
     setText("");
     setItems([]);
+    setItemsFor("");
     setOpen(false);
   };
+  useEffect(() => {
+    chooseRef.current = choose;
+  });
 
   const listId = `${id}-list`;
   const optionId = (i: number) => `${id}-opt-${i}`;
@@ -95,6 +114,7 @@ export function PlaceSearch({
         value={text}
         onChange={(e) => {
           setText(e.target.value);
+          enterPending.current = false;
           setOpen(true);
           if (e.target.value.trim().length < 2) {
             setItems([]);
@@ -112,12 +132,13 @@ export function PlaceSearch({
             e.preventDefault();
             setActive((a) => (a <= 0 ? items.length - 1 : a - 1));
           } else if (e.key === "Enter") {
+            if (text.trim().length < 2) return;
+            e.preventDefault();
             const pick = items[active >= 0 ? active : 0];
-            if (pick) {
-              e.preventDefault();
-              choose(pick);
-            }
+            if (itemsFor === text.trim() && pick) choose(pick);
+            else if (itemsFor !== text.trim()) enterPending.current = true;
           } else if (e.key === "Escape") {
+            enterPending.current = false;
             setOpen(false);
           }
         }}

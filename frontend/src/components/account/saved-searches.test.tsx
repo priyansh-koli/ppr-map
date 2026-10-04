@@ -88,4 +88,30 @@ describe("SaveSearch", () => {
       alertFrequency: "on_data_update",
     });
   });
+
+  it("offers to save the next search after one is saved", async () => {
+    const { calls } = mockApi({
+      "GET /me": () => [200, ME],
+      "POST /me/saved-searches": () => [201, SAVED],
+    });
+    const view = (query: Record<string, string>, name: string) => (
+      <SessionProvider>
+        <SaveSearch query={query} suggestedName={name} geolocated={false} />
+      </SessionProvider>
+    );
+    const { rerender } = render(view({ county: "carlow", priceMax: "300000" }, "Carlow"));
+    fireEvent.click(await screen.findByRole("button", { name: "Save this search" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("Saved.")).toBeInTheDocument();
+    // The same filters in another order are the same search.
+    rerender(view({ priceMax: "300000", county: "carlow" }, "Carlow"));
+    expect(screen.getByText("Saved.")).toBeInTheDocument();
+    rerender(view({ county: "kerry" }, "Kerry"));
+    expect(screen.queryByText("Saved.")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Save this search" }));
+    expect(screen.getByLabelText("Name")).toHaveValue("Kerry");
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("Saved.")).toBeInTheDocument();
+    expect(calls("POST /me/saved-searches")).toBe(2);
+  });
 });

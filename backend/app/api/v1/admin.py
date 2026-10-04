@@ -684,7 +684,10 @@ async def users(
     page_size: PageSize = 50,
 ) -> Page[AdminUser]:
     where = "(CAST(:q AS text) IS NULL OR u.email ILIKE :like OR u.full_name ILIKE :like)"
-    like = f"%{q.replace('%', '').replace('_', '')}%" if q else None
+    # `_` and `%` are matched as themselves: deleting them made "jane_doe@" find nothing
+    # (P1 #32). Backslash is ILIKE's escape character.
+    escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") if q else None
+    like = f"%{escaped}%" if escaped else None
     rows = (
         await db.execute(
             sa.text(USERS.format(where=where)), {"q": q, "like": like, **_offset(page, page_size)}

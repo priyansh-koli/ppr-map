@@ -10,7 +10,7 @@ import type {
 } from "maplibre-gl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { api, ApiError, STATIC_PREVIEW, type PropertyList } from "@/lib/api/client";
+import { api, ApiError, STATIC_PREVIEW } from "@/lib/api/client";
 import { DEFAULT_FILTERS, type Filters, filtersToParams, parseFilters } from "@/lib/filters";
 
 import { basemapStyle, IRELAND_BOUNDS, IRELAND_CENTER, TERRAIN } from "./basemap";
@@ -29,6 +29,7 @@ import {
   tileUrl,
 } from "./layers";
 import { Legend } from "./legend";
+import { listLoader, type ListState } from "./list-loader";
 import { SalesList } from "./sales-list";
 
 const LIST_ZOOM = 12;
@@ -38,17 +39,8 @@ const HOVER_DELAY_MS = 150;
 // Pixels round the pointer that count as on a marker: small dots stay easy to hit.
 const HOVER_SLOP = 3;
 const CLICK_SLOP = 6;
-// The API's answer for a box too large to list (/api/v1/properties).
-const ZOOM_IN = "Zoom in to list sales";
-
 /** The card, and the point on the map it belongs to (it follows that point as the map moves). */
 type Card = { content: CardContent; anchor?: [number, number]; pinned: boolean } | null;
-export type ListState =
-  | { status: "zoom" }
-  | { status: "loading" }
-  | { status: "error"; message: string }
-  | { status: "ok"; data: PropertyList };
-
 type View = { center: [number, number]; zoom: number; pitch: number; bearing: number };
 
 function readView(): View {
@@ -137,7 +129,7 @@ export function MapExplorer() {
   const pinned = useRef(false);
   const anchor = useRef<[number, number] | undefined>(undefined);
   const version = useRef("");
-  const listRequest = useRef<AbortController | null>(null);
+  const [lists] = useState(() => listLoader((query, init) => api.list(query, init), setList));
   const spotRequest = useRef<AbortController | null>(null);
   // Map event handlers are registered once; they read the current filters from here.
   const state = useRef({ filters, showHexes });
@@ -254,7 +246,7 @@ export function MapExplorer() {
     const map = mapRef.current;
     if (!map) return;
     if (map.getZoom() < LIST_ZOOM) {
-      setList({ status: "zoom" });
+      lists.zoomedOut();
       return;
     }
     const b = map.getBounds();
@@ -264,25 +256,8 @@ export function MapExplorer() {
       [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map((v) => v.toFixed(5)).join(","),
     );
     query.set("pageSize", "50");
-    // Only the latest view counts: a slower answer for where the map was must not replace it.
-    listRequest.current?.abort();
-    const request = new AbortController();
-    listRequest.current = request;
-    setList({ status: "loading" });
-    api
-      .list(query, { signal: request.signal })
-      .then((data) => {
-        if (!request.signal.aborted) setList({ status: "ok", data });
-      })
-      .catch((e: unknown) => {
-        if (request.signal.aborted) return;
-        setList(
-          e instanceof ApiError && e.status === 422 && e.detail === ZOOM_IN
-            ? { status: "zoom" }
-            : { status: "error", message: "The list could not be loaded." },
-        );
-      });
-  }, []);
+    lists.load(query);
+  }, [lists]);
 
   // Map set-up, once. MapLibre and PMTiles are loaded in the browser only.
   useEffect(() => {
@@ -437,13 +412,13 @@ export function MapExplorer() {
     return () => {
       cancelled = true;
       clearTimeout(hoverTimer.current);
-      listRequest.current?.abort();
+      lists.stop();
       spotRequest.current?.abort();
       map?.remove();
       mapRef.current = null;
       import("maplibre-gl").then((m) => m.removeProtocol("pmtiles")).catch(() => {});
     };
-  }, [openProperty, openSpot, closeCard, highlight, showCard, refreshList]);
+  }, [openProperty, openSpot, closeCard, highlight, showCard, refreshList, lists]);
 
   // Filters and layer choice: new tile URLs, the list, and the address bar.
   useEffect(() => {

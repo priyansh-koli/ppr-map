@@ -58,6 +58,47 @@ function runs(points: SeriesPoint[], x: (iso: string) => number, y: (v: number) 
   return out.filter((r) => r.points.length > 1);
 }
 
+const STEP_MONTHS: Record<PeriodKind, number> = { month: 1, rolling_12m: 1, quarter: 3, year: 12 };
+
+function addMonths(iso: string, months: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Every period from the first to the last, the area's and Ireland's points placed on it. A
+ * period with no sales has no row, and plotting the rows by index squeezed it out and drew
+ * the line straight across it; on the axis it is a gap (P1 #31).
+ */
+export function onAxis(kind: PeriodKind, area: SeriesPoint[], national: SeriesPoint[]) {
+  const starts = [...area, ...national].map((p) => p.periodStart).sort();
+  const axis: string[] = [];
+  if (starts.length) {
+    const last = starts.at(-1)!;
+    for (let iso = starts[0]!; iso <= last && axis.length < 1000;) {
+      axis.push(iso);
+      iso = addMonths(iso, STEP_MONTHS[kind]);
+    }
+  }
+  const place = (series: SeriesPoint[]): SeriesPoint[] => {
+    const by = new Map(series.map((p) => [p.periodStart, p]));
+    return axis.map(
+      (iso) =>
+        by.get(iso) ?? {
+          periodStart: iso,
+          n: 0,
+          median: null,
+          p25: null,
+          p75: null,
+          provisional: false,
+          suppressed: false,
+        },
+    );
+  };
+  return { axis, area: place(area), national: place(national) };
+}
+
 function niceTicks(lo: number, hi: number): number[] {
   const step =
     [25_000, 50_000, 100_000, 200_000, 250_000, 500_000].find((s) => (hi - lo) / s <= 5) ??
@@ -112,16 +153,17 @@ function Legend({ name }: { name: string }) {
 function MedianChart({ data }: { data: AreaStats }) {
   const [hover, setHover] = useState<number | null>(null);
   const svg = useRef<SVGSVGElement>(null);
-  const points = data.points;
-  const national = useMemo(
-    () => new Map(data.national.map((p) => [p.periodStart, p])),
-    [data.national],
+  const placed = useMemo(
+    () => onAxis(data.periodKind, data.points, data.national),
+    [data.periodKind, data.points, data.national],
   );
-  const values = [
-    ...points.map((p) => p.median),
-    ...points.map((p) => national.get(p.periodStart)?.median),
-  ].filter((v): v is number => typeof v === "number");
-  if (points.length < 2 || values.length < 2) {
+  const points = placed.area;
+  const nationalPoints = placed.national;
+  const values = [...points, ...nationalPoints]
+    .map((p) => p.median)
+    .filter((v): v is number => typeof v === "number");
+  // Ireland's line alone is no trend for this area: every one of its periods was suppressed.
+  if (points.length < 2 || !points.some((p) => p.median != null)) {
     return (
       <p className="text-sm text-muted">
         Too few sales in {data.area.name} for a price trend: periods with fewer than 5 sales are not
@@ -133,13 +175,10 @@ function MedianChart({ data }: { data: AreaStats }) {
   const hi = Math.max(...values) * 1.05;
   const iw = W - PAD.left - PAD.right;
   const x = (iso: string) => {
-    const i = points.findIndex((p) => p.periodStart === iso);
+    const i = placed.axis.indexOf(iso);
     return PAD.left + (points.length === 1 ? iw / 2 : (i / (points.length - 1)) * iw);
   };
   const y = (v: number) => PAD.top + (1 - (v - lo) / (hi - lo)) * (H - PAD.top - PAD.bottom);
-  const nationalPoints = points.map(
-    (p) => national.get(p.periodStart) ?? { ...p, median: null, n: 0, suppressed: true },
-  );
   const lastArea = [...points].reverse().find((p) => p.median != null);
   const lastIreland = [...nationalPoints].reverse().find((p) => p.median != null);
   const labels = [
@@ -157,7 +196,7 @@ function MedianChart({ data }: { data: AreaStats }) {
     setHover(Math.min(points.length - 1, Math.max(0, i)));
   };
   const hp = hover !== null ? points[hover] : undefined;
-  const hn = hp ? national.get(hp.periodStart) : undefined;
+  const hn = hover !== null ? nationalPoints[hover] : undefined;
   const first = points[0]!;
   const final = points.at(-1)!;
   return (
@@ -275,7 +314,7 @@ function MedianChart({ data }: { data: AreaStats }) {
               aria-hidden="true"
             />
             <strong className="text-ink">
-              {hp.median != null ? formatEur(hp.median) : "fewer than 5 sales"}
+              {hp.median != null ? formatEur(hp.median) : hp.n ? "fewer than 5 sales" : "no sales"}
             </strong>
             <span className="text-muted">
               {data.area.name}, {hp.n} sales
