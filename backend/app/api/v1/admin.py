@@ -27,6 +27,7 @@ from app.schemas.base import ApiModel
 from app.schemas.search import Page
 from app.services import audit
 from app.services import email as mail
+from app.services.accounts import keep_an_admin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -723,7 +724,7 @@ async def change_user(
         await confirm_password(db, cache, user.id, body.password)
         roles = sorted({*body.roles, Role.USER.value})  # everyone keeps the user role
         if "admin" in before.roles and "admin" not in roles:
-            await _keep_an_admin(db, user_id)
+            await keep_an_admin(db, user_id)
         await db.execute(sa.text("DELETE FROM user_role WHERE user_id = :u"), {"u": user_id})
         await db.execute(
             sa.text(
@@ -737,7 +738,7 @@ async def change_user(
         if user_id == user.id:
             raise HTTPException(409, "You cannot deactivate your own account")
         if not body.is_active and "admin" in before.roles:
-            await _keep_an_admin(db, user_id)
+            await keep_an_admin(db, user_id)
         await db.execute(
             sa.text("UPDATE app_user SET is_active = :a, updated_at = now() WHERE id = :u"),
             {"a": body.is_active, "u": user_id},
@@ -765,21 +766,6 @@ async def change_user(
         )
     ).one()
     return _user(row)
-
-
-async def _keep_an_admin(db: AsyncSession, losing: uuid.UUID) -> None:
-    others: int = (
-        await db.execute(
-            sa.text(
-                "SELECT count(*) FROM user_role ur JOIN role r ON r.id = ur.role_id "
-                "JOIN app_user u ON u.id = ur.user_id WHERE r.name = 'admin' "
-                "AND u.is_active AND u.deleted_at IS NULL AND u.id <> :u"
-            ),
-            {"u": losing},
-        )
-    ).scalar_one()
-    if not others:
-        raise HTTPException(409, "There must always be at least one active admin")
 
 
 # --- audit log ----------------------------------------------------------------------------

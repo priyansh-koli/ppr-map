@@ -270,3 +270,29 @@ def test_db_roles_lets_the_services_sign_in(
                 {"login": "LOGIN" if saved.rolcanlogin else "NOLOGIN", "p": saved.rolpassword},
             ).scalar_one()
             conn.connection.cursor().execute(restore)
+
+
+@pytest.mark.db
+def test_audit_log_cannot_be_truncated(migrated_db: sa.Engine) -> None:
+    """P2 #42: the row trigger never fires for TRUNCATE, so the owner could empty the log."""
+    with pytest.raises(sa.exc.DBAPIError, match="append-only"), migrated_db.begin() as conn:
+        conn.execute(sa.text("TRUNCATE audit_log"))
+    with pytest.raises(sa.exc.DBAPIError, match="append-only"), migrated_db.begin() as conn:
+        conn.execute(sa.text("TRUNCATE app_user CASCADE"))
+
+
+@pytest.mark.db
+def test_references_to_replaced_pois_are_indexed(migrated_db: sa.Engine) -> None:
+    """Enrich deletes every POI each run; an unindexed reference to `poi` makes each delete
+    scan the referencing table (migration 0019: a dev run was still deleting after 30 min)."""
+    unindexed = """
+    SELECT c.conrelid::regclass::text || '.' || a.attname
+    FROM pg_constraint c
+    JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = c.conkey[1]
+    WHERE c.contype = 'f' AND c.confrelid = 'poi'::regclass
+      AND NOT EXISTS (
+          SELECT 1 FROM pg_index i
+          WHERE i.indrelid = c.conrelid AND i.indkey[0] = c.conkey[1])
+    """
+    with migrated_db.connect() as conn:
+        assert conn.execute(sa.text(unindexed)).scalars().all() == []

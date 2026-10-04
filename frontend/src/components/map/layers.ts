@@ -9,7 +9,7 @@ import { bandExpression, PRICE_BANDS, SUPPRESSED_COLOR } from "@/lib/price-bands
 
 // Points are drawn from z14 (migrations 0004 and 0006); below that, cells of 32 px.
 export const POINT_ZOOM = 14;
-export const SALE_LAYERS = ["cells", "stacks", "stack-counts", "sales"] as const;
+const SALE_LAYERS = ["cells", "stacks", "stack-counts", "sales"] as const;
 export const INTERACTIVE_LAYERS = ["sales", "stacks", "cells"];
 
 const INK = "#16181d";
@@ -59,7 +59,7 @@ const COUNT_ON_BAND: ExpressionSpecification = [
  * The first basemap label layer. Sales are drawn beneath it, so place and street names stay
  * readable over them.
  */
-export function firstLabelLayer(map: MapLibreMap): string | undefined {
+function firstLabelLayer(map: MapLibreMap): string | undefined {
   return map.getStyle().layers.find((l) => l.type === "symbol")?.id;
 }
 

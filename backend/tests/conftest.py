@@ -4,6 +4,9 @@ from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 from typing import Any
 
+# Settings default to production (P2 #43); without a .env, as in CI, tests run as "test".
+os.environ.setdefault("ENVIRONMENT", "test")
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -142,6 +145,9 @@ def _build_carlow(engine: Any) -> None:
     from ppr_pipeline.ppr.ingest import ingest_ppr
 
     with engine.begin() as conn:
+        # The cascade reaches audit_log, whose trigger refuses TRUNCATE (migration 0018);
+        # replica mode skips triggers for this one transaction (a test database only).
+        conn.execute(sa.text("SET LOCAL session_replication_role = replica"))
         conn.execute(
             sa.text(
                 "TRUNCATE property, sale, ingest_run, area, poi, app_user RESTART IDENTITY CASCADE"

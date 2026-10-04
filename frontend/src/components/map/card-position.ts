@@ -1,5 +1,5 @@
 export const CARD_W = 300;
-export const CARD_H = 340;
+const CARD_H = 340;
 const GAP = 16;
 const EDGE = 8;
 

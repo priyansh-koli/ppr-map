@@ -29,6 +29,8 @@ jobs:
           --health-interval 5s --health-retries 20
     env:
       TEST_DATABASE_URL: postgresql+psycopg://ci:ci@localhost:5432/pprmap_test
+      # Settings default to production, which needs real secrets (P2 #43).
+      ENVIRONMENT: test
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7

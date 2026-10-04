@@ -9,7 +9,14 @@ import pytest
 import sqlalchemy as sa
 from app.models.enums import AreaKind
 
-from ppr_pipeline.boundaries import LAYERS, area_name, area_slug, load_boundaries, read_layer
+from ppr_pipeline.boundaries import (
+    LAYERS,
+    area_name,
+    area_slug,
+    load_boundaries,
+    read_layer,
+    slugify,
+)
 from ppr_pipeline.sources import load_sources
 from tests.conftest import FIXTURES
 
@@ -32,6 +39,12 @@ def test_slugs_are_stable_and_distinguish_same_names() -> None:
     b = area_slug(AreaKind.TOWNLAND, "0000aaaa-f409-4728-9d0b-f62916789acb", "Barnadarrig")
     assert a.startswith("townland-barnadarrig-") and a != b
     assert a == area_slug(AreaKind.TOWNLAND, "4e53b5b4-f409-4728-9d0b-f62916789acb", "Barnadarrig")
+
+
+def test_slugs_fold_accents() -> None:
+    """P2 #48: "Dún Laoghaire" became "d-n-laoghaire", in a permanent URL."""
+    assert area_slug(AreaKind.SETTLEMENT, "x", "An Spidéal").startswith("an-spideal-")
+    assert slugify("Dún Laoghaire-Rathdown") == "dun-laoghaire-rathdown"
 
 
 def test_every_layer_has_a_pinned_url() -> None:

@@ -4,12 +4,16 @@ Three forms come out of one raw address:
 - `display`: the filer's text, cleaned (junk parts dropped, ALL CAPS turned into title case).
   Abbreviations are kept as written, so a wrong expansion is never shown to users.
 - `normalised`: lowercase with abbreviations expanded; used for search and fuzzy matching.
-- `key`: `normalised` without the unit and the trailing county, alphanumerics only. Together
-  with the county and the unit it is the exact dedupe key for a Property (D-001, R-11).
+- `key`: `normalised` without the unit and the trailing county, alphanumerics only, accents
+  folded ("Seán" keys like "Sean"). Two numbers keep a hyphen between them, so "1 25" and
+  "125" stay apart. Together with the county and the unit it is the exact dedupe key for a
+  Property (D-001, R-11).
 """
 
 import re
+import unicodedata
 from dataclasses import dataclass
+from itertools import pairwise
 
 from app.models.enums import County
 
@@ -55,6 +59,13 @@ STREET_QUALIFIERS = {"lower", "upper", "north", "south", "east", "west", "little
 UNIT_WORDS = {"apartment", "flat", "unit", "suite"}
 UNIT_ID = re.compile(r"^[a-z]?\d+[a-z]?$|^[a-z]$")
 HOUSE_NUMBER = re.compile(r"^\d+[a-z]?(?:-\d+[a-z]?)?$")
+
+
+def st_is_saint(prev: str | None, nxt: str | None) -> bool:
+    """`st` between the words `prev` and `nxt` (lowercase, None at the ends)."""
+    starts_name = prev is None or bool(HOUSE_NUMBER.match(prev))
+    return starts_name and nxt is not None and nxt not in STREET_QUALIFIERS
+
 
 # Valid Dublin postal districts (D6W is the only lettered one).
 DUBLIN_DISTRICTS = {str(n) for n in [*range(1, 19), 20, 22, 24]} | {"6w"}
@@ -132,9 +143,7 @@ def _expand_part(part: str) -> list[str]:
         if tok == "county" and nxt in COUNTIES:
             out.append("co")  # "County Cork" and "Co. Cork" compare equal
         elif tok == "st":
-            starts_name = prev is None or HOUSE_NUMBER.match(prev)
-            saint = starts_name and nxt is not None and nxt not in STREET_QUALIFIERS
-            out.append("saint" if saint else "street")
+            out.append("saint" if st_is_saint(prev, nxt) else "street")
         else:
             out.append(ABBREVIATIONS.get(tok, tok))
     return out
@@ -158,6 +167,22 @@ def _split_unit(parts: list[list[str]]) -> tuple[str | None, list[list[str]]]:
     return " ".join(unit), remaining
 
 
+def fold(text: str) -> str:
+    """Lowercase, no accents: "Dún Laoghaire" -> "dun laoghaire"."""
+    decomposed = unicodedata.normalize("NFKD", text)
+    return "".join(c for c in decomposed if not unicodedata.combining(c)).lower()
+
+
+def address_key(parts: list[list[str]]) -> str:
+    """Alphanumerics only, but a hyphen between two numbers: "1 25" is not "125" (P2 #36),
+    nor is the range "1-25". Accents are folded first, so a fada is never dropped (#37)."""
+    words = re.findall(r"[a-z0-9]+", fold(" ".join(" ".join(p) for p in parts)))
+    out = words[:1]
+    for prev, word in pairwise(words):
+        out.append(("-" if prev[-1].isdigit() and word[0].isdigit() else "") + word)
+    return "".join(out)
+
+
 def _strip_county(parts: list[list[str]], county: str) -> list[list[str]]:
     if not parts:
         return parts
@@ -179,7 +204,7 @@ def normalise_address(raw: str, county: str) -> Address:
 
     unit, rest = _split_unit(expanded)
     rest = _strip_county(rest, county)
-    key = re.sub(r"[^a-z0-9]", "", " ".join(" ".join(p) for p in rest))
+    key = address_key(rest)
 
     house_number = None
     if rest and rest[0] and HOUSE_NUMBER.match(rest[0][0]):

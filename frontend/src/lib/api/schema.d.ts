@@ -522,6 +522,7 @@ export interface paths {
         /**
          * Delete Me
          * @description Close the account now; its data is purged after 30 days (`app.cli purge-deleted`).
+         *     The last active admin cannot (409): someone must be able to run the site.
          */
         delete: operations["delete_me_api_v1_me_delete"];
         options?: never;
@@ -690,8 +691,9 @@ export interface paths {
         head?: never;
         /**
          * Update Saved Search
-         * @description Rename, change the filters or the alert. Changing the filters starts its alerts
-         *     from the register as it is now.
+         * @description Rename, change the filters or the alert. Changing the filters, or switching an alert
+         *     on that was off, starts its alerts from the register as it is now: an alert never sends
+         *     the sales filed while it was off (P2 #38).
          */
         patch: operations["update_saved_search_api_v1_me_saved_searches__sid__patch"];
         trace?: never;
@@ -1452,6 +1454,18 @@ export interface components {
             /** Toeur */
             toEur: number | null;
         };
+        /** EarlierSale */
+        EarlierSale: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** @description Absent only in hover cards built before the flags were added */
+            flags?: components["schemas"]["SaleFlags"] | null;
+            /** Priceeur */
+            priceEur: number;
+        };
         /** EmailIn */
         EmailIn: {
             /**
@@ -2063,7 +2077,7 @@ export interface components {
             id: string;
             latestSale?: components["schemas"]["LatestSale"] | null;
             /** Previoussales */
-            previousSales?: components["schemas"]["SaleBrief"][];
+            previousSales?: components["schemas"]["EarlierSale"][];
             vicinity: components["schemas"]["Vicinity"];
         };
         /** QueueItem */

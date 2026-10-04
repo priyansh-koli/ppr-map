@@ -3,10 +3,10 @@
 from datetime import date
 
 from fastapi import APIRouter, HTTPException
-from pydantic import ValidationError
 
 from app.schemas.base import ApiModel
 from app.services import sources as s
+from app.services.config_files import ConfigUnavailable
 
 router = APIRouter(tags=["meta"])
 
@@ -43,7 +43,7 @@ def sources() -> Sources:
     """Each data source, its licence and attribution, and the ones we will not use."""
     try:
         all_ = s.load_sources()
-    except (OSError, ValidationError) as exc:
+    except ConfigUnavailable as exc:
         raise HTTPException(503, "The list of sources is not available") from exc
 
     def out(key: str, src: s.Source) -> SourceOut:

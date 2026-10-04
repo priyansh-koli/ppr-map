@@ -7,6 +7,9 @@ services:
     image: postgis/postgis:16-3.5
     # The official image is amd64-only; Apple Silicon runs it under Rosetta (D-029).
     platform: linux/amd64
+    # Docker's 64 MB /dev/shm is too small for parallel workers: VACUUM of a table with
+    # several indexes failed with "No space left on device" (D-059).
+    shm_size: 512mb
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-pprmap}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}

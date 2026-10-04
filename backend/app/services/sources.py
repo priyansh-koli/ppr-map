@@ -5,12 +5,10 @@ The pipeline validates the whole file (ppr_pipeline.sources); this reads only wh
 """
 
 from datetime import date
-from functools import lru_cache
 
-import yaml
 from pydantic import BaseModel, ConfigDict
 
-from app.config import get_settings
+from app.services.config_files import ConfigFile
 
 
 class Source(BaseModel):
@@ -32,7 +30,4 @@ class SourcesFile(BaseModel):
     sources: dict[str, Source]
 
 
-@lru_cache
-def load_sources() -> dict[str, Source]:
-    path = get_settings().ppr_config_dir / "sources.yaml"
-    return SourcesFile.model_validate(yaml.safe_load(path.read_text(encoding="utf-8"))).sources
+load_sources = ConfigFile("sources.yaml", lambda data: SourcesFile.model_validate(data).sources)

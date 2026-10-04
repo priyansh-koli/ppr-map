@@ -98,7 +98,7 @@ Summary shape (draft):
   "confidence": "exact",
   "latestSale": {"date": "2025-03-14", "priceEur": 465000, "isNew": false,
                   "flags": {"notFullMarketPrice": false, "vatExclusive": false, "bulk": false}},
-  "previousSales": [{"date": "2014-06-02", "priceEur": 240000}],
+  "previousSales": [{"date": "2014-06-02", "priceEur": 240000, "flags": {"notFullMarketPrice": false, "vatExclusive": false, "bulk": false}}],
   "vicinity": {
     "nearestStop": {"value": {"name": "…", "type": "bus_stop", "distanceM": 180}, "source": "NTA GTFS", "asOf": "2026-09-20"},
     "nearestPrimarySchool": {"value": {"name": "…", "distanceM": 650}, "source": "Dept of Education", "asOf": "…"},
@@ -153,7 +153,7 @@ The property page's sales carry `vatEstimates` for VAT-exclusive prices (D-015):
 | GET | `/admin/geocode/queue?kind=conflict|low|locality|locked&county=&page=` | properties to check, most recently sold first; `conflict` is a precise point more than 25 km from its routing key's median (D-035) |
 | PUT | `/admin/properties/{id}/geocode` | `{lat, lng, confidence: exact|street|locality, note}` places a property by hand, re-joins its areas, locks it against later geocoding runs, and updates its hover card; says whether the point is in the county it was filed under |
 | GET/PATCH | `/admin/removal-requests?status=open|…` · `/admin/removal-requests/{id}` | `{status: in_review | approved | rejected, decisionNote}`; approving "stop showing" hides the property at once; a decided request cannot be changed; the requester is emailed the outcome |
-| GET/PATCH | `/admin/users?q=` · `/admin/users/{id}` | `{isActive?, roles?, password}`: role changes need the admin's own password; everyone keeps `user`; nobody can deactivate themselves; the last active admin cannot lose the role; deactivating signs the account out |
+| GET/PATCH | `/admin/users?q=` · `/admin/users/{id}` | `{isActive?, roles?, password}`: role changes need the admin's own password; everyone keeps `user`; nobody can deactivate themselves; the last active admin cannot lose the role or close their own account (`DELETE /me`, 409); deactivating signs the account out |
 | GET | `/admin/audit-log?actor=&targetKind=&target=` | newest first |
 
 Merging and splitting properties (dedupe corrections) are not built yet.

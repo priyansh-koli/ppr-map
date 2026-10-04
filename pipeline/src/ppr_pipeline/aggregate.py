@@ -1,7 +1,9 @@
 """Aggregates rebuilt after each ingest or geocode run (docs/ARCHITECTURE.md, Data flow step 9).
 
 - `area_stats`: price statistics per area and period, from market sales only (not "not full
-  market price", not in a bulk group, not a possible duplicate filing, not withdrawn).
+  market price", not in a bulk group, not a possible duplicate filing, not withdrawn). Sales
+  of a property hidden on request still count: the register is public, and leaving them out
+  would bend the figures (D-052).
 - `price_hex`: median price per H3 cell (r8, and its r7 and r6 parents) over the last 12
   and 36 months, from exact and street points only.
 - `property_summary`: the hover-card payload, one JSON row per property.
@@ -48,7 +50,7 @@ JOIN property p ON p.id = s.property_id
 JOIN area c ON c.kind = 'county' AND c.code = p.county::text
 JOIN area ie ON ie.kind = 'country' AND ie.code = 'IE'
 WHERE s.withdrawn_at IS NULL AND NOT s.not_full_market_price AND s.bulk_group_id IS NULL
-  AND NOT s.is_possible_duplicate AND NOT p.is_suppressed
+  AND NOT s.is_possible_duplicate
 """
 
 # One row per (sale, area, segment): every sale counts in "all" and in new or second-hand.
@@ -227,7 +229,8 @@ def price_hexes(conn: sa.Connection, max_date: date) -> int:
 
 # The area line uses the most local area with unsuppressed 12-month stats: the settlement
 # (exact, street and locality points), else the county. Vicinity values exist only for exact
-# and street points (enrich/vicinity.py).
+# and street points (enrich/vicinity.py). A repeat filing of a sale is not a sale of its own,
+# and earlier sales carry their flags like the latest one (P2 #46).
 SUMMARIES = """
 INSERT INTO property_summary (property_id, payload, data_version, computed_at)
 SELECT p.id, jsonb_strip_nulls(jsonb_build_object(
@@ -241,13 +244,20 @@ SELECT p.id, jsonb_strip_nulls(jsonb_build_object(
                 'notFullMarketPrice', s.not_full_market_price,
                 'vatExclusive', s.vat_exclusive,
                 'bulk', s.bulk_group_id IS NOT NULL))
-        FROM sale s WHERE s.property_id = p.id AND s.withdrawn_at IS NULL
+        FROM sale s
+        WHERE s.property_id = p.id AND s.withdrawn_at IS NULL AND NOT s.is_possible_duplicate
         ORDER BY s.sale_date DESC, s.id DESC LIMIT 1),
     'previousSales', (
-        SELECT coalesce(jsonb_agg(jsonb_build_object('date', x.sale_date, 'priceEur', x.price_eur)
-                                  ORDER BY x.sale_date DESC), '[]'::jsonb)
-        FROM (SELECT s.sale_date, s.price_eur FROM sale s
+        SELECT coalesce(jsonb_agg(x.sale ORDER BY x.sale_date DESC, x.id DESC), '[]'::jsonb)
+        FROM (SELECT s.sale_date, s.id, jsonb_build_object(
+                  'date', s.sale_date, 'priceEur', s.price_eur,
+                  'flags', jsonb_build_object(
+                      'notFullMarketPrice', s.not_full_market_price,
+                      'vatExclusive', s.vat_exclusive,
+                      'bulk', s.bulk_group_id IS NOT NULL)) AS sale
+              FROM sale s
               WHERE s.property_id = p.id AND s.withdrawn_at IS NULL
+                AND NOT s.is_possible_duplicate
               ORDER BY s.sale_date DESC, s.id DESC OFFSET 1) x),
     'area', (
         SELECT jsonb_build_object(

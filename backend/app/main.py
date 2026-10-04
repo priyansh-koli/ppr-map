@@ -8,6 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1 import router as v1_router
 from app.auth.csrf import CsrfMiddleware
+from app.logs import keep_access_log_private
 from app.schemas.base import Problem
 
 API_PREFIX = "/api/v1"
@@ -49,6 +50,7 @@ async def validation_exception_handler(_: Request, exc: Exception) -> JSONRespon
 
 
 def create_app() -> FastAPI:
+    keep_access_log_private()
     app = FastAPI(
         title="PPR Map API",
         version="0.1.0",

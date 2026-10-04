@@ -28,7 +28,7 @@ from app.schemas.base import ApiModel, Money
 from app.schemas.properties import PropertySummary
 from app.schemas.search import Page
 from app.services import email as mail
-from app.services.accounts import export, load_me
+from app.services.accounts import export, keep_an_admin, load_me
 
 router = APIRouter(prefix="/me", tags=["me"])
 
@@ -170,8 +170,10 @@ async def change_password(
 
 @router.delete("", status_code=204)
 async def delete_me(body: PasswordIn, user: User, response: Response, db: Db, cache: Cache) -> None:
-    """Close the account now; its data is purged after 30 days (`app.cli purge-deleted`)."""
+    """Close the account now; its data is purged after 30 days (`app.cli purge-deleted`).
+    The last active admin cannot (409): someone must be able to run the site."""
     await confirm_password(db, cache, user.id, body.password)
+    await keep_an_admin(db, user.id)
     await db.execute(
         sa.text(
             "UPDATE app_user SET deleted_at = now(), is_active = false, updated_at = now() "

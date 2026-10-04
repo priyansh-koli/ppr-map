@@ -31,12 +31,12 @@ import sqlalchemy as sa
 from app.models.data import IngestRun
 from app.models.enums import GeocodeConfidence, IngestKind, IngestStatus
 
+from ppr_pipeline.address import fold
 from ppr_pipeline.geocode import local
 from ppr_pipeline.geocode.gazetteer import load_index
 from ppr_pipeline.geocode.rules import (
     RESIDENTIAL_BUILDINGS,
     Candidate,
-    fold,
     km_between,
     ladder,
     name_tokens,

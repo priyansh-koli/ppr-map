@@ -20,6 +20,7 @@ import sqlalchemy as sa
 from app.models.data import IngestRun
 from app.models.enums import AreaKind, County, IngestKind, IngestStatus
 
+from ppr_pipeline.address import fold
 from ppr_pipeline.ppr.ingest import USER_AGENT
 from ppr_pipeline.sources import Source
 
@@ -104,7 +105,8 @@ def area_name(text: str) -> str:
 
 
 def slugify(text: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    """ "Dún Laoghaire" -> "dun-laoghaire": accents are folded, never dropped (P2 #48)."""
+    return re.sub(r"[^a-z0-9]+", "-", fold(text)).strip("-")
 
 
 def gdb_path(zip_path: Path) -> str:

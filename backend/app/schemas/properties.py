@@ -161,6 +161,12 @@ class SaleBrief(ApiModel):
     price_eur: Money
 
 
+class EarlierSale(SaleBrief):
+    flags: SaleFlags | None = Field(
+        None, description="Absent only in hover cards built before the flags were added"
+    )
+
+
 class AreaLine(ApiModel):
     name: str
     kind: str
@@ -209,7 +215,7 @@ class PropertySummary(ApiModel):
     address: str
     confidence: GeocodeConfidence
     latest_sale: LatestSale | None = None
-    previous_sales: list[SaleBrief] = Field(default_factory=list)
+    previous_sales: list[EarlierSale] = Field(default_factory=list)
     area: AreaLine | None = None
     vicinity: Vicinity
     data_version: str

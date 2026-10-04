@@ -78,7 +78,7 @@ export const COUNTIES = [
   "wicklow",
 ] as const;
 
-export const SORTS: Sort[] = ["-date", "date", "-price", "price", "-change", "change"];
+const SORTS: Sort[] = ["-date", "date", "-price", "price", "-change", "change"];
 export const RADII = [250, 500, 1000, 2000, 5000, 10000, 20000];
 
 const TYPES: SaleType[] = ["any", "new", "second_hand"];
@@ -90,7 +90,7 @@ const SLUG = /^[a-z0-9_-]{1,80}$/;
 const NEAR = /^\d{2}(\.\d{1,7})?,-\d{1,2}(\.\d{1,7})?$/;
 
 /** "2025-02-30" has the right shape but is not a day. */
-export function isCalendarDate(v: string): boolean {
+function isCalendarDate(v: string): boolean {
   if (!ISO_DATE.test(v)) return false;
   const d = new Date(`${v}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;

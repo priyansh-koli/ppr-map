@@ -108,7 +108,9 @@ def check_unsubscribe_token(token: str) -> uuid.UUID | None:
         parsed = uuid.UUID(sid)
     except ValueError:
         return None
-    return parsed if hmac.compare_digest(unsubscribe_token(parsed), token) else None
+    # Bytes: compare_digest raises on a str with non-ASCII characters (P2 #40).
+    good = hmac.compare_digest(unsubscribe_token(parsed).encode(), token.encode())
+    return parsed if good else None
 
 
 def parse_query(query: dict[str, str]) -> tuple[SalesFilter, str]:
@@ -196,7 +198,7 @@ async def send_alerts(session: AsyncSession, mailer: mail.Mailer, frequency: str
         email = mail.search_alert(
             to, full_name, name, total, sales, search_path(query), unsubscribe_token(sid)
         )
-        ok = await _send(mailer, email)
+        ok = await _send(mailer, email, sid)
         await session.execute(
             sa.text(
                 "UPDATE alert_delivery SET status = :status, sent_at = CASE WHEN :ok "
@@ -212,10 +214,10 @@ async def send_alerts(session: AsyncSession, mailer: mail.Mailer, frequency: str
     return result
 
 
-async def _send(mailer: mail.Mailer, email: mail.Email) -> bool:
+async def _send(mailer: mail.Mailer, email: mail.Email, sid: uuid.UUID) -> bool:
     try:
         await mailer.deliver(email)
     except Exception:  # one failed email must not stop the others
-        log.exception("alert email to %s failed", email.to)
+        log.exception("alert email for saved search %s failed", sid)
         return False
     return True

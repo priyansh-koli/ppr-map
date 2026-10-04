@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
@@ -67,3 +68,41 @@ def test_committed_openapi_schema_is_current() -> None:
 
     committed = json.loads((REPO_ROOT / "frontend" / "openapi.json").read_text())
     assert committed == json.loads(json.dumps(create_app().openapi())), "run `make api-types`"
+
+
+def test_access_log_keeps_no_ip_or_query() -> None:
+    """P2 #44: uvicorn logged every client IP and full query string."""
+    import logging
+
+    from app.logs import PrivateAccessLog
+
+    record = logging.LogRecord(
+        "uvicorn.access",
+        logging.INFO,
+        __file__,
+        1,
+        '%s - "%s %s HTTP/%s" %d',
+        ("203.0.113.9:51234", "GET", "/api/v1/search?q=me%40example.ie", "1.1", 200),
+        None,
+    )
+    assert PrivateAccessLog().filter(record)
+    assert record.getMessage() == '- - "GET /api/v1/search HTTP/1.1" 200'
+    create_app()
+    assert any(isinstance(f, PrivateAccessLog) for f in logging.getLogger("uvicorn.access").filters)
+
+
+def test_a_failed_email_is_logged_without_the_address(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """P2 #44: email addresses went into the app's logs."""
+    import asyncio
+    import smtplib
+
+    from app.services import email as mail
+
+    def down(*_: object, **__: object) -> None:
+        raise OSError("connection refused")
+
+    monkeypatch.setattr(smtplib, "SMTP", down)
+    asyncio.run(mail.SmtpMailer().send(mail.password_changed("niamh@example.ie", "Niamh")))
+    assert "could not send" in caplog.text and "niamh@example.ie" not in caplog.text

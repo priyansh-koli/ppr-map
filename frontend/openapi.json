@@ -1045,6 +1045,36 @@
         "title": "DutyBandOut",
         "type": "object"
       },
+      "EarlierSale": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "flags": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SaleFlags"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Absent only in hover cards built before the flags were added"
+          },
+          "priceEur": {
+            "title": "Priceeur",
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "priceEur"
+        ],
+        "title": "EarlierSale",
+        "type": "object"
+      },
       "EmailIn": {
         "properties": {
           "email": {
@@ -2760,7 +2790,7 @@
           },
           "previousSales": {
             "items": {
-              "$ref": "#/components/schemas/SaleBrief"
+              "$ref": "#/components/schemas/EarlierSale"
             },
             "title": "Previoussales",
             "type": "array"
@@ -6067,7 +6097,7 @@
     },
     "/api/v1/me": {
       "delete": {
-        "description": "Close the account now; its data is purged after 30 days (`app.cli purge-deleted`).",
+        "description": "Close the account now; its data is purged after 30 days (`app.cli purge-deleted`).\nThe last active admin cannot (409): someone must be able to run the site.",
         "operationId": "delete_me_api_v1_me_delete",
         "requestBody": {
           "content": {
@@ -6634,7 +6664,7 @@
         ]
       },
       "patch": {
-        "description": "Rename, change the filters or the alert. Changing the filters starts its alerts\nfrom the register as it is now.",
+        "description": "Rename, change the filters or the alert. Changing the filters, or switching an alert\non that was off, starts its alerts from the register as it is now: an alert never sends\nthe sales filed while it was off (P2 #38).",
         "operationId": "update_saved_search_api_v1_me_saved_searches__sid__patch",
         "parameters": [
           {

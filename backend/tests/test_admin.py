@@ -224,3 +224,58 @@ def test_ingest_runs_and_queueing(db: sa.Engine, monkeypatch: pytest.MonkeyPatch
     assert again.status_code == 409 and "already queued or running" in again.json()["detail"]
     overview = boss.get("/api/v1/admin/overview").json()
     assert overview["users"] == 1 and "ppr" in {r["kind"] for r in overview["lastRuns"]}
+
+
+def test_the_last_admin_cannot_close_their_account(db: sa.Engine) -> None:
+    """P2 #45: closing your own account skipped the last-admin check."""
+    boss = admin(Outbox(), db)
+    closed = boss.request("DELETE", "/api/v1/me", json={"password": PASSWORD})
+    assert closed.status_code == 409
+    assert boss.get("/api/v1/me").status_code == 200
+
+
+def test_two_admins_cannot_demote_each_other_at_once(db: sa.Engine) -> None:
+    """P2 #45: each check counted the other as still an admin, so both demotions passed and
+    no admin was left. The check now holds a lock until its change commits."""
+    import threading
+    import time
+
+    a = admin(Outbox(), db, "a@example.ie")
+    admin(Outbox(), db, "b@example.ie")
+    ids = {
+        u["email"]: u["id"] for u in a.get("/api/v1/admin/users", params={"q": "@"}).json()["items"]
+    }
+    # B demotes A: B's transaction has taken the lock, passed its check (A is not the last)
+    # and removed A's role, but has not committed yet.
+    b_tx = db.connect()
+    tx = b_tx.begin()
+    b_tx.execute(sa.text("SELECT pg_advisory_xact_lock(hashtextextended('keep-an-admin', 0))"))
+    b_tx.execute(
+        sa.text(
+            "DELETE FROM user_role WHERE user_id = :u "
+            "AND role_id = (SELECT id FROM role WHERE name = 'admin')"
+        ),
+        {"u": ids["a@example.ie"]},
+    )
+    # Meanwhile A demotes B.
+    answer: list[int] = []
+    body = {"roles": ["user"], "password": PASSWORD}
+    a_request = threading.Thread(
+        target=lambda: answer.append(
+            a.patch(f"/api/v1/admin/users/{ids['b@example.ie']}", json=body).status_code
+        )
+    )
+    a_request.start()
+    time.sleep(1)
+    tx.commit()
+    b_tx.close()
+    a_request.join(timeout=30)
+    assert answer == [409]
+    with db.connect() as conn:
+        admins = conn.execute(
+            sa.text(
+                "SELECT count(*) FROM user_role ur JOIN role r ON r.id = ur.role_id "
+                "WHERE r.name = 'admin'"
+            )
+        ).scalar_one()
+    assert admins == 1

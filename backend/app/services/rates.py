@@ -7,13 +7,11 @@ on a guess. All money is Decimal.
 
 from datetime import date
 from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
-from functools import lru_cache
 from typing import Literal
 
-import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.config import get_settings
+from app.services.config_files import ConfigFile
 
 CENT = Decimal("0.01")
 EURO = Decimal("1")
@@ -79,10 +77,7 @@ class Rates(_Strict):
     central_bank_mortgage_measures: MortgageMeasures
 
 
-@lru_cache
-def load_rates() -> Rates:
-    path = get_settings().ppr_config_dir / "rates.yaml"
-    return Rates.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
+load_rates = ConfigFile("rates.yaml", Rates.model_validate)
 
 
 def _money(v: Decimal) -> Decimal:

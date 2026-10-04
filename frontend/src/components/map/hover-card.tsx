@@ -34,6 +34,14 @@ function Flags({ sale }: { sale: NonNullable<PropertySummary["latestSale"]> }) {
   return <p className="mt-1 text-xs text-muted">{flags.join(" · ")}</p>;
 }
 
+/** The one flag an earlier sale's price most needs, in a few words. */
+function earlierFlag(sale: NonNullable<PropertySummary["previousSales"]>[number]) {
+  if (sale.flags?.notFullMarketPrice) return "not full market price";
+  if (sale.flags?.bulk) return "bulk sale";
+  if (sale.flags?.vatExclusive) return "excl. VAT";
+  return null;
+}
+
 function PropertyCard({
   id,
   summary,
@@ -65,7 +73,10 @@ function PropertyCard({
           Earlier:{" "}
           {previous
             .slice(0, 3)
-            .map((s) => `${formatEur(s.priceEur)} (${s.date.slice(0, 4)})`)
+            .map(
+              (s) =>
+                `${formatEur(s.priceEur)} (${[s.date.slice(0, 4), earlierFlag(s)].filter(Boolean).join(", ")})`,
+            )
             .join(", ")}
           {previous.length > 3 ? "…" : ""}
         </p>

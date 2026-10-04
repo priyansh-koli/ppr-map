@@ -184,3 +184,79 @@ def test_a_failed_run_leaves_the_previous_tables_whole(
             sa.text("SELECT status::text FROM ingest_run WHERE kind = 'aggregate' ORDER BY id")
         ).scalars()
         assert list(runs) == ["succeeded", "failed"]
+
+
+COPY_SALE = """
+INSERT INTO sale (property_id, source_row_hash, raw_date, raw_address, raw_county, raw_eircode,
+                  raw_price, raw_nfmp, raw_vat, raw_description, raw_size, sale_date, price_eur,
+                  not_full_market_price, vat_exclusive, is_new, size_band, is_possible_duplicate,
+                  first_seen_run_id, last_seen_run_id)
+SELECT s.property_id, :hash, raw_date, raw_address, raw_county, raw_eircode, raw_price,
+       raw_nfmp, raw_vat, raw_description, raw_size, :sale_date, :price, :nfmp, vat_exclusive,
+       is_new, size_band, :repeat, first_seen_run_id, last_seen_run_id
+FROM sale s JOIN property p ON p.id = s.property_id WHERE p.address_display = :address
+ORDER BY s.id LIMIT 1
+"""
+
+
+def _summary(conn: sa.Connection, address: str) -> dict[str, object]:
+    payload: dict[str, object] = conn.execute(
+        sa.text(
+            "SELECT ps.payload FROM property_summary ps JOIN property p "
+            "ON p.id = ps.property_id WHERE p.address_display = :a"
+        ),
+        {"a": address},
+    ).scalar_one()
+    return payload
+
+
+def test_earlier_sales_carry_flags_and_leave_out_repeat_filings(loaded: sa.Engine) -> None:
+    """P2 #46: the hover card's "Earlier" listed a refiled sale twice and gave no hint that a
+    price was not a market one."""
+    address = "143 Cois Dara, Chapelstown, Carlow"
+    with loaded.begin() as conn:
+        for n, repeat in enumerate((False, True)):
+            conn.execute(
+                sa.text(COPY_SALE),
+                {
+                    "hash": f"{n:064d}",
+                    "sale_date": "2015-05-01",
+                    "price": 150000,
+                    "nfmp": True,
+                    "repeat": repeat,
+                    "address": address,
+                },
+            )
+    aggregate(loaded)
+    with loaded.connect() as conn:
+        payload = _summary(conn, address)
+    assert payload["previousSales"] == [
+        {
+            "date": "2015-05-01",
+            "priceEur": 150000,
+            "flags": {"notFullMarketPrice": True, "vatExclusive": True, "bulk": False},
+        }
+    ]
+
+
+def test_a_hidden_property_still_counts_in_area_stats(loaded: sa.Engine) -> None:
+    """P2 #47: D-052 keeps a hidden home's sales in area figures (the register is public);
+    the aggregate dropped them."""
+    with loaded.begin() as conn:
+        conn.execute(
+            sa.text(
+                "UPDATE property SET is_suppressed = true "
+                "WHERE address_display = '143 Cois Dara, Chapelstown, Carlow'"
+            )
+        )
+    aggregate(loaded)
+    with loaded.connect() as conn:
+        year = _stat(conn, "carlow", "year", "2025-01-01", "all")
+        hidden_summaries = conn.execute(
+            sa.text(
+                "SELECT count(*) FROM property_summary ps JOIN property p "
+                "ON p.id = ps.property_id WHERE p.is_suppressed"
+            )
+        ).scalar_one()
+    assert year.n_sales == 30
+    assert hidden_summaries == 0  # the property itself stays hidden

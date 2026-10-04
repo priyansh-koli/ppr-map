@@ -352,13 +352,17 @@ class PropertyEnrichment(Base):
     property_id: Mapped[int] = mapped_column(
         sa.ForeignKey("property.id", ondelete="CASCADE"), primary_key=True
     )
-    nearest_stop_id: Mapped[int | None] = mapped_column(sa.ForeignKey("poi.id"))
+    nearest_stop_id: Mapped[int | None] = mapped_column(sa.ForeignKey("poi.id"), index=True)
     nearest_stop_type: Mapped[PoiType | None] = mapped_column(POI_TYPE)
     nearest_stop_m: Mapped[int | None] = mapped_column(sa.Integer)
     nearest_rail_m: Mapped[int | None] = mapped_column(sa.Integer)
-    nearest_primary_school_id: Mapped[int | None] = mapped_column(sa.ForeignKey("poi.id"))
+    nearest_primary_school_id: Mapped[int | None] = mapped_column(
+        sa.ForeignKey("poi.id"), index=True
+    )
     nearest_primary_school_m: Mapped[int | None] = mapped_column(sa.Integer)
-    nearest_post_primary_school_id: Mapped[int | None] = mapped_column(sa.ForeignKey("poi.id"))
+    nearest_post_primary_school_id: Mapped[int | None] = mapped_column(
+        sa.ForeignKey("poi.id"), index=True
+    )
     nearest_post_primary_school_m: Mapped[int | None] = mapped_column(sa.Integer)
     amenities_1km: Mapped[dict[str, int] | None] = mapped_column(JSONB)
     deprivation_band: Mapped[str | None] = mapped_column(sa.Text)

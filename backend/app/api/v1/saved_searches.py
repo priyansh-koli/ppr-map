@@ -6,6 +6,7 @@ Every query is filtered by the caller's id: another user's search is a 404, neve
 import csv
 import io
 import json
+import unicodedata
 import uuid
 from datetime import UTC, date, datetime
 from typing import Annotated, Any, Literal
@@ -85,7 +86,9 @@ class SavedSearchIn(ApiModel):
     @classmethod
     def _name(cls, value: str) -> str:
         value = value.strip()
-        if not value or any(ord(c) < 32 for c in value):
+        # Control characters and line or paragraph separators (U+2028) would break the
+        # alert email's subject line, every time (P2 #39).
+        if not value or any(unicodedata.category(c) in ("Cc", "Zl", "Zp") for c in value):
             raise ValueError("name must be 1 to 100 printable characters")
         return value
 
@@ -201,19 +204,22 @@ async def saved_search(sid: uuid.UUID, user: SearchUser, db: Db) -> SavedSearchO
 async def update_saved_search(
     sid: uuid.UUID, body: SavedSearchPatch, user: SearchUser, db: Db
 ) -> SavedSearchOut:
-    """Rename, change the filters or the alert. Changing the filters starts its alerts
-    from the register as it is now."""
+    """Rename, change the filters or the alert. Changing the filters, or switching an alert
+    on that was off, starts its alerts from the register as it is now: an alert never sends
+    the sales filed while it was off (P2 #38)."""
     sent = body.model_dump(exclude_unset=True)
     if any(v is None for v in sent.values()):
         raise HTTPException(422, "Fields cannot be set to null")
-    ready = await alerts.ready_run(db) if "query" in sent else None
+    switching_on = sent.get("alert_frequency", "off") != "off"
+    ready = await alerts.ready_run(db) if "query" in sent or switching_on else None
     done = await db.execute(
         sa.text(
             "UPDATE saved_search SET name = coalesce(:n, name), "
             "query = coalesce(CAST(:q AS jsonb), query), "
             "alert_frequency = coalesce(CAST(:f AS alert_frequency), alert_frequency), "
-            "alerted_through_run_id = CASE WHEN :requery THEN :ready "
-            "ELSE alerted_through_run_id END, updated_at = now() "
+            # The CASE sees the row as it was, so `alert_frequency = 'off'` is the old value.
+            "alerted_through_run_id = CASE WHEN :requery OR (:on AND alert_frequency = 'off') "
+            "THEN :ready ELSE alerted_through_run_id END, updated_at = now() "
             "WHERE id = :id AND user_id = :u RETURNING id"
         ),
         {
@@ -221,6 +227,7 @@ async def update_saved_search(
             "q": _json(body.query) if body.query is not None else None,
             "f": body.alert_frequency,
             "requery": "query" in sent,
+            "on": switching_on,
             "ready": ready,
             "id": sid,
             "u": user.id,

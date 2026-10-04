@@ -41,3 +41,28 @@ def test_caddy_lets_through_exactly_the_tile_filters() -> None:
     assert found is not None
     names = {f.alias or n for n, f in SalesFilter.model_fields.items()}
     assert set(found.group(1).split("|")) == names | {"v"}
+
+
+def test_a_deploy_that_forgets_environment_is_production(monkeypatch: pytest.MonkeyPatch) -> None:
+    """P2 #43: the default was development, so such a deploy got non-Secure cookies and
+    started without its secrets."""
+    from app.config import secure_cookies
+
+    monkeypatch.delenv("ENVIRONMENT", raising=False)
+    for name in ("SESSION_SECRET", "CSRF_SECRET", "IP_HASH_SALT"):
+        monkeypatch.setenv(name, "x" * 64)
+    settings = Settings(_env_file=None)
+    assert settings.environment == "production" and secure_cookies(settings)
+
+
+def test_no_other_site_may_frame_the_pages() -> None:
+    """P2 #43: admin actions are one click, so a framing page could clickjack them."""
+    import json
+
+    caddyfile = (REPO_ROOT / "infra" / "caddy" / "Caddyfile").read_text()
+    assert "X-Frame-Options DENY" in caddyfile
+    assert "Content-Security-Policy \"frame-ancestors 'none'\"" in caddyfile
+    vercel = json.loads((REPO_ROOT / "frontend" / "vercel.json").read_text())
+    every_page = {h["key"]: h["value"] for h in vercel["headers"][0]["headers"]}
+    assert every_page["X-Frame-Options"] == "DENY"
+    assert every_page["Content-Security-Policy"] == "frame-ancestors 'none'"

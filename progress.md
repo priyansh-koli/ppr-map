@@ -6,14 +6,14 @@ Where the project stands and how it got here. **Update the snapshot and add a lo
 
 | | |
 |---|---|
-| Phase | **5 complete, awaiting the owner's review** (search, area pages, saved searches and alerts, calculators, admin, estimate and comparables). P0 and P1 bugs from the review are fixed (D-057, D-058). |
-| Branch | `phase-5`, 6 commits ahead of `origin/phase-5` (not pushed). `origin/main` = `origin/phase-5` before today's commits. |
+| Phase | **5 complete, awaiting the owner's review** (search, area pages, saved searches and alerts, calculators, admin, estimate and comparables). P0, P1 and P2 bugs from the review are fixed (D-057 to D-059). |
+| Branch | `phase-5`, 7 commits ahead of `origin/phase-5` (not pushed). `origin/main` = `origin/phase-5` before today's commits. |
 | Live preview | https://ppr-map.vercel.app/ (static frontend only, no API; deploys from `main`) |
-| Local data | Data version `2026-09-18.r35.a39`. Migrations at head `0017`. Services sign in as `ppr_app`, `ppr_pipeline` and `ppr_tiles`. |
-| Dataset | 807,724 sales (2010-01-01 to 2026-09-18) on 728,462 properties. 73,808 areas. 65,789 POIs. 638,778 gazetteer features. |
-| Geocoding | exact 100,981 (13.9%) · street 314,680 (43.2%) · locality 249,473 (34.2%) · routing key 26,625 (3.7%) · county 36,703 (5.0%) |
-| Quality gates | lint, mypy strict, tsc, and 408 tests pass (backend 141, pipeline 119, frontend 148); Playwright: 60 route checks, 20 against the live stack |
-| Next step | Owner reviews Phase 5 and the P0 and P1 fixes; then fix P2 bugs ([task.md](task.md)) |
+| Local data | Data version `2026-09-18.r40.a50`. Migrations at head `0019`. Services sign in as `ppr_app`, `ppr_pipeline` and `ppr_tiles`. |
+| Dataset | 807,724 sales (2010-01-01 to 2026-09-18) on 728,386 properties. 73,808 areas. 65,800 POIs. 638,778 gazetteer features. |
+| Geocoding | exact 102,051 (14.0%) · street 315,385 (43.3%) · locality 247,660 (34.0%) · routing key 26,579 (3.6%) · county 36,711 (5.0%) |
+| Quality gates | lint, mypy strict, tsc, and 429 tests pass (backend 153, pipeline 127, frontend 149); Playwright: 60 route checks, 20 against the live stack |
+| Next step | Owner reviews Phase 5 and the P0 to P2 fixes; then P3 ([task.md](task.md)) |
 
 ## Phases
 
@@ -28,9 +28,16 @@ Where the project stands and how it got here. **Update the snapshot and add a lo
 | — | Local street gazetteer (geocoding improvement) | 2026-09-30 | D-046 |
 | 5 | Search, calculators, area pages, saved searches and alerts, jobs, removal requests and admin, estimate and comparables | 2026-09-30 to 10-01 | D-047 to D-053 |
 | — | Map tile planning fix, `/sources` page, Vercel preview | 2026-10-01 to 03 | D-054 to D-056 |
-| — | Phase 5 bug review (about 85 bugs found); P0 and P1 fixed | 2026-10-04 | D-057, D-058 |
+| — | Phase 5 bug review (about 85 bugs found); P0, P1 and P2 fixed | 2026-10-04 | D-057 to D-059 |
 
 ## Log
+
+### 2026-10-04: P2 bug fixes and a clean-up
+- Fixed all 16 P2 bugs (#34 to #49), each with a regression test that fails without it. Migration 0018 blocks TRUNCATE on the audit log. D-059 has the details.
+- Applied to the dev data. A forced PPR reload re-keyed 6,196 sales (two-number addresses and fadas): 5,856 properties retired, 5,780 made, 76 fewer homes. A normal geocode run (6 min, Nominatim for 10 new homes) gained 1,070 exact and 705 street points through the fixed local rules. The boundary load fixed 20 accented slugs. Then enrich and the aggregate.
+- Not done: re-asking Nominatim for the ~19k non-exact properties the geocoding fixes touch. Re-queueing them is a bulk update of the property table, left to the owner (task.md, Now).
+- Found while applying: enrich could never finish on real data since P1 #21 (unindexed references to `poi`, see D-059). It was cancelled after 30 min of deleting, which rolled back cleanly. Migration 0019 indexes them, and the run now takes about 2 min. Its VACUUM then hit Docker's 64 MB `/dev/shm`, so the db service gets 512 MB.
+- Clean-up: deleted a stray screenshot script (`frontend/shot.tmp.mjs`), 13 unused API type aliases and 9 needless exports (knip), and ignored build output and caches. No dead Python found (vulture). Caddy's single-file Caddyfile mount goes stale when the file is replaced on disk: restart Caddy, not just reload.
 
 ### 2026-10-04: P1 bug fixes
 - Fixed all 25 P1 bugs in three commits (security and data rules, wrong numbers and pipeline, UI), each with a regression test that fails without it. Migrations 0014 to 0017; D-058 has the details.

@@ -29,6 +29,24 @@ describe("HoverCard", () => {
     );
   });
 
+  it("flags an earlier sale that was not at full market price (P2 #46)", () => {
+    const flagged = {
+      ...summary,
+      previousSales: [
+        {
+          date: "2016-03-01",
+          priceEur: 200000,
+          flags: { notFullMarketPrice: true, vatExclusive: false, bulk: false },
+        },
+        { date: "2012-05-01", priceEur: 180000 },
+      ],
+    } as PropertySummary;
+    render(<HoverCard content={{ kind: "property", id: summary.id, summary: flagged }} />);
+    expect(
+      screen.getByText(/Earlier: €200,000 \(2016, not full market price\), €180,000 \(2012\)/),
+    ).toBeInTheDocument();
+  });
+
   it("says when sales only have an approximate location", () => {
     render(
       <HoverCard content={{ kind: "stack", n: 12, median: 310000, confidence: "locality" }} />,

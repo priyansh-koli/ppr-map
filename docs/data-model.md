@@ -248,7 +248,7 @@ Unique on `(saved_search_id, data_version)`, so an alert is sent at most once pe
 `id, user_id FK, prefix char(8) (shown), key_hash char(64) unique, name, scopes text[], created_at, last_used_at, revoked_at`
 
 ### `audit_log`
-Append-only. The app DB role has no UPDATE or DELETE on it.
+Append-only. The app DB role has no UPDATE or DELETE on it, and triggers refuse UPDATE, DELETE and TRUNCATE for everyone else too (migrations 0001, 0005, 0018).
 `id, actor_user_id null, action text (e.g. user.role.change, property.geocode.correct, removal.approve), target_kind, target_id, before jsonb, after jsonb, ip_hash, created_at` · index `(target_kind, target_id)`, `(actor_user_id, created_at)`.
 
 ### `removal_request`
@@ -258,4 +258,4 @@ Requester PII (`requester_email`, `reason`) is deleted 12 months after closure b
 ## Privacy constraints encoded in the schema
 
 - No table stores owner or occupant names from any source. There are no joins to sources that would identify owners.
-- Suppressed properties (`is_suppressed`) are filtered out by the tile function, search and summary endpoints. The underlying `sale` rows are kept, because the PPR itself is public and aggregates stay correct.
+- Suppressed properties (`is_suppressed`) are filtered out by the tile function, search and summary endpoints. The underlying `sale` rows are kept and still count in `area_stats` and `price_hex`, because the PPR itself is public and aggregates stay correct (D-052, D-059).

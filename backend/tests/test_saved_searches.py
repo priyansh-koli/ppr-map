@@ -251,3 +251,40 @@ def test_csv_export(db: sa.Engine) -> None:
     for _ in range(9):
         assert client.get(f"{URL}/{sid}/export.csv").status_code == 200
     assert client.get(f"{URL}/{sid}/export.csv").status_code == 429  # 10 a day for a user
+
+
+def test_switching_an_alert_on_skips_the_backlog(db: sa.Engine) -> None:
+    """P2 #38: an alert switched on later sent every sale filed while it was off."""
+    client = verified(Outbox(), "gráinne@example.ie")
+    search = {"name": "Carlow", "query": {"county": "carlow"}, "alertFrequency": "off"}
+    sid = client.post(URL, json=search).json()["id"]
+    new_register_update(db, "178 Pollerton Road, Carlow", 271000)
+    assert client.patch(f"{URL}/{sid}", json={"alertFrequency": "weekly"}).status_code == 200
+    result, sent = run_alerts("weekly")
+    assert (result.checked, sent.sent) == (0, [])
+
+
+def test_a_name_that_would_break_the_subject_is_refused(db: sa.Engine) -> None:
+    """P2 #39: a name with U+2028 failed that search's alert email every time."""
+    from email.message import EmailMessage
+
+    from app.services import email as mail
+
+    client = signed_in(Outbox(), FakeRedis(), "una@example.ie")
+    for name in ("Carlow\u2028homes", "Carlow\u2029homes", "Carlow\x85homes"):
+        bad = client.post(URL, json={"name": name, "query": {}})
+        assert bad.status_code == 422, name
+    assert client.post(URL, json={"name": "Carlow \U0001f3e1", "query": {}}).status_code == 201
+
+    # A name stored before the check still gives a one-line subject.
+    email = mail.search_alert("u@example.ie", "Una", "Carlow\u2028homes", 1, [], "/search", "t")
+    msg = EmailMessage()
+    msg["Subject"] = email.subject
+    assert email.subject == "1 new sale: Carlow homes"
+
+
+def test_unsubscribe_with_a_non_ascii_token_is_a_400(db: sa.Engine) -> None:
+    """P2 #40: hmac.compare_digest raised on a non-ASCII str, so this was a 500."""
+    visitor = signed_in(Outbox(), FakeRedis(), "visitor@example.ie")
+    token = "00000000-0000-0000-0000-000000000000.\u00e9"
+    assert visitor.post("/api/v1/alerts/unsubscribe", json={"token": token}).status_code == 400

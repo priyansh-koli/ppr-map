@@ -2,6 +2,9 @@ import os
 from collections.abc import Iterator
 from pathlib import Path
 
+# Settings default to production (P2 #43); without a .env, as in CI, tests run as "test".
+os.environ.setdefault("ENVIRONMENT", "test")
+
 import pytest
 import sqlalchemy as sa
 from alembic import command

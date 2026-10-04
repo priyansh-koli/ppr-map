@@ -90,7 +90,7 @@ function Euros({
 const amount = (v: string) => (v.trim() !== "" && Number(v) >= 0 ? String(Number(v)) : null);
 
 /** Where the figures come from and when they were last checked. */
-export function RulesNote({ rules }: { rules: Rules }) {
+function RulesNote({ rules }: { rules: Rules }) {
   return (
     <div className="space-y-2 text-xs text-muted">
       <p>{rules.note}</p>

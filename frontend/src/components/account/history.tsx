@@ -19,7 +19,7 @@ interface PageOf<T> {
 }
 
 /** A list read a page at a time, newest first, with "Show more" for the next page. */
-export function usePaged<T extends { id: number }>(load: (page: number) => Promise<PageOf<T>>) {
+function usePaged<T extends { id: number }>(load: (page: number) => Promise<PageOf<T>>) {
   const [items, setItems] = useState<T[] | null>(null);
   const [total, setTotal] = useState(0);
   const [pageSize, setPageSize] = useState(1);

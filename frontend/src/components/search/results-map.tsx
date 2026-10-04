@@ -18,7 +18,7 @@ import { toBox } from "@/lib/filters";
 type Circle = { near: string; radiusM: number } | null;
 
 /** A polygon approximating a circle on the ground, for the "within X of" outline. */
-export function circlePolygon(lat: number, lng: number, radiusM: number, steps = 64) {
+function circlePolygon(lat: number, lng: number, radiusM: number, steps = 64) {
   const dLat = radiusM / 111_320;
   const dLng = radiusM / (111_320 * Math.cos((lat * Math.PI) / 180));
   const ring = Array.from({ length: steps + 1 }, (_, i) => {

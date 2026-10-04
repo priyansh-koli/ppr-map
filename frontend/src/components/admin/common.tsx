@@ -26,7 +26,7 @@ export function RequireAdmin({ perm, children }: { perm: string; children: React
   return <>{children}</>;
 }
 
-export const ADMIN_PAGES = [
+const ADMIN_PAGES = [
   ROUTES.adminIngestRuns,
   ROUTES.adminGeocode,
   ROUTES.adminRemovals,

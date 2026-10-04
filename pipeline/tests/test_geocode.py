@@ -206,3 +206,34 @@ def test_h3_cells_fit_in_bigint() -> None:
     cell = h3_r8(53.3498, -6.2603)
     assert 0 < cell < 2**63
     assert h3.get_resolution(format(cell, "x")) == 8
+
+
+def test_st_before_a_qualifier_is_street() -> None:
+    """P2 #34: "Main St Lower" was read as "Main Saint Lower" and never matched."""
+    assert names_match("Main St Lower", ["Main Street Lower"])
+    assert names_match("St John's Road", ["Saint John's Road"])
+    house = _result(
+        category="building",
+        type="house",
+        name="",
+        address={"house_number": "5", "road": "Main Street Lower"},
+    )
+    assert classify(house, "5 Main St Lower") == (C.EXACT, "")
+
+
+def test_a_no_prefix_keeps_its_house_number() -> None:
+    """P2 #35: "No. 5" was stripped as if it were a unit, so the address was never exact."""
+    assert query_parts("No. 5 Main St, Naas", "kildare") == ["5 Main St", "Naas"]
+    assert query_parts("No 12, Abbey Rd, Naas", "kildare") == ["12", "Abbey Rd", "Naas"]
+    assert query_parts("Apt 4, Main St, Naas", "kildare") == ["Main St", "Naas"]
+
+
+def test_an_estate_keeps_village_or_town_in_its_name() -> None:
+    """P2 #49: "5 The Village" was queried as "5 The"."""
+    assert query_parts("5 The Village, Ballinroad, Co Waterford", "waterford") == [
+        "5 The Village",
+        "Ballinroad",
+    ]
+    assert query_parts("The Village, Ballinroad", "waterford") == ["The Village", "Ballinroad"]
+    assert query_parts("12 Ashbrook Village, Ennis", "clare")[0] == "12 Ashbrook Village"
+    assert query_parts("14 The Deanery, Station Rd, Kildare Town", "kildare")[-1] == "Kildare"

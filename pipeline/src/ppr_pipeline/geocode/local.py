@@ -23,8 +23,8 @@ from dataclasses import dataclass, field
 
 from app.models.enums import GeocodeConfidence
 
+from ppr_pipeline.address import fold
 from ppr_pipeline.geocode.rules import (
-    fold,
     km_between,
     name_tokens,
     query_parts,

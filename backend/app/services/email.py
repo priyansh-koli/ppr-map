@@ -54,7 +54,8 @@ class SmtpMailer:
         try:
             await self.deliver(email)
         except (OSError, smtplib.SMTPException):
-            log.exception("could not send %r to %s", email.subject, email.to)
+            # Never the address: logs hold no personal data (P2 #44).
+            log.exception("could not send %r", email.subject)
 
 
 def get_mailer() -> Mailer:
@@ -160,9 +161,12 @@ def search_alert(
         f"Change or stop this alert: {link('/account/saved-searches')}\n"
         f"Stop this alert in one click: {unsubscribe}\n"
     )
+    # One line: a name saved with a line separator before names were checked for one would
+    # otherwise fail every alert for that search (P2 #39).
+    subject_name = " ".join(search_name.split())
     return Email(
         to,
-        f"{total} new {'sale' if total == 1 else 'sales'}: {search_name}",
+        f"{total} new {'sale' if total == 1 else 'sales'}: {subject_name}",
         body,
         headers=(("List-Unsubscribe", f"<{unsubscribe}>"),),
     )

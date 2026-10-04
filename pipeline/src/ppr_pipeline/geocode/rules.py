@@ -9,26 +9,29 @@ the I/O.
 
 import math
 import re
-import unicodedata
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
 from app.models.enums import GeocodeConfidence
 
-from ppr_pipeline.address import ABBREVIATIONS, HOUSE_NUMBER
+from ppr_pipeline.address import ABBREVIATIONS, HOUSE_NUMBER, fold, st_is_saint
 
 # "Apt 11 Cartron Court" -> "Cartron Court"; the unit is stored separately on the property.
 UNIT_PREFIX = re.compile(
-    r"^(?:apt|apartment|appartment|flat|unit|no)\.?\s*[a-z]?\d+[a-z]?"
+    r"^(?:apt|apartment|appartment|flat|unit)\.?\s*[a-z]?\d+[a-z]?"
     r"(?:\s+block\s+[a-z0-9]+)?\b[\s,]*",
     re.I,
 )
+# "No. 5 Main St" -> "5 Main St": the number is the house's, not a unit (P2 #35).
+NUMBER_WORD = re.compile(r"^(?:no|number)\.?\s*(?=\d)", re.I)
 COUNTY_PART = re.compile(r"^(?:co\.?|county)\s+(\w+)$", re.I)
 DUBLIN_DISTRICT = re.compile(r"^dublin\s+\d{1,2}\s*w?$", re.I)
-# "Donnybrook Dublin 4", "Kildare Town", "Louth Village", "Off Cathedral Road"
+# "Donnybrook Dublin 4", "Kildare Town", "Louth Village", "Off Cathedral Road". Not an
+# estate: "The Village", or a part with a house number ("5 Ashbrook Village", P2 #49).
 TRAILING_DISTRICT = re.compile(r"\s+dublin\s+\d{1,2}\s*w?$", re.I)
-TRAILING_TOWN = re.compile(r"(?<=\w)\s+(?:town|village)$", re.I)
+TRAILING_TOWN = re.compile(r"(?<=\w)(?<!\bthe)\s+(?:town|village)$", re.I)
+STARTS_WITH_NUMBER = re.compile(r"^\d")
 LEADING_OFF = re.compile(r"^off\s+", re.I)
 
 # Words that may differ between a PPR address and the OSM name without changing the place.
@@ -91,12 +94,6 @@ class Candidate:
     raw: dict[str, Any]
 
 
-def fold(text: str) -> str:
-    """Lowercase, no accents: "Dún Laoghaire" -> "dun laoghaire"."""
-    decomposed = unicodedata.normalize("NFKD", text)
-    return "".join(c for c in decomposed if not unicodedata.combining(c)).lower()
-
-
 def query_parts(address_display: str, county: str) -> list[str]:
     """Comma parts to query, most specific first. Drops the unit and a trailing "Co X",
     and reduces "Dublin 6W" to "Dublin" (postal districts are not OSM places). A bare
@@ -104,7 +101,7 @@ def query_parts(address_display: str, county: str) -> list[str]:
     parts = [p.strip(" .") for p in address_display.split(",")]
     parts = [p for p in parts if p]
     if parts:
-        parts[0] = UNIT_PREFIX.sub("", parts[0]).strip()
+        parts[0] = NUMBER_WORD.sub("", UNIT_PREFIX.sub("", parts[0]).strip())
         if not parts[0]:
             parts = parts[1:]
     if parts:
@@ -118,7 +115,9 @@ def query_parts(address_display: str, county: str) -> list[str]:
         if DUBLIN_DISTRICT.match(p):
             p = "Dublin"
         else:
-            p = TRAILING_TOWN.sub("", TRAILING_DISTRICT.sub("", p))
+            p = TRAILING_DISTRICT.sub("", p)
+            if not STARTS_WITH_NUMBER.match(p):
+                p = TRAILING_TOWN.sub("", p)
             p = LEADING_OFF.sub("", trailing_county.sub("", p))
         if not out or fold(out[-1]) != fold(p):
             out.append(p)
@@ -177,7 +176,10 @@ def name_tokens(text: str) -> frozenset[str]:
     out: set[str] = set()
     for i, w in enumerate(words):
         if w == "st":
-            w = "street" if i == len(words) - 1 else "saint"
+            # The address rule: "Main St Lower" is a street, not "Main Saint Lower" (P2 #34).
+            prev = words[i - 1] if i > 0 else None
+            nxt = words[i + 1] if i + 1 < len(words) else None
+            w = "saint" if st_is_saint(prev, nxt) else "street"
         w = ABBREVIATIONS.get(w, w)
         if w in NAME_FILLER or w == "no" or HOUSE_NUMBER.match(w):
             continue

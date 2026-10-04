@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app.config import REPO_CONFIG_DIR
+from app.services import config_files
 from app.services import rates as r
 
 
@@ -141,6 +142,27 @@ def test_missing_rates_are_a_503_not_a_guess(
     try:
         res = client.get("/api/v1/tools/stamp-duty", params={"price": 300000})
         assert res.status_code == 503
+    finally:
+        monkeypatch.undo()
+        r.load_rates.cache_clear()
+
+
+def test_a_broken_rates_file_is_a_503_and_not_reread(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """P2 #41: a YAML syntax error was a 500, and the file was read again on every request."""
+    from app.config import get_settings
+
+    (tmp_path / "rates.yaml").write_text("rules_version: [unclosed\n")
+    monkeypatch.setattr(get_settings(), "ppr_config_dir", tmp_path)
+    r.load_rates.cache_clear()
+    try:
+        assert client.get("/api/v1/tools/rules").status_code == 503
+        # Fixed on disk: the failure is kept for a minute, then the file is read again.
+        (tmp_path / "rates.yaml").write_text((REPO_CONFIG_DIR / "rates.yaml").read_text())
+        assert client.get("/api/v1/tools/rules").status_code == 503
+        monkeypatch.setattr(config_files.time, "monotonic", lambda: 1e12)
+        assert client.get("/api/v1/tools/rules").status_code == 200
     finally:
         monkeypatch.undo()
         r.load_rates.cache_clear()

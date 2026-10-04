@@ -17,7 +17,10 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=REPO_ENV_FILE, extra="ignore")
 
-    environment: Literal["development", "test", "production"] = "development"
+    # Production unless said otherwise: a deploy that forgets ENVIRONMENT gets Secure cookies
+    # and refuses to start without its secrets, rather than running on development defaults
+    # (P2 #43). .env.example sets development; CI and the tests set test.
+    environment: Literal["development", "test", "production"] = "production"
     database_url: str = Field(
         default="postgresql+psycopg://pprmap:pprmap@localhost:5432/pprmap",
         description="SQLAlchemy URL; the psycopg 3 driver serves both sync and async use.",

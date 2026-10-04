@@ -146,3 +146,23 @@ def test_misspelt_and_glued_unit_words() -> None:
     b = normalise_address("APT4, 24 MARLBOROUGH RD, DONNYBROOK", "dublin")
     assert a.unit == b.unit == "apartment 4"
     assert a.key == b.key == "24marlboroughroaddonnybrook"
+
+
+def test_numbers_apart_stay_apart_in_the_key() -> None:
+    """P2 #36: "1 25" (unit 1 of number 25, as filed) and "125" were one property."""
+
+    def key(raw: str) -> str:
+        return normalise_address(raw, "dublin").key
+
+    assert key("125 Main St, Swords") == "125mainstreetswords"
+    assert key("1 25 Main Street, Swords") == key("1-25 Main St, Swords") == "1-25mainstreetswords"
+    # A Dublin district number still runs on from the word before it.
+    assert normalise_address("5 Main St, Dublin 15", "dublin").key == "5mainstreetdublin15"
+
+
+def test_a_fada_is_folded_not_dropped_in_the_key() -> None:
+    """P2 #37: "Seán" keyed as "sen", so one home was two properties."""
+    a = normalise_address("4 Páirc Sheáin, Gaoth Dobhair", "donegal")
+    b = normalise_address("4 PAIRC SHEAIN, GAOTH DOBHAIR", "donegal")
+    assert a.key == b.key == "4paircsheaingaothdobhair"
+    assert a.display == "4 Páirc Sheáin, Gaoth Dobhair"  # shown as filed

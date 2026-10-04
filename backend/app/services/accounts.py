@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Any
 
 import sqlalchemy as sa
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.permissions import Role, permissions_for
@@ -106,3 +107,20 @@ def _json(value: Any) -> Any:
     if isinstance(value, uuid.UUID | Decimal):
         return str(value)
     return value
+
+
+ACTIVE_ADMINS = """
+SELECT count(*) FILTER (WHERE u.id <> :u), coalesce(bool_or(u.id = :u), false)
+FROM user_role ur JOIN role r ON r.id = ur.role_id JOIN app_user u ON u.id = ur.user_id
+WHERE r.name = 'admin' AND u.is_active AND u.deleted_at IS NULL
+"""
+
+
+async def keep_an_admin(db: AsyncSession, losing: uuid.UUID) -> None:
+    """409 if `losing` is the last active admin and is about to lose the role, the account
+    or its activity. The lock is held until the caller commits, so two admins demoting each
+    other at once, or the last admin closing their own account, cannot leave none (P2 #45)."""
+    await db.execute(sa.text("SELECT pg_advisory_xact_lock(hashtextextended('keep-an-admin', 0))"))
+    others, is_admin = (await db.execute(sa.text(ACTIVE_ADMINS), {"u": losing})).one()
+    if is_admin and not others:
+        raise HTTPException(409, "There must always be at least one active admin")

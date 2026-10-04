@@ -69,5 +69,5 @@ None of them can run `COPY ... TO PROGRAM`, change or empty the audit log, or al
 ## Rules outside the matrix
 
 - **Ownership:** every `/me/*` resource is filtered by `user_id = current_user.id` in the query. Tests cover cross-user access and must return 404, not 403.
-- **Admin role changes** need a second confirmation (re-entering the password) and write an `audit_log` entry. An admin can't remove their own admin role if they are the last admin.
+- **Admin role changes** need a second confirmation (re-entering the password) and write an `audit_log` entry. An admin can't remove their own admin role, or close their own account, if they are the last admin; the check holds a lock until the change commits, so two admins cannot demote each other at once (D-059).
 - **Browser geolocation ("near me")** is only requested after the user clicks a "Use my location" button, which comes with a sentence explaining why and that the location is not stored. It is never requested on page load. The coordinates are used client-side to build a `near=` filter. They are not written to search history (the history stores "near my location" instead). Saving such a search keeps the point, because its alerts need it; the save form says so.

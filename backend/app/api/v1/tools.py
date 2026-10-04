@@ -8,12 +8,12 @@ from decimal import Decimal
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import ValidationError
 
 from app.auth.deps import require
 from app.auth.permissions import Perm
 from app.schemas.base import ApiModel, Money
 from app.services import rates as r
+from app.services.config_files import ConfigUnavailable
 
 router = APIRouter(prefix="/tools", tags=["tools"], dependencies=[Depends(require(Perm.TOOLS_USE))])
 
@@ -73,7 +73,7 @@ class AffordabilityOut(Rules):
 def _rules() -> r.Rates:
     try:
         return r.load_rates()
-    except (OSError, ValidationError) as exc:
+    except ConfigUnavailable as exc:
         # A missing or unverified value must never turn into a figure (R-10).
         raise HTTPException(503, "The calculator's rates are not available") from exc
 
