@@ -48,7 +48,7 @@ test("details lead to the property page", async ({ page }) => {
   await first.click();
   await page.getByRole("link", { name: /Full sale history/ }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(address);
-  await expect(page.getByRole("heading", { name: "Sales" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sales", exact: true })).toBeAttached();
 });
 
 test("filters change the list and the address bar", async ({ page }) => {

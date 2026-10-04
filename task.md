@@ -7,15 +7,15 @@ What is done and what is left. **Starting a new chat?** Read [CLAUDE.md](CLAUDE.
 ## Resume checklist
 
 1. `git status`, then `git log --oneline -5`: the branch is `phase-5`. Check whether the last commits were pushed.
-2. Start Docker Desktop, then run `make up` (http://localhost:8080; Mailpit on :8025). Check the migrations with `docker compose --env-file .env -f infra/docker-compose.yml exec api alembic current`, which should print `0013 (head)`.
+2. Start Docker Desktop, then run `make up` (http://localhost:8080; Mailpit on :8025). Check the migrations with `docker compose --env-file .env -f infra/docker-compose.yml exec api alembic current`, which should print `0017 (head)`. After pulling, run `make env` (adds the database role passwords an older `.env` lacks), then `make up` and `make migrate`.
 3. Run the gates: `make lint && make typecheck && make test && make test-db`.
-4. After frontend changes, rebuild the container: `docker compose --env-file .env -f infra/docker-compose.yml up -d --build frontend`.
+4. After frontend changes, rebuild the container: `docker compose --env-file .env -f infra/docker-compose.yml up -d --build frontend`. After pipeline changes, rebuild the worker the same way (`--build worker`): its image holds the pipeline code, only `backend/app` is mounted.
 
 ## Now
 
-- [ ] **Owner:** review Phase 5 and the P0 fixes (D-057). Phases are reviewed at a STOP checkpoint before the next one starts.
-- [ ] **Owner:** decide whether to push `phase-5` (2 commits ahead) and merge it into `main`. A push to `main` deploys the Vercel preview.
-- [ ] Fix the P1 bugs, in groups: security and operations, then data rules, then UI.
+- [ ] **Owner:** review Phase 5, the P0 fixes (D-057) and the P1 fixes (D-058). Phases are reviewed at a STOP checkpoint before the next one starts.
+- [ ] **Owner:** decide whether to push `phase-5` (6 commits ahead) and merge it into `main`. A push to `main` deploys the Vercel preview.
+- [ ] Fix the P2 bugs. #36 and #37 (address key) are unblocked now that a reload moves re-keyed sales (#23).
 
 ## Done
 
@@ -28,44 +28,9 @@ What is done and what is left. **Starting a new chat?** Read [CLAUDE.md](CLAUDE.
 - [x] P0 #6 Property page 500 without a location (1cd2fac)
 - [x] P0 #7 Aggregate truncated hover-card data mid-run (1cd2fac)
 - [x] P1 #20 Aggregate locked area pages and hex tiles for its whole run: fixed by #7's single transaction
-
-## Bugs: P1 (important)
-
-### Security and operations
-- [ ] **#8** The API, worker, scheduler and Martin all connect as the Postgres superuser. Any SQL injection would get `COPY … TO PROGRAM` and could wipe the audit log. Fix: least-privilege roles. `infra/docker-compose.yml:42`
-- [ ] **#9** Tiles have no rate limit, and a junk query parameter bypasses Martin's cache (about 1.8 s of DB time per request). `infra/caddy/Caddyfile:5`
-- [ ] **#10** Password re-checks (change password, delete account, admin role change) have no attempt limit. Each try costs a 64 MiB argon2 verify on a shared 4-thread pool. `backend/app/api/v1/me.py:124`
-- [ ] **#11** `/properties` and the hover summary have no rate limit; `sort=-change` over a large box is expensive and open to anonymous users. `backend/app/api/v1/properties.py:89`
-
-### Data rules (CONVENTIONS.md) broken
-- [ ] **#12** The comparables median is shown for fewer than 5 sales, and can be based on fewer sales than the count shown. `backend/app/services/properties.py:115`
-- [ ] **#13** Sale-cell and stack tiles publish a median for fewer than 5 sales. Reported by one agent, not re-checked. Migrations 0004, 0006.
-- [ ] **#14** A hidden (n < 5) price band can be worked out by subtraction, because the total and the zero bands are both shown. `backend/app/services/areas.py:281`
-
-### Wrong numbers
-- [ ] **#15** The comparables "same street" flag is wrong for about 20% of properties: in "…, co clare" or "…, dublin 6" the town is treated as a street. Migration 0010, line 28.
-- [ ] **#16** The "last 12 months" price hexes actually cover 13 months. `pipeline/src/ppr_pipeline/aggregate.py:190`
-- [ ] **#17** Any school with "Scoil" in its name is typed as primary; community schools such as "Scoil Phobail" are post-primary. `pipeline/src/ppr_pipeline/enrich/pois.py:119`
-- [ ] **#18** `tile_matching_sales` doesn't exclude the 1,193 duplicate filings, so list, search and alert counts don't match the area stats. Migration 0008 (now 0012).
-
-### Pipeline robustness
-- [ ] **#19** Alerts can permanently miss sales if "aggregate" runs before "geocode". `backend/app/services/alerts.py:35`
-- [x] **#20** The aggregate locked area pages and hex tiles for its whole run (fixed with P0 #7)
-- [ ] **#21** A failed enrich leaves every property with no vicinity values. `pipeline/src/ppr_pipeline/enrich/run.py:92`
-- [ ] **#22** Nothing stops two pipeline runs at once; a double click on "Queue" in admin starts two, and they corrupt each other. `backend/app/jobs.py:69`, `frontend/src/components/admin/panels.tsx:204`
-- [ ] **#23** Re-ingest never moves a sale to its new property (`ON CONFLICT` doesn't update `property_id`). Blocks #36–#37. `pipeline/src/ppr_pipeline/ppr/load.py:130`
-
-### Broken UI features
-- [ ] **#24** The location-precision select shows "Exact address only" when the filter is `routing_key`. `frontend/src/components/map/filter-panel.tsx:226`
-- [ ] **#25** Stop and school distance filters are applied on the map but are invisible there and can't be removed. `filter-panel.tsx`
-- [ ] **#26** A slow list response overwrites the "zoom in" state, so the list shows sales from a view the map has left. `map-explorer.tsx:254`
-- [ ] **#27** Pressing Enter in place search right after typing picks a suggestion for the previous text. `place-search.tsx:114`
-- [ ] **#28** With a distance filter, hovering result rows reloads every tile on the results map. `results-map.tsx:143`
-- [ ] **#29** The account budget fields block the whole Details form for any amount that isn't a multiple of €10,000 (`step=10000`). `account/settings.tsx:100`
-- [ ] **#30** History "Show more" skips entries after a Remove, and the button then never goes away. `account/history.tsx:34`
-- [ ] **#31** Area charts plot sparse series by index, so missing periods are squeezed out and bridged. When every area period is suppressed, the chart shows only the Ireland line. `area/area-charts.tsx:120`
-- [ ] **#32** Admin user search deletes `_` and `%`, so searching for `jane_doe@…` finds nothing. `backend/app/api/v1/admin.py:677`
-- [ ] **#33** "Saved." sticks after saving a search, so the next search can't be saved without a reload. `search/save-search.tsx:27`
+- [x] P1 #8–#14 Security, operations and data rules: database roles (migration 0014), tile and password limits, medians under 5, hidden price bands (0609336, migration 0015)
+- [x] P1 #15–#19, #21–#23 Wrong numbers and pipeline robustness: same street, 12-month hexes, school levels, repeat filings, alerts after geocoding, atomic enrich, one pipeline run at a time, re-keyed sales (88bfa0b, migrations 0016, 0017)
+- [x] P1 #24–#33 UI: map filter panel, synced list, place search, results map, budgets, history paging, area charts, admin user search, save search (99e95a9)
 
 ## Bugs: P2 (edge cases, data quality)
 
@@ -111,6 +76,8 @@ What is done and what is left. **Starting a new chat?** Read [CLAUDE.md](CLAUDE.
 - [ ] `--refresh --limit` leaves stale area ids
 - [ ] Strict cp1252 decoding fails the whole run on one bad byte
 - [ ] *(new, 2026-10-04)* `geocode --refresh` blanks every point at the start, so the map and property pages have no locations for the whole 1–2 hour run. Keep the old point until the new one is written.
+- [ ] *(new, 2026-10-04, P1 work)* The test database shares the cluster's roles with the dev database: a test that changes a role (as `db-roles` does) changes it for the running stack. The test puts the password back; keep it that way, or give tests their own cluster.
+- [ ] *(new, 2026-10-04, P1 work)* A retired property's public id (#23) stops working (404). Add a redirect table if outside links to property pages start to matter.
 - [ ] *(new, 2026-10-04)* An address that is only a town name ("Athea, Co Limerick") can still land on a house with that name (10 left; D-057)
 
 **DB**

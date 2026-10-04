@@ -6,14 +6,14 @@ Where the project stands and how it got here. **Update the snapshot and add a lo
 
 | | |
 |---|---|
-| Phase | **5 complete, awaiting the owner's review** (search, area pages, saved searches and alerts, calculators, admin, estimate and comparables). P0 bugs from the review are fixed (D-057). |
-| Branch | `phase-5`, 2 commits ahead of `origin/phase-5` (not pushed). `origin/main` = `origin/phase-5` before today's commits. |
+| Phase | **5 complete, awaiting the owner's review** (search, area pages, saved searches and alerts, calculators, admin, estimate and comparables). P0 and P1 bugs from the review are fixed (D-057, D-058). |
+| Branch | `phase-5`, 6 commits ahead of `origin/phase-5` (not pushed). `origin/main` = `origin/phase-5` before today's commits. |
 | Live preview | https://ppr-map.vercel.app/ (static frontend only, no API; deploys from `main`) |
-| Local data | Data version `2026-09-18.r1.a27`. Migrations at head `0013`. |
-| Dataset | 807,724 sales (2010-01-01 to 2026-09-18) on 728,460 properties. 73,808 areas. 65,789 POIs. 638,778 gazetteer features. |
-| Geocoding | exact 100,980 (13.9%) · street 314,677 (43.2%) · locality 249,475 (34.2%) · routing key 26,626 (3.7%) · county 36,702 (5.0%) |
-| Quality gates | lint, mypy strict, tsc, and 374 tests pass (backend 126, pipeline 115, frontend 133) |
-| Next step | Owner reviews Phase 5 and the P0 fixes; then fix P1 bugs ([task.md](task.md)) |
+| Local data | Data version `2026-09-18.r35.a39`. Migrations at head `0017`. Services sign in as `ppr_app`, `ppr_pipeline` and `ppr_tiles`. |
+| Dataset | 807,724 sales (2010-01-01 to 2026-09-18) on 728,462 properties. 73,808 areas. 65,789 POIs. 638,778 gazetteer features. |
+| Geocoding | exact 100,981 (13.9%) · street 314,680 (43.2%) · locality 249,473 (34.2%) · routing key 26,625 (3.7%) · county 36,703 (5.0%) |
+| Quality gates | lint, mypy strict, tsc, and 408 tests pass (backend 141, pipeline 119, frontend 148); Playwright: 60 route checks, 20 against the live stack |
+| Next step | Owner reviews Phase 5 and the P0 and P1 fixes; then fix P2 bugs ([task.md](task.md)) |
 
 ## Phases
 
@@ -28,9 +28,16 @@ Where the project stands and how it got here. **Update the snapshot and add a lo
 | — | Local street gazetteer (geocoding improvement) | 2026-09-30 | D-046 |
 | 5 | Search, calculators, area pages, saved searches and alerts, jobs, removal requests and admin, estimate and comparables | 2026-09-30 to 10-01 | D-047 to D-053 |
 | — | Map tile planning fix, `/sources` page, Vercel preview | 2026-10-01 to 03 | D-054 to D-056 |
-| — | Phase 5 bug review (about 85 bugs found); P0 fixed | 2026-10-04 | D-057 |
+| — | Phase 5 bug review (about 85 bugs found); P0 and P1 fixed | 2026-10-04 | D-057, D-058 |
 
 ## Log
+
+### 2026-10-04: P1 bug fixes
+- Fixed all 25 P1 bugs in three commits (security and data rules, wrong numbers and pipeline, UI), each with a regression test that fails without it. Migrations 0014 to 0017; D-058 has the details.
+- The services no longer sign in as the Postgres superuser (`ppr_app`, `ppr_pipeline`, `ppr_tiles`). Caddy is now built with a rate-limit plugin and refuses unknown tile parameters.
+- Found while testing: enrich had never been able to run in the worker (GDAL temp files), and the worker image still held old pipeline code. Its failed run emptied the vicinity table on dev, which was #21 itself. Both are fixed and the table is rebuilt (415,657 homes).
+- A forced PPR reload moved 2,187 sales off properties whose keys had drifted from the current address rules, and retired 1,906 emptied properties. 1,900 of the new ones kept their position; 8 were geocoded (Nominatim started for that, then stopped). The aggregate was then rebuilt.
+- Also fixed an e2e locator that the "Sales nearby" heading made ambiguous.
 
 ### 2026-10-04: P0 bug fixes and project handover files
 - Seven agents reviewed the code and found about 85 bugs, sorted P0 to P3 (the list is in [task.md](task.md)).
