@@ -100,6 +100,36 @@ def test_fallbacks_place_every_property_in_its_county(carlow: sa.Engine) -> None
     assert _rows(carlow) == rows
 
 
+def test_stored_town_buildings_are_placed_again(carlow: sa.Engine) -> None:
+    # Stored before D-057: "Ballybannon, Milford" placed on a house named "Milford" in
+    # Carlow town by the query "Milford" alone (its town part).
+    with carlow.connect() as conn:
+        pid = conn.execute(
+            sa.text("SELECT id FROM property WHERE address_display LIKE 'Ballybannon%'")
+        ).scalar_one()
+        run_id = conn.execute(
+            sa.insert(IngestRun)
+            .values(kind=IngestKind.GEOCODE, status=IngestStatus.RUNNING)
+            .returning(IngestRun.id)
+        ).scalar_one()
+        conn.commit()
+    house = Candidate(GeocodeConfidence.STREET, -6.9261, 52.8365, "building/house", "Milford", {})
+    outcome = Outcome(pid, house, [Attempt(1, "Milford", house, None)])
+    with carlow.begin() as conn:
+        write_outcomes(conn, [outcome], run_id)
+    assert _rows(carlow)["Ballybannon, Milford, Co Carlow"][:2] == (
+        "street",
+        "nominatim:building/house",
+    )
+    summary = geocode_properties(carlow, "http://nominatim.test", client=_empty_nominatim())
+    assert summary["rechecked_town_buildings"] == 1
+    assert _rows(carlow)["Ballybannon, Milford, Co Carlow"][:3] == (
+        "locality",
+        "gazetteer:townland",
+        "Ballybannon",
+    )
+
+
 def test_points_outside_the_county_are_rejected(carlow: sa.Engine) -> None:
     with carlow.connect() as conn:
         pid = conn.execute(

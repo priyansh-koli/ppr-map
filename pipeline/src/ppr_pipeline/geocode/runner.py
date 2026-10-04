@@ -363,6 +363,37 @@ WHERE geocoded_at IS NOT NULL AND NOT geocode_locked AND geocode_confidence = 's
   AND substr(geocode_method, 20) <> ALL(:types)
 """
 
+# D-057: a building matched by name to a town part queried alone is refused (`rules.pick`).
+# Stored ones are found here: the property's accepted Nominatim query, checked against its
+# town parts in Python, then dropped as above.
+TOWN_BUILDING_CANDIDATES = """
+SELECT DISTINCT ON (p.id) p.id, p.address_display, p.county::text, ga.query
+FROM property p
+JOIN geocode_attempt ga ON ga.property_id = p.id AND ga.method = 'nominatim' AND ga.accepted
+WHERE p.geocoded_at IS NOT NULL AND NOT p.geocode_locked AND p.geocode_confidence = 'street'
+  AND p.geocode_method LIKE 'nominatim:building/%'
+ORDER BY p.id, ga.id DESC
+"""
+
+DROP_NOMINATIM = """
+UPDATE property SET
+    geom = NULL, geocode_confidence = 'unmatched', geocode_method = 'nominatim:none',
+    geocode_source = NULL, updated_at = now()
+WHERE id = ANY(:ids)
+"""
+
+
+def recheck_town_buildings(conn: sa.Connection) -> int:
+    ids = [
+        pid
+        for pid, address, county, query in conn.execute(sa.text(TOWN_BUILDING_CANDIDATES))
+        if query in town_parts(query_parts(address, county), county)
+    ]
+    if ids:
+        conn.execute(sa.text(DROP_NOMINATIM), {"ids": ids})
+    return len(ids)
+
+
 # The local pass may improve anything Nominatim placed at town level or not at all, and may
 # turn a Nominatim street into the exact house on it, if the two agree.
 STREET_TO_EXACT_KM = 1.5
@@ -610,6 +641,7 @@ def fallbacks(engine: sa.Engine, run_id: int) -> dict[str, int]:
         rechecked = conn.execute(
             sa.text(RECHECK_BUILDINGS), {"types": sorted(RESIDENTIAL_BUILDINGS)}
         ).rowcount
+        town_buildings = recheck_town_buildings(conn)
         # The reset turned a third of all properties back to 'unmatched' in this transaction,
         # which the planner's statistics do not know: without this it planned the routing-key
         # step for one unmatched row and re-ran its median per row, for hours (2026-09-30).
@@ -636,6 +668,7 @@ def fallbacks(engine: sa.Engine, run_id: int) -> dict[str, int]:
         ).rowcount
     return {
         "rechecked_buildings": rechecked,
+        "rechecked_town_buildings": town_buildings,
         **matched_locally,
         "gazetteer": gazetteer,
         "routing_key": routing,
