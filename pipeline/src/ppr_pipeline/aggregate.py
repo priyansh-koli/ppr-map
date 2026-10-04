@@ -155,7 +155,7 @@ def area_stats(conn: sa.Connection, provisional_from: date, last_month: date) ->
 
 HEX_SALES = """
 SELECT h3_r8, price_eur, is_new, sale_date FROM market
-WHERE h3_r8 IS NOT NULL AND sale_date > :since
+WHERE h3_r8 IS NOT NULL AND sale_date >= :since
 """
 
 INSERT_HEX = """
@@ -166,7 +166,7 @@ SELECT h.h3, CAST(:window AS hex_window), h.segment, h.resolution, h.n,
 FROM (
     SELECT h3, resolution, segment, count(*) AS n,
            percentile_cont(0.5) WITHIN GROUP (ORDER BY price_eur) AS median
-    FROM hex_sale WHERE sale_date > :since
+    FROM hex_sale WHERE sale_date >= :since
     GROUP BY 1, 2, 3
 ) h JOIN hex_geom g ON g.h3 = h.h3
 """
@@ -186,9 +186,16 @@ def _copy(conn: sa.Connection, table: str, columns: str, rows: Iterator[tuple[An
             copy.write_row(row)
 
 
+def _months_before(month: date, n: int) -> date:
+    index = month.year * 12 + month.month - 1 - n
+    return date(index // 12, index % 12 + 1, 1)
+
+
 def price_hexes(conn: sa.Connection, max_date: date) -> int:
-    since_36 = date(max_date.year - 3, max_date.month, 1)
-    since_12 = date(max_date.year - 1, max_date.month, 1)
+    # The same windows as area_stats' rolling_12m: whole months, ending with the register's
+    # latest month. (From the first of the same month a year back took in 13 months.)
+    last_month = max_date.replace(day=1)
+    since_12, since_36 = _months_before(last_month, 11), _months_before(last_month, 35)
     sales = conn.execute(sa.text(HEX_SALES), {"since": since_36}).all()
     conn.execute(
         sa.text(

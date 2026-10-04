@@ -106,7 +106,7 @@ def _change(alias: str) -> str:
 
 
 # Every match is materialised, so `n_sales` (a lookup per property) is left out here and
-# counted for the page only, as `tile_matching_sales` counts it (migration 0012).
+# counted for the page only, as `tile_matching_sales` counts it (migrations 0012, 0017).
 MATCHES = """
 WITH m AS MATERIALIZED (
     SELECT property_id, public_id, geom, confidence, sale_date, price_eur, is_new, nfmp, vatx,
@@ -118,7 +118,8 @@ WITH m AS MATERIALIZED (
 COLUMNS = """page.public_id, p.address_display, page.confidence::text, ST_Y(page.geom),
        ST_X(page.geom), page.sale_date, page.price_eur, page.is_new, page.nfmp, page.vatx,
        page.bulk, (SELECT count(*) FROM sale a
-                   WHERE a.property_id = page.property_id AND a.withdrawn_at IS NULL)"""
+                   WHERE a.property_id = page.property_id AND a.withdrawn_at IS NULL
+                     AND NOT a.is_possible_duplicate)"""
 TOTALS = "agg.total, ST_XMin(agg.box), ST_YMin(agg.box), ST_XMax(agg.box), ST_YMax(agg.box)"
 
 # Sorting by date or price: the previous sale is looked up for the page only.

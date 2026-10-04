@@ -69,18 +69,37 @@ def housekeeping_job() -> dict[str, int]:
 # --- queueing -----------------------------------------------------------------------------
 
 
+class PipelineBusy(Exception):
+    """A pipeline step is already queued or running."""
+
+
 def enqueue_pipeline(step: str, triggered_by: str | None) -> Job:
+    """Queue one step, unless one is already waiting or running: two runs rebuild the same
+    tables and corrupt each other (P1 #22). The check and the enqueue share a Redis lock, so
+    a double click queues one. The pipeline also takes a database lock while it runs
+    (`ppr_pipeline.db.pipeline_lock`), which covers runs started outside the queue."""
     if step not in PIPELINE_STEPS:
         raise ValueError(f"unknown pipeline step {step!r}")
-    return queue("pipeline").enqueue(
-        "ppr_pipeline.jobs.run",
-        step,
-        triggered_by,
-        job_timeout=PIPELINE_TIMEOUT_S,
-        result_ttl=7 * 24 * 3600,
-        failure_ttl=30 * 24 * 3600,
-        description=f"pipeline: {step}",
-    )
+    with connection().lock("pipeline:enqueue", timeout=30, blocking_timeout=10):
+        q = queue("pipeline")
+        if q.count or q.started_job_registry.count:
+            raise PipelineBusy("A pipeline step is already queued or running")
+        return q.enqueue(
+            "ppr_pipeline.jobs.run",
+            step,
+            triggered_by,
+            job_timeout=PIPELINE_TIMEOUT_S,
+            result_ttl=7 * 24 * 3600,
+            failure_ttl=30 * 24 * 3600,
+            description=f"pipeline: {step}",
+        )
+
+
+def queue_monthly_pipeline() -> None:
+    try:
+        enqueue_pipeline("monthly", None)
+    except PipelineBusy:
+        log.warning("monthly pipeline not queued: a pipeline step is still queued or running")
 
 
 def job_status(job_id: str) -> dict[str, Any] | None:
@@ -144,9 +163,8 @@ def build_scheduler() -> Any:
     )
     if get_settings().schedule_pipeline:
         s.add_job(
-            enqueue_pipeline,
+            queue_monthly_pipeline,
             CronTrigger(day=2, hour=2, timezone=TIMEZONE),
-            args=["monthly", None],
             id="pipeline-monthly",
             coalesce=True,
         )

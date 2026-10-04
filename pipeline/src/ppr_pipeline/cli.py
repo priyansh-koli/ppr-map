@@ -1,6 +1,8 @@
 """`ppr` command-line entry point. Steps are implemented from Phase 2 onwards."""
 
+import functools
 import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
 
@@ -9,7 +11,7 @@ from app.config import get_settings
 
 from ppr_pipeline import benchmarks, boundaries
 from ppr_pipeline.aggregate import aggregate as rebuild_aggregates
-from ppr_pipeline.db import get_engine
+from ppr_pipeline.db import PipelineBusy, get_engine, pipeline_lock
 from ppr_pipeline.enrich.run import enrich as enrich_all
 from ppr_pipeline.geocode.gazetteer import build_gazetteer
 from ppr_pipeline.geocode.runner import geocode_properties
@@ -36,12 +38,28 @@ def sources(
         typer.echo(f"{key:20} {status:9} {checked:10} {src.licence}")
 
 
+def locked[**P, R](command: Callable[P, R]) -> Callable[P, R]:
+    """Steps that write the data run one at a time (`pipeline_lock`)."""
+
+    @functools.wraps(command)
+    def run(*args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            with pipeline_lock(get_engine()):
+                return command(*args, **kwargs)
+        except PipelineBusy as exc:
+            typer.echo(f"Not started: {exc}.", err=True)
+            raise typer.Exit(code=1) from exc
+
+    return run
+
+
 def _todo() -> None:
     typer.echo(NOT_YET, err=True)
     raise typer.Exit(code=2)
 
 
 @app.command()
+@locked
 def ingest(
     kind: Annotated[str, typer.Argument(help="Source key from config/sources.yaml")],
     file: Annotated[
@@ -97,6 +115,7 @@ OSM_PBF = Path("osm") / "ireland-and-northern-ireland-latest.osm.pbf"
 
 
 @app.command()
+@locked
 def gazetteer(
     refresh: Annotated[
         bool, typer.Option(help="Download the housing-development surveys again.")
@@ -116,6 +135,7 @@ def gazetteer(
 
 
 @app.command()
+@locked
 def geocode(
     refresh: Annotated[
         bool, typer.Option(help="Redo every property, except admin-locked ones.")
@@ -139,6 +159,7 @@ def geocode(
 
 
 @app.command()
+@locked
 def enrich(
     refresh: Annotated[
         bool, typer.Option(help="Download GTFS and Pobal again even if present.")
@@ -153,6 +174,7 @@ def enrich(
 
 
 @app.command()
+@locked
 def aggregate() -> None:
     """Rebuild area stats, price hexes and hover summaries."""
     summary = rebuild_aggregates(get_engine(), progress=typer.echo)

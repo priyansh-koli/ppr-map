@@ -79,39 +79,47 @@ def provenance(conn: sa.Connection) -> dict[str, Any]:
     }
 
 
-def compute_vicinity(engine: sa.Engine, progress: Progress = lambda _: None) -> dict[str, Any]:
+def vicinity(conn: sa.Connection, progress: Progress = lambda _: None) -> dict[str, Any]:
+    """Replace every vicinity row inside the caller's transaction. Readers keep the previous
+    rows until it commits, and a failure leaves them whole (P1 #21). DELETE, not TRUNCATE:
+    TRUNCATE would lock the table against every reader for the whole run."""
     started = time.monotonic()
-    with engine.begin() as conn:
-        conn.execute(sa.text("TRUNCATE property_enrichment"))
-        lo, hi = conn.execute(sa.text("SELECT min(id), max(id) FROM property")).one()
-        prov = provenance(conn)
+    conn.execute(sa.text("DELETE FROM property_enrichment"))
+    lo, hi = conn.execute(sa.text("SELECT min(id), max(id) FROM property")).one()
     if lo is None:
         return {"enriched": 0}
+    prov = provenance(conn)
+    # The ITM tables are built once for all batches, and dropped with the transaction.
+    for name, types in GROUPS.items():
+        conn.execute(
+            sa.text(
+                f"CREATE TEMP TABLE {name} ON COMMIT DROP AS "  # noqa: S608 (constant names)
+                "SELECT id, type, ST_Transform(geom, 2157) AS g FROM poi "
+                "WHERE type::text = ANY(:types)"
+            ),
+            {"types": list(types)},
+        )
+        conn.execute(sa.text(f"CREATE INDEX ON {name} USING gist (g)"))
+        conn.execute(sa.text(f"ANALYZE {name}"))
     done = 0
-    # One session: the ITM tables are built once and each batch commits on its own.
-    with engine.connect() as conn:
-        for name, types in GROUPS.items():
-            # Pooled connections keep session temp tables: start clean, and drop at the end.
-            conn.execute(sa.text(f"DROP TABLE IF EXISTS {name}"))
-            conn.execute(
-                sa.text(
-                    f"CREATE TEMP TABLE {name} AS "  # noqa: S608 (constant table names)
-                    "SELECT id, type, ST_Transform(geom, 2157) AS g FROM poi "
-                    "WHERE type::text = ANY(:types)"
-                ),
-                {"types": list(types)},
-            )
-            conn.execute(sa.text(f"CREATE INDEX ON {name} USING gist (g)"))
-            conn.execute(sa.text(f"ANALYZE {name}"))
-        conn.commit()
-        for start in range(lo, hi + 1, JOIN_BATCH):
-            done += conn.execute(
-                sa.text(INSERT),
-                {"lo": start, "hi": start + JOIN_BATCH, "provenance": json.dumps(prov)},
-            ).rowcount
-            conn.commit()
-            progress(f"  vicinity: {done:,}")
-        for name in GROUPS:
-            conn.execute(sa.text(f"DROP TABLE {name}"))
-        conn.commit()
+    for start in range(lo, hi + 1, JOIN_BATCH):
+        done += conn.execute(
+            sa.text(INSERT),
+            {"lo": start, "hi": start + JOIN_BATCH, "provenance": json.dumps(prov)},
+        ).rowcount
+        progress(f"  vicinity: {done:,}")
     return {"enriched": done, "seconds": round(time.monotonic() - started, 1)}
+
+
+def vacuum(engine: sa.Engine) -> None:
+    """Every row was replaced: reclaim the old ones and refresh the planner's statistics."""
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(sa.text("VACUUM (ANALYZE) property_enrichment"))
+
+
+def compute_vicinity(engine: sa.Engine, progress: Progress = lambda _: None) -> dict[str, Any]:
+    """Recompute the vicinity values on their own (the POIs are already loaded)."""
+    with engine.begin() as conn:
+        stats = vicinity(conn, progress)
+    vacuum(engine)
+    return stats

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { messageOf } from "@/components/auth/form";
 import { ConfidenceChip } from "@/components/ui/confidence-chip";
@@ -190,6 +190,9 @@ export function IngestRuns() {
   const [step, setStep] = useState("aggregate");
   const [jobs, setJobs] = useState<AdminJob[] | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // One request at a time: a double click queued two runs (the API also refuses a second).
+  const [queueing, setQueueing] = useState(false);
+  const inFlight = useRef(false);
   const refreshJobs = useCallback(() => {
     api.admin
       .jobs()
@@ -205,6 +208,9 @@ export function IngestRuns() {
           className="flex flex-wrap items-end gap-2 text-sm"
           onSubmit={async (e) => {
             e.preventDefault();
+            if (inFlight.current) return;
+            inFlight.current = true;
+            setQueueing(true);
             setMessage(null);
             try {
               const job = await api.admin.startRun(step);
@@ -212,6 +218,9 @@ export function IngestRuns() {
               refreshJobs();
             } catch (err) {
               setMessage(`Could not queue it: ${messageOf(err)}`);
+            } finally {
+              inFlight.current = false;
+              setQueueing(false);
             }
           }}
         >
@@ -229,8 +238,13 @@ export function IngestRuns() {
               ))}
             </select>
           </label>
-          <button type="submit" className="btn btn-primary btn-sm">
-            Queue
+          <button
+            type="submit"
+            className="btn btn-primary btn-sm"
+            disabled={queueing}
+            aria-busy={queueing}
+          >
+            {queueing ? "Queueing…" : "Queue"}
           </button>
           <button type="button" className="btn btn-secondary btn-sm" onClick={refreshJobs}>
             Refresh jobs

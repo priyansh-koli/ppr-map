@@ -8,6 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # Aggregates with fewer sales are not published (CONVENTIONS.md, data rules).
 MIN_N = 5
+# A street or estate part with one of these words is a street even when a place shares its
+# name (comparables).
+STREET_WORD = (
+    r"\m(road|rd|street|st|avenue|ave|lane|drive|terrace|place|square|quay|row|way|crescent"
+    r"|close|court|grove|park|gardens|walk|green|rise|heights|mews|hill|view|b[oó]thar|ascal)\M"
+)
 
 META = """
 SELECT r.stats ->> 'data_version', (r.stats ->> 'max_sale_date')::date,
@@ -98,17 +104,32 @@ async def series(session: AsyncSession, area_ids: list[int], since: Any) -> tupl
 
 # Market sales near a precisely placed property (brief: "same street and within 500 m,
 # last 24 months"). Distances only between exact and street points (D-035). Addresses that
-# share a street or estate part are on the same street (address_street_parts, migration 0010).
+# share a street or estate part are on the same street (address_street_parts, migrations
+# 0010 and 0016). A part named like a town, suburb or townland within about 10 km says where,
+# not which street ("ranelagh" in "8 annesley park, ranelagh, dublin 6"), unless it has a
+# street word in it ("navan road").
 COMPARABLES = """
 WITH me AS MATERIALIZED (
-    SELECT id, geom, address_street_parts(address_normalised) AS streets FROM property
+    SELECT id, geom, ST_Expand(geom, 0.1) AS around,
+           address_street_parts(address_normalised) AS parts
+    FROM property
     WHERE public_id = :id AND NOT is_suppressed AND geocode_confidence IN ('exact', 'street')
+), mine AS MATERIALIZED (
+    SELECT coalesce(array_agg(part), '{}') AS streets
+    FROM me, unnest(me.parts) AS part
+    WHERE part ~ :street_word
+       OR NOT (EXISTS (SELECT FROM gazetteer_feature g
+                       WHERE g.kind IN ('place', 'city') AND g.geom && me.around
+                         AND lower(g.name) = part)
+               OR EXISTS (SELECT FROM area a
+                          WHERE a.kind IN ('settlement', 'townland') AND a.geom && me.around
+                            AND lower(a.name) = part))
 ), nearby AS MATERIALIZED (
     SELECT DISTINCT ON (p.id) p.public_id, p.address_display, p.geocode_confidence::text AS conf,
            s.sale_date, s.price_eur, s.is_new, s.vat_exclusive,
            round(ST_Distance(p.geom::geography, me.geom::geography))::int AS distance_m,
-           address_street_parts(p.address_normalised) && me.streets AS same_street
-    FROM me, property p JOIN sale s ON s.property_id = p.id
+           address_street_parts(p.address_normalised) && mine.streets AS same_street
+    FROM me, mine, property p JOIN sale s ON s.property_id = p.id
     WHERE p.id <> me.id AND NOT p.is_suppressed
       AND p.geocode_confidence IN ('exact', 'street')
       AND p.geom && ST_Expand(me.geom, :deg)
@@ -142,5 +163,6 @@ async def comparables(
         "since": since,
         "limit": limit,
         "min_n": MIN_N,
+        "street_word": STREET_WORD,
     }
     return list((await session.execute(sa.text(COMPARABLES), params)).all())

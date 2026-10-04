@@ -1,5 +1,10 @@
 """`ppr enrich`: reload transport stops, amenities and deprivation, then recompute the
-per-property vicinity values. Each source load is recorded as its own `ingest_run`."""
+per-property vicinity values. Each source load is recorded as its own `ingest_run`.
+
+The sources are read first; then the POIs, the deprivation values and the vicinity values
+that point at them are replaced in one transaction, so a failure anywhere (a bad download,
+an unreadable extract) leaves the previous ones whole instead of every property without
+vicinity values (P1 #21)."""
 
 import time
 from collections.abc import Callable
@@ -20,7 +25,7 @@ from ppr_pipeline.enrich.pois import (
     read_osm,
     replace_pois,
 )
-from ppr_pipeline.enrich.vicinity import compute_vicinity
+from ppr_pipeline.enrich.vicinity import vacuum, vicinity
 from ppr_pipeline.ppr.ingest import USER_AGENT
 from ppr_pipeline.sources import Source
 
@@ -40,28 +45,6 @@ def download(url: str, dest: Path) -> Path:
                 fh.write(chunk)
     part.replace(dest)
     return dest
-
-
-def _run(
-    engine: sa.Engine, kind: IngestKind, url: str, step: Callable[[sa.Connection], dict[str, Any]]
-) -> dict[str, Any]:
-    with engine.begin() as conn:
-        run_id: int = conn.execute(
-            sa.insert(IngestRun)
-            .values(kind=kind, status=IngestStatus.RUNNING, source_url=url)
-            .returning(IngestRun.id)
-        ).scalar_one()
-    started = time.monotonic()
-    try:
-        with engine.begin() as conn:
-            stats = step(conn)
-            stats["seconds"] = round(time.monotonic() - started, 1)
-            _finish(conn, run_id, status=IngestStatus.SUCCEEDED, stats=stats)
-    except BaseException as exc:
-        with engine.begin() as conn:
-            _finish(conn, run_id, status=IngestStatus.FAILED, stats={"error": repr(exc)})
-        raise
-    return stats
 
 
 def enrich(
@@ -88,43 +71,64 @@ def enrich(
         progress(f"Downloading {pobal_url}")
         download(pobal_url, pobal)
 
-    # The vicinity rows point at POIs that are about to be replaced; they are rebuilt below.
-    with engine.begin() as conn:
-        conn.execute(sa.text("TRUNCATE property_enrichment"))
-
-    def load_gtfs(conn: sa.Connection) -> dict[str, Any]:
-        as_of, rows = read_gtfs(gtfs)
-        return {
-            "feed_date": as_of.isoformat(),
-            "stops": replace_pois(conn, GTFS_SOURCE, as_of, rows, "lonlat"),
-        }
-
-    def load_osm(conn: sa.Connection) -> dict[str, Any]:
-        as_of, rows = read_osm(pbf, data_dir / "work")
-        return {
-            "extract_date": as_of.isoformat(),
-            "pois": replace_pois(conn, OSM_SOURCE, as_of, rows, "wkb"),
-        }
-
-    progress("  transport stops (GTFS)")
-    stats = {"gtfs": _run(engine, IngestKind.GTFS, str(gtfs), load_gtfs)}
-    progress("  amenities and schools (OSM)")
-    stats["osm"] = _run(engine, IngestKind.OSM, str(pbf), load_osm)
-    progress("  deprivation (Pobal)")
-    stats["pobal"] = _run(
-        engine,
-        IngestKind.POBAL,
-        pobal_url,
-        lambda conn: load_pobal(conn, pobal.read_bytes(), ed_ids(ed_layer)),
-    )
-    with engine.connect() as conn:
-        stats["poi_types"] = dict(
-            conn.execute(
-                sa.text("SELECT type::text, count(*) FROM poi GROUP BY 1 ORDER BY 1")
-            ).all()
-        )
-    stats["vicinity"] = compute_vicinity(engine, progress)
+    runs = {
+        "gtfs": _start(engine, IngestKind.GTFS, str(gtfs)),
+        "osm": _start(engine, IngestKind.OSM, str(pbf)),
+        "pobal": _start(engine, IngestKind.POBAL, pobal_url),
+    }
+    stats: dict[str, Any] = {}
+    try:
+        # Read before the transaction: parsing the OSM extract takes minutes and locks nothing.
+        progress("  reading transport stops (GTFS)")
+        gtfs_date, stops = read_gtfs(gtfs)
+        progress("  reading amenities and schools (OSM)")
+        osm_date, amenities = read_osm(pbf, data_dir / "work")
+        progress("  reading deprivation (Pobal)")
+        pobal_csv, eds = pobal.read_bytes(), ed_ids(ed_layer)
+        with engine.begin() as conn:
+            # First: the vicinity rows point at the POIs about to be replaced.
+            conn.execute(sa.text("DELETE FROM property_enrichment"))
+            started = time.monotonic()
+            stats["gtfs"] = {
+                "feed_date": gtfs_date.isoformat(),
+                "stops": replace_pois(conn, GTFS_SOURCE, gtfs_date, stops, "lonlat"),
+            }
+            stats["osm"] = {
+                "extract_date": osm_date.isoformat(),
+                "pois": replace_pois(conn, OSM_SOURCE, osm_date, amenities, "wkb"),
+            }
+            stats["pobal"] = load_pobal(conn, pobal_csv, eds)
+            stats["poi_types"] = dict(
+                conn.execute(
+                    sa.text("SELECT type::text, count(*) FROM poi GROUP BY 1 ORDER BY 1")
+                ).all()
+            )
+            seconds = round(time.monotonic() - started, 1)
+            stats["vicinity"] = vicinity(conn, progress)
+            for name, run_id in runs.items():
+                _finish(
+                    conn,
+                    run_id,
+                    status=IngestStatus.SUCCEEDED,
+                    stats={**stats[name], "seconds": seconds},
+                )
+    except BaseException as exc:
+        with engine.begin() as conn:
+            for run_id in runs.values():
+                _finish(conn, run_id, status=IngestStatus.FAILED, stats={"error": repr(exc)})
+        raise
+    vacuum(engine)
     return stats
+
+
+def _start(engine: sa.Engine, kind: IngestKind, url: str) -> int:
+    with engine.begin() as conn:
+        run_id: int = conn.execute(
+            sa.insert(IngestRun)
+            .values(kind=kind, status=IngestStatus.RUNNING, source_url=url)
+            .returning(IngestRun.id)
+        ).scalar_one()
+    return run_id
 
 
 def _finish(conn: sa.Connection, run_id: int, **values: Any) -> None:

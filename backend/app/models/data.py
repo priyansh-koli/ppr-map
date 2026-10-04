@@ -334,6 +334,13 @@ class GazetteerFeature(Base):
     __table_args__ = (
         sa.Index("ix_gazetteer_feature_county_kind", "county", "kind"),
         gist("gazetteer_feature", "geom"),
+        # Place names near a home, for comparable sales (migration 0016).
+        sa.Index(
+            "ix_gazetteer_feature_place_geom",
+            "geom",
+            postgresql_using="gist",
+            postgresql_where=sa.text("kind IN ('place', 'city')"),
+        ),
     )
 
 

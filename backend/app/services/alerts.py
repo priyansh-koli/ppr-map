@@ -2,10 +2,12 @@
 
 A sale is new to a search when the PPR ingest run that first saw it is later than the run
 the search was last checked against (`alerted_through_run_id`). Alerts go out only once the
-data is complete: after an aggregate run that followed the ingest, when new properties have
-been geocoded (unplaced ones match nothing). Only active accounts with a verified email and
-the `alert:receive` permission get them (docs/permissions.md). Each search gets at most one
-alert per register update (`alert_delivery` is unique on search and update).
+data is complete: every property with a sale from the ingest has been through geocoding
+(an unplaced one matches nothing, and once the search is checked past that run its sale
+would never be reported), and a geocode run and then an aggregate run followed the ingest.
+Only active accounts with a verified email and the `alert:receive` permission get them
+(docs/permissions.md). Each search gets at most one alert per register update
+(`alert_delivery` is unique on search and update).
 """
 
 import hashlib
@@ -30,13 +32,21 @@ log = logging.getLogger(__name__)
 LISTED = 20
 SORTS = ("date", "-price", "price", "-change", "change")
 
-# The newest PPR ingest whose data a later aggregate run has finished (the pipeline's last
-# step), so every new property has been placed.
+# The newest PPR ingest that the pipeline has finished with: geocoding ran after it and the
+# aggregate (the last step) after that, and none of its properties is waiting to be placed.
+# An aggregate run straight after the ingest, before geocoding, is not enough (P1 #19).
 READY_RUN = """
 SELECT max(p.id) FROM ingest_run p
 WHERE p.kind = 'ppr' AND p.status = 'succeeded'
-  AND EXISTS (SELECT 1 FROM ingest_run a WHERE a.kind = 'aggregate'
-              AND a.status = 'succeeded' AND a.id > p.id)
+  AND EXISTS (
+      SELECT 1 FROM ingest_run g JOIN ingest_run a
+        ON a.kind = 'aggregate' AND a.status = 'succeeded' AND a.started_at >= g.finished_at
+      WHERE g.kind = 'geocode' AND g.status = 'succeeded' AND g.started_at >= p.finished_at)
+  AND NOT EXISTS (
+      SELECT 1 FROM property pr
+      WHERE pr.geocoded_at IS NULL AND EXISTS (
+          SELECT 1 FROM sale s
+          WHERE s.property_id = pr.id AND s.first_seen_run_id <= p.id))
 """
 
 DUE = """
@@ -62,6 +72,7 @@ WHERE EXISTS (
     SELECT 1 FROM sale s
     WHERE s.property_id = m.property_id AND s.sale_date = m.sale_date
       AND s.price_eur = m.price_eur AND s.withdrawn_at IS NULL
+      AND NOT s.is_possible_duplicate
       AND s.first_seen_run_id > :since AND s.first_seen_run_id <= :ready)
 ORDER BY m.sale_date DESC, m.property_id
 LIMIT :limit

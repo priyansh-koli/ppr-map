@@ -35,3 +35,39 @@ def test_monthly_pipeline_only_when_switched_on(monkeypatch: pytest.MonkeyPatch)
 def test_unknown_pipeline_steps_are_refused() -> None:
     with pytest.raises(ValueError, match="unknown pipeline step"):
         jobs.enqueue_pipeline("drop-tables", None)
+
+
+def test_only_one_pipeline_run_is_queued(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A double click on "Queue" started two runs that corrupted each other (P1 #22)."""
+    from contextlib import nullcontext
+    from types import SimpleNamespace
+
+    class FakeQueue:
+        def __init__(self) -> None:
+            self.jobs: list[str] = []
+            self.started_job_registry = SimpleNamespace(count=0)
+
+        @property
+        def count(self) -> int:
+            return len(self.jobs)
+
+        def enqueue(self, *args: object, description: str, **_: object) -> object:
+            self.jobs.append(description)
+            return SimpleNamespace(id="job-1", description=description)
+
+    fake = FakeQueue()
+    monkeypatch.setattr(jobs, "queue", lambda name: fake)
+    monkeypatch.setattr(
+        jobs, "connection", lambda: SimpleNamespace(lock=lambda *a, **k: nullcontext())
+    )
+    jobs.enqueue_pipeline("aggregate", None)
+    with pytest.raises(jobs.PipelineBusy):
+        jobs.enqueue_pipeline("aggregate", None)
+    fake.jobs.clear()
+    fake.started_job_registry.count = 1  # running now
+    with pytest.raises(jobs.PipelineBusy):
+        jobs.enqueue_pipeline("monthly", None)
+    jobs.queue_monthly_pipeline()  # the scheduler logs it and carries on
+    fake.started_job_registry.count = 0
+    jobs.enqueue_pipeline("geocode", None)
+    assert fake.jobs == ["pipeline: geocode"]

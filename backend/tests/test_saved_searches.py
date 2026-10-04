@@ -52,17 +52,25 @@ def run_alerts(frequency: str = "on_data_update") -> tuple[alerts.Result, Outbox
     return asyncio.run(go()), outbox
 
 
-def new_register_update(db: sa.Engine, address: str, price: int) -> None:
-    """A later PPR run that files one more sale of an existing Carlow property, then the
-    aggregate run that completes the update."""
+RUN = (
+    "INSERT INTO ingest_run (kind, status, started_at, finished_at, rows_read, rows_inserted, "
+    "rows_withdrawn, rows_failed) VALUES (CAST(:kind AS ingest_kind), 'succeeded', "
+    "clock_timestamp(), clock_timestamp(), 0, 0, 0, 0) RETURNING id"
+)
+
+
+def pipeline_step(db: sa.Engine, kind: str) -> int:
     with db.begin() as conn:
-        run = conn.execute(
-            sa.text(
-                "INSERT INTO ingest_run (kind, status, finished_at, rows_read, rows_inserted, "
-                "rows_withdrawn, rows_failed) VALUES ('ppr', 'succeeded', now(), 1, 1, 0, 0) "
-                "RETURNING id"
-            )
-        ).scalar_one()
+        return int(conn.execute(sa.text(RUN), {"kind": kind}).scalar_one())
+
+
+def new_register_update(
+    db: sa.Engine, address: str, price: int, steps: tuple[str, ...] = ("geocode", "aggregate")
+) -> None:
+    """A later PPR run that files one more sale of an existing Carlow property, then the
+    pipeline steps that complete the update (geocoding, then the aggregate)."""
+    with db.begin() as conn:
+        run = conn.execute(sa.text(RUN), {"kind": "ppr"}).scalar_one()
         conn.execute(
             sa.text(
                 "INSERT INTO sale (property_id, source_row_hash, raw_date, raw_address, "
@@ -74,12 +82,8 @@ def new_register_update(db: sa.Engine, address: str, price: int) -> None:
             ),
             {"h": NEW_HASH, "price": price, "run": run, "a": address},
         )
-        conn.execute(
-            sa.text(
-                "INSERT INTO ingest_run (kind, status, finished_at, rows_read, rows_inserted, "
-                "rows_withdrawn, rows_failed) VALUES ('aggregate', 'succeeded', now(), 0, 0, 0, 0)"
-            )
-        )
+    for kind in steps:
+        pipeline_step(db, kind)
 
 
 def test_saving_and_editing_searches(db: sa.Engine) -> None:
@@ -143,6 +147,59 @@ def test_alerts_report_each_new_sale_once(db: sa.Engine) -> None:
 
     weekly_run, weekly_sent = run_alerts("weekly")
     assert weekly_run.sent == 1 and weekly_sent.sent[0].subject == "1 new sale: Weekly"
+
+
+def test_alerts_wait_for_new_homes_to_be_placed(db: sa.Engine) -> None:
+    """An aggregate run before geocoding used to mark the update as alerted while its new
+    homes had no location, so their sales were never reported (P1 #19)."""
+    outbox = Outbox()
+    client = verified(outbox, "fiona@example.ie")
+    search = {"name": "Carlow", "query": {"county": "carlow"}, "alertFrequency": "on_data_update"}
+    assert client.post(URL, json=search).status_code == 201
+    address = "178 Pollerton Road, Carlow"
+    with db.begin() as conn:
+        placed = conn.execute(
+            sa.text(
+                "SELECT geom, geocode_confidence, geocoded_at FROM property "
+                "WHERE address_display = :a"
+            ),
+            {"a": address},
+        ).one()
+        # As a home first seen in this update: not placed yet.
+        conn.execute(
+            sa.text(
+                "UPDATE property SET geom = NULL, geocode_confidence = 'unmatched', "
+                "geocoded_at = NULL WHERE address_display = :a"
+            ),
+            {"a": address},
+        )
+    try:
+        new_register_update(db, address, 262000, steps=("aggregate",))
+        early, sent = run_alerts()
+        assert (early.checked, sent.sent) == (0, [])  # not ready: nothing checked or sent
+        with db.begin() as conn:
+            conn.execute(
+                sa.text(
+                    "UPDATE property SET geom = :g, geocode_confidence = :c, geocoded_at = :t "
+                    "WHERE address_display = :a"
+                ),
+                {"g": placed[0], "c": placed[1], "t": placed[2], "a": address},
+            )
+        pipeline_step(db, "geocode")
+        waiting, sent = run_alerts()
+        assert (waiting.checked, sent.sent) == (0, [])  # placed, but not aggregated since
+        pipeline_step(db, "aggregate")
+        result, sent = run_alerts()
+        assert result.sent == 1 and "€262,000" in sent.sent[0].body
+    finally:
+        with db.begin() as conn:
+            conn.execute(
+                sa.text(
+                    "UPDATE property SET geom = :g, geocode_confidence = :c, geocoded_at = :t "
+                    "WHERE address_display = :a"
+                ),
+                {"g": placed[0], "c": placed[1], "t": placed[2], "a": address},
+            )
 
 
 def test_unsubscribe_link(db: sa.Engine) -> None:

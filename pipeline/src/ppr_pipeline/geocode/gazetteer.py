@@ -89,7 +89,11 @@ def _value(col: dict[str, Any], tag: str, i: int) -> Any:
 def read_osm(pbf: Path, work_dir: Path) -> Iterator[Row]:
     """(kind, name, house_number, detail, wkb hex, source_ref, radius_m, source)."""
     work_dir.mkdir(parents=True, exist_ok=True)
-    pyogrio.set_gdal_config_options({"OSM_CONFIG_FILE": str(osm_conf(work_dir))})
+    # The OSM driver spills its node index to temporary files in CPL_TMPDIR, by default the
+    # working directory, which the worker image cannot write to.
+    pyogrio.set_gdal_config_options(
+        {"OSM_CONFIG_FILE": str(osm_conf(work_dir)), "CPL_TMPDIR": str(work_dir)}
+    )
 
     meta, _, geoms, values = pyogrio.raw.read(
         str(pbf),

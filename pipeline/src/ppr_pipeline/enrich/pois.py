@@ -111,13 +111,21 @@ NOT_SHOPS = {
     "fuel",
 }
 
+# Checked before the primary names: "Scoil Phobail" (community school), "Pobalscoil",
+# "Meánscoil" (secondary), "Scoil Chuimsitheach" (comprehensive), "Gairmscoil" (vocational)
+# and "Ardscoil" all say "scoil" but are post-primary.
 POST_PRIMARY_NAME = re.compile(
     r"\b(secondary|community school|community college|college|col[aá]iste|gaelchol[aá]iste|"
-    r"comprehensive|vocational|high school|grammar|post[- ]primary)\b",
+    r"comprehensive|vocational|high school|grammar|post[- ]primary|"
+    r"pobal ?scoil|pobail ?scoil|scoil phobail|scoil phobal|me[aá]n ?scoil|"
+    r"scoil chuimsitheach|gairm ?scoil|ard ?scoil)\b",
     re.I,
 )
+# A plain "Scoil ..." is nearly always a primary school; post-primary ones are named as such
+# above or tagged in OSM, and the tag wins over the name.
 PRIMARY_NAME = re.compile(
-    r"\b(national school|n\.?\s?s\.?|scoil|primary|gaelscoil|infant|junior school)\b", re.I
+    r"\b(national school|n\.?\s?s\.?|scoil|bunscoil|primary|gaelscoil|infant|junior school)\b",
+    re.I,
 )
 SPECIAL_NAME = re.compile(r"\bspecial school\b", re.I)
 
@@ -127,9 +135,13 @@ def school_type(name: str | None, school_tag: str | None) -> PoiType | None:
     text = name or ""
     if SPECIAL_NAME.search(text) or tag in ("special", "special_education_needs"):
         return PoiType.SCHOOL_SPECIAL
-    if tag in ("secondary", "post_primary") or POST_PRIMARY_NAME.search(text):
+    if tag in ("secondary", "post_primary"):
         return PoiType.SCHOOL_POST_PRIMARY
-    if tag == "primary" or PRIMARY_NAME.search(text):
+    if tag == "primary":
+        return PoiType.SCHOOL_PRIMARY
+    if POST_PRIMARY_NAME.search(text):
+        return PoiType.SCHOOL_POST_PRIMARY
+    if PRIMARY_NAME.search(text):
         return PoiType.SCHOOL_PRIMARY
     return None
 
@@ -174,7 +186,11 @@ def read_osm(pbf: Path, work_dir: Path) -> tuple[date, list[tuple[Any, ...]]]:
     """(extract date, rows of (type, name, wkb, source_ref, attrs)). Polygons are reduced to
     a point on their surface in the database."""
     work_dir.mkdir(parents=True, exist_ok=True)
-    pyogrio.set_gdal_config_options({"OSM_CONFIG_FILE": str(osm_conf(work_dir))})
+    # The OSM driver spills its node index to temporary files in CPL_TMPDIR, by default the
+    # working directory, which the worker image cannot write to.
+    pyogrio.set_gdal_config_options(
+        {"OSM_CONFIG_FILE": str(osm_conf(work_dir)), "CPL_TMPDIR": str(work_dir)}
+    )
     as_of = datetime.fromtimestamp(pbf.stat().st_mtime, UTC).date()
     rows = []
     for layer, ids in (("points", ("osm_id",)), ("multipolygons", ("osm_id", "osm_way_id"))):

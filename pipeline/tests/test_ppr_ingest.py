@@ -2,6 +2,7 @@
 
 import csv
 import io
+from decimal import Decimal
 
 import pytest
 import sqlalchemy as sa
@@ -81,6 +82,64 @@ def test_forced_reload_is_idempotent(engine: sa.Engine, sample_csv: bytes) -> No
     assert (forced.rows_inserted, forced.rows_withdrawn) == (0, 0)
     assert _count(engine, "SELECT count(*) FROM sale") == 26
     assert _count(engine, "SELECT count(*) FROM property") == 24
+
+
+def test_a_re_keyed_sale_moves_to_its_new_property(engine: sa.Engine, sample_csv: bytes) -> None:
+    """When the address rules change a sale's key, a reload moves the sale to the property
+    of its new key; it used to stay on the old one (P1 #23). The home keeps its place on the
+    map, its hidden state and the users' saved items, and the emptied property is retired."""
+    ingest_ppr(engine, sample_csv, URL)
+    elms = "9theelmscastlejanewoodglanmire"
+    with engine.begin() as conn:
+        # As if an earlier version of the rules had keyed it differently.
+        old_id = conn.execute(
+            sa.text(
+                "UPDATE property SET address_key = 'old-elms-key', public_id = 'oldelmsid000', "
+                "geom = ST_SetSRID(ST_MakePoint(-8.38, 51.93), 4326), "
+                "geocode_confidence = 'exact', geocode_method = 'admin', geocoded_at = now(), "
+                "geocode_locked = true, is_suppressed = true "
+                "WHERE address_key = :k RETURNING id"
+            ),
+            {"k": elms},
+        ).scalar_one()
+        conn.execute(sa.text("DELETE FROM app_user WHERE email = 'moved@example.ie'"))
+        user = conn.execute(
+            sa.text(
+                "INSERT INTO app_user (email, password_hash, full_name) "
+                "VALUES ('moved@example.ie', 'x', 'M') RETURNING id"
+            )
+        ).scalar_one()
+        conn.execute(
+            sa.text(
+                "INSERT INTO wishlist_item (user_id, target_kind, property_id) "
+                "VALUES (:u, 'property', :p)"
+            ),
+            {"u": user, "p": old_id},
+        )
+    run = ingest_ppr(engine, sample_csv, URL, force=True)
+    assert run.status is IngestStatus.SUCCEEDED
+    assert (run.stats["sales_moved"], run.stats["properties_retired"]) == (2, 1)
+    with engine.connect() as conn:
+        gone = conn.execute(sa.text("SELECT count(*) FROM property WHERE id = :i"), {"i": old_id})
+        assert gone.scalar_one() == 0
+        new = conn.execute(
+            sa.text(
+                "SELECT p.id, p.is_suppressed, p.geocode_locked, p.geocode_confidence::text, "
+                "round(ST_X(p.geom)::numeric, 2), (SELECT count(*) FROM sale s "
+                "WHERE s.property_id = p.id) FROM property p WHERE p.address_key = :k"
+            ),
+            {"k": elms},
+        ).one()
+        saved = conn.execute(
+            sa.text("SELECT property_id FROM wishlist_item WHERE user_id = :u"), {"u": user}
+        ).scalar_one()
+    assert new[1:] == (True, True, "exact", Decimal("-8.38"), 2)
+    assert saved == new[0]
+    # A plain reload moves nothing.
+    again = ingest_ppr(engine, sample_csv, URL, force=True)
+    assert (again.stats["sales_moved"], again.stats["properties_retired"]) == (0, 0)
+    with engine.begin() as conn:
+        conn.execute(sa.text("DELETE FROM app_user WHERE id = :u"), {"u": user})
 
 
 def test_vanished_rows_are_withdrawn_then_restored(engine: sa.Engine, sample_csv: bytes) -> None:

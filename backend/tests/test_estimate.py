@@ -143,6 +143,55 @@ def test_comparables_median_needs_five_sales(api: TestClient, db: sa.Engine) -> 
     assert seen == {True, False}  # both sides of the threshold are exercised
 
 
+def test_a_town_or_county_part_is_not_a_street(api: TestClient, db: sa.Engine) -> None:
+    """In "…, carlow, co carlow" the town is not the last part; it named no street, yet every
+    home in Carlow came out "on the same street" (P1 #15)."""
+    pid = property_id(db, POLLERTON)
+    url, params = f"/api/v1/properties/{pid}/comparables", {"radiusM": 2000, "limit": 50}
+    before = api.get(url, params=params).json()["items"]
+    same = {i["id"] for i in before if i["sameStreet"]}
+    other = next(i["id"] for i in before if not i["sameStreet"])
+    ids = [pid, other]
+    with db.begin() as conn:
+        saved = conn.execute(
+            sa.text("SELECT id, address_normalised FROM property WHERE public_id = ANY(:ids)"),
+            {"ids": ids},
+        ).all()
+        conn.execute(
+            sa.text(
+                "UPDATE property SET address_normalised = address_normalised || ', co carlow' "
+                "WHERE public_id = ANY(:ids)"
+            ),
+            {"ids": ids},
+        )
+    try:
+        after = {i["id"]: i["sameStreet"] for i in api.get(url, params=params).json()["items"]}
+        assert after[other] is False
+        assert {i for i, s in after.items() if s} == same
+    finally:
+        with db.begin() as conn:
+            for row_id, address in saved:
+                conn.execute(
+                    sa.text("UPDATE property SET address_normalised = :a WHERE id = :i"),
+                    {"a": address, "i": row_id},
+                )
+    with db.connect() as conn:
+        parts = conn.execute(
+            sa.text(
+                "SELECT address_street_parts('8 annesley park, ranelagh, dublin 6'), "
+                "address_street_parts('1 main st, sandyford dublin 18, dublin'), "
+                "address_street_parts('2 the green, kilkee, co. clare, ireland'), "
+                "address_street_parts('5 oak road, dublin 6w, dublin')"
+            )
+        ).one()
+    assert list(parts) == [
+        ["annesley park", "ranelagh"],  # ranelagh is left out by the place names nearby
+        ["main st", "sandyford"],
+        ["the green", "kilkee"],
+        ["oak road"],
+    ]
+
+
 def test_area_pages_show_their_regions_index(api: TestClient) -> None:
     # test_areas.py may have cached Carlow's page before the index was loaded: the new
     # benchmarks run must replace it.

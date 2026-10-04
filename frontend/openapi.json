@@ -5037,7 +5037,7 @@
         ]
       },
       "post": {
-        "description": "Queue a pipeline step (or `monthly`, all of them) for the worker (D-051).",
+        "description": "Queue a pipeline step (or `monthly`, all of them) for the worker (D-051). Only one at\na time: while one is queued or running, another is refused (409).",
         "operationId": "start_run_api_v1_admin_ingest_runs_post",
         "requestBody": {
           "content": {
@@ -5059,6 +5059,9 @@
               }
             },
             "description": "Successful Response"
+          },
+          "409": {
+            "description": "A pipeline step is already queued or running"
           },
           "422": {
             "content": {

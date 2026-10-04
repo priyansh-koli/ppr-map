@@ -133,6 +133,56 @@ ON CONFLICT (source_row_hash) DO UPDATE SET
     withdrawn_at = NULL
 """
 
+# A sale already held whose address now keys to another property (the address rules
+# changed: a key that merged two homes, or split one) moves to it (P1 #23). Without this the
+# sale stayed on the old property for ever, since ON CONFLICT only re-sees a sale.
+MOVE_SALES = """
+CREATE TEMP TABLE sale_move ON COMMIT DROP AS
+SELECT s.id AS sale_id, s.property_id AS old_id, p.id AS new_id, s.sale_date
+FROM ppr_stage st
+JOIN sale s ON s.source_row_hash = st.source_row_hash
+JOIN property p
+  ON p.county = st.county
+ AND p.address_key = st.address_key
+ AND coalesce(p.unit, '') = coalesce(st.unit, '')
+WHERE s.property_id <> p.id;
+UPDATE sale s SET property_id = m.new_id FROM sale_move m WHERE s.id = m.sale_id;
+-- A home hidden on request stays hidden wherever its sales go (D-052).
+UPDATE property p SET is_suppressed = true, updated_at = now()
+FROM sale_move m JOIN property old ON old.id = m.old_id
+WHERE p.id = m.new_id AND old.is_suppressed AND NOT p.is_suppressed;
+-- A property left without sales is retired into the one that took its latest sale.
+CREATE TEMP TABLE property_move ON COMMIT DROP AS
+SELECT DISTINCT ON (m.old_id) m.old_id, m.new_id
+FROM sale_move m
+WHERE NOT EXISTS (SELECT 1 FROM sale s WHERE s.property_id = m.old_id)
+ORDER BY m.old_id, m.sale_date DESC, m.sale_id DESC;
+-- A new property holding only the sales of one retired property is that home under a new
+-- key: it keeps its place on the map, including a hand placement.
+UPDATE property p
+SET geom = o.geom, geocode_confidence = o.geocode_confidence,
+    geocode_method = o.geocode_method, geocode_source = o.geocode_source,
+    geocoded_at = o.geocoded_at, geocode_locked = o.geocode_locked,
+    small_area_id = o.small_area_id, ed_id = o.ed_id, townland_id = o.townland_id,
+    settlement_id = o.settlement_id, h3_r8 = o.h3_r8, updated_at = now()
+FROM property_move pm JOIN property o ON o.id = pm.old_id
+WHERE p.id = pm.new_id AND p.geocoded_at IS NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM sale s LEFT JOIN sale_move m ON m.sale_id = s.id
+      WHERE s.property_id = p.id AND m.old_id IS DISTINCT FROM pm.old_id);
+-- Saved items, views and removal requests follow the home.
+UPDATE wishlist_item w SET property_id = pm.new_id
+FROM property_move pm
+WHERE w.property_id = pm.old_id
+  AND NOT EXISTS (SELECT 1 FROM wishlist_item x
+                  WHERE x.user_id = w.user_id AND x.property_id = pm.new_id);
+UPDATE view_history v SET property_id = pm.new_id
+FROM property_move pm WHERE v.property_id = pm.old_id;
+UPDATE removal_request r SET property_id = pm.new_id
+FROM property_move pm WHERE r.property_id = pm.old_id;
+DELETE FROM property p USING property_move pm WHERE p.id = pm.old_id;
+"""
+
 WITHDRAW_MISSING = """
 UPDATE sale SET withdrawn_at = now()
 WHERE withdrawn_at IS NULL AND last_seen_run_id <> :run_id
@@ -150,6 +200,8 @@ class LoadResult:
     sales_withdrawn: int
     properties_inserted: int
     properties_total: int
+    sales_moved: int
+    properties_retired: int
     sales_active: int
     possible_duplicates: int
     max_sale_date: str | None
@@ -227,6 +279,9 @@ def load(conn: sa.Connection, rows: Iterable[ParsedRow], run_id: int) -> LoadRes
 
     properties_before = _scalar(conn, "SELECT count(*) FROM property")
     conn.execute(sa.text(UPSERT_PROPERTIES))
+    raw.execute(MOVE_SALES)
+    moved = _scalar(conn, "SELECT count(*) FROM sale_move")
+    retired = _scalar(conn, "SELECT count(*) FROM property_move")
     conn.execute(sa.text(UPSERT_SALES), {"run_id": run_id})
     withdrawn = conn.execute(sa.text(WITHDRAW_MISSING), {"run_id": run_id}).rowcount
 
@@ -237,8 +292,10 @@ def load(conn: sa.Connection, rows: Iterable[ParsedRow], run_id: int) -> LoadRes
             conn, "SELECT count(*) FROM sale WHERE first_seen_run_id = :r", r=run_id
         ),
         sales_withdrawn=withdrawn,
-        properties_inserted=properties_total - properties_before,
+        properties_inserted=properties_total - properties_before + retired,
         properties_total=properties_total,
+        sales_moved=moved,
+        properties_retired=retired,
         sales_active=_scalar(conn, "SELECT count(*) FROM sale WHERE withdrawn_at IS NULL"),
         possible_duplicates=_scalar(
             conn,

@@ -59,7 +59,8 @@ export interface paths {
         put?: never;
         /**
          * Start Run
-         * @description Queue a pipeline step (or `monthly`, all of them) for the worker (D-051).
+         * @description Queue a pipeline step (or `monthly`, all of them) for the worker (D-051). Only one at
+         *     a time: while one is queued or running, another is refused (409).
          */
         post: operations["start_run_api_v1_admin_ingest_runs_post"];
         delete?: never;
@@ -2865,6 +2866,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Job"];
                 };
+            };
+            /** @description A pipeline step is already queued or running */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

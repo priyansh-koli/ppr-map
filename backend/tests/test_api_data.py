@@ -211,6 +211,40 @@ def test_groups_of_fewer_than_five_sales_have_no_median(db: sa.Engine) -> None:
     assert {int(str(s["n"])) >= 5 for s in stacks} == {True, False}
 
 
+def test_repeat_filings_are_not_matches(db: sa.Engine) -> None:
+    """A sale filed twice counts once, on the map and in lists, as in area stats (P1 #18)."""
+    matches = (
+        "SELECT public_id, n_sales FROM tile_matching_sales("
+        "ST_MakeEnvelope(-7.5, 52.5, -6.5, 53.2, 4326), '{}')"
+    )
+    columns = (
+        "property_id, raw_date, raw_address, raw_county, raw_eircode, raw_price, raw_nfmp, "
+        "raw_vat, raw_description, raw_size, sale_date, price_eur, not_full_market_price, "
+        "vat_exclusive, is_new, size_band, first_seen_run_id, last_seen_run_id"
+    )
+    with db.connect() as conn, conn.begin() as tx:
+        before = dict(conn.execute(sa.text(matches)).all())
+        sale_id, public_id = conn.execute(
+            sa.text(
+                "SELECT s.id, p.public_id FROM sale s JOIN property p ON p.id = s.property_id "
+                "WHERE p.public_id = ANY(:ids) ORDER BY s.id LIMIT 1"
+            ),
+            {"ids": list(before)},
+        ).one()
+        # The same row filed again: the ingest flags the repeat.
+        conn.execute(
+            sa.text(
+                f"INSERT INTO sale ({columns}, source_row_hash, is_possible_duplicate) "
+                f"SELECT {columns}, repeat('d', 64), true FROM sale WHERE id = :id"
+            ),
+            {"id": sale_id},
+        )
+        after = dict(conn.execute(sa.text(matches)).all())
+        tx.rollback()
+    assert before[public_id] == after[public_id] == 1
+    assert after == before
+
+
 def test_each_sale_is_counted_in_one_cell_of_one_tile(db: sa.Engine) -> None:
     """The four z11 tiles under a z10 tile hold exactly the z10 tile's sales."""
     with db.connect() as conn:

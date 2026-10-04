@@ -218,11 +218,19 @@ async def ingest_run(run_id: int, user: IngestAdmin, db: Db) -> IngestRunDetail:
     )
 
 
-@router.post("/ingest-runs", status_code=202, response_model=Job)
+@router.post(
+    "/ingest-runs",
+    status_code=202,
+    response_model=Job,
+    responses={409: {"description": "A pipeline step is already queued or running"}},
+)
 async def start_run(body: RunRequest, request: Request, user: IngestAdmin, db: Db) -> Job:
-    """Queue a pipeline step (or `monthly`, all of them) for the worker (D-051)."""
+    """Queue a pipeline step (or `monthly`, all of them) for the worker (D-051). Only one at
+    a time: while one is queued or running, another is refused (409)."""
     try:
         job = await run_in_threadpool(jobs.enqueue_pipeline, body.step, str(user.id))
+    except jobs.PipelineBusy as exc:
+        raise HTTPException(409, f"{exc}; wait for it to finish") from exc
     except REDIS_ERRORS as exc:
         raise HTTPException(503, "The job queue is not available") from exc
     await audit.record(

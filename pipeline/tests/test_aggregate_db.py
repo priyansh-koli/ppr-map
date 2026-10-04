@@ -108,6 +108,33 @@ def test_price_hexes_use_precise_points_only(loaded: sa.Engine) -> None:
     assert valid
 
 
+def test_hex_windows_are_the_area_windows(loaded: sa.Engine) -> None:
+    """ "Last 12 months" is the 12 whole months ending with the latest one, as in area_stats;
+    the hexes took in a 13th (P1 #16)."""
+    with loaded.begin() as conn:
+        # December 2024: 12 months before the register's latest month, December 2025.
+        conn.execute(
+            sa.text(
+                "UPDATE sale SET sale_date = '2024-12-15' WHERE id = ("
+                "SELECT s.id FROM sale s JOIN property p ON p.id = s.property_id "
+                "WHERE p.geocode_confidence IN ('exact', 'street') ORDER BY s.id LIMIT 1)"
+            )
+        )
+    aggregate(loaded)
+    with loaded.connect() as conn:
+        hexes = dict(
+            conn.execute(
+                sa.text(
+                    'SELECT "window"::text, sum(n) FROM price_hex '
+                    "WHERE segment = 'all' AND resolution = 8 GROUP BY 1"
+                )
+            ).all()
+        )
+        rolling = _stat(conn, "carlow", "rolling_12m", "2025-12-01", "all")
+    assert hexes["rolling_36m"] - hexes["rolling_12m"] == 1
+    assert rolling.n_sales == 29
+
+
 def test_hover_summaries(loaded: sa.Engine) -> None:
     aggregate(loaded)
     with loaded.connect() as conn:

@@ -9,6 +9,7 @@ Rural ED (tests/fixtures/pobal_carlow_rural.csv).
 import json
 from dataclasses import replace
 from datetime import date
+from pathlib import Path
 
 import httpx
 import pytest
@@ -126,3 +127,74 @@ def test_pobal_values_and_hover_vicinity(enriched: sa.Engine) -> None:
     assert vicinity["flood"]["link"].startswith("https://www.floodinfo.ie/")
     # A town-centre point gets no distances: they would be made up.
     assert set(coarse["vicinity"]) == {"flood"}
+
+
+def _point_wkb(lon: float, lat: float) -> bytes:
+    import struct
+
+    return struct.pack("<BIdd", 1, 1, lon, lat)
+
+
+def test_a_failed_enrich_keeps_the_previous_values(
+    enriched: sa.Engine, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Enrich emptied the vicinity table first, so any later failure left every property
+    without vicinity values (P1 #21). Now nothing changes until all of it succeeds."""
+    from ppr_pipeline.enrich import run
+    from ppr_pipeline.sources import load_sources
+
+    for src, dest in (
+        (FIXTURES / "gtfs_carlow.zip", "raw/gtfs/GTFS_All.zip"),
+        (FIXTURES / "pobal_carlow_rural.csv", "raw/pobal/hp-deprivation-index-scores-2022.csv"),
+    ):
+        (tmp_path / dest).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / dest).write_bytes(src.read_bytes())
+    for placeholder in (run.OSM_PBF, "raw/boundaries/electoral_division_2022.zip"):
+        (tmp_path / placeholder).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / placeholder).write_bytes(b"")
+    monkeypatch.setattr(run, "ed_ids", lambda _: {ed_key(CARLOW_RURAL[0]): CARLOW_RURAL[1]})
+    osm = json.loads((FIXTURES / "osm_pois_carlow.json").read_text())
+
+    def snapshot() -> tuple[int, int, int]:
+        with enriched.connect() as conn:
+            return tuple(  # type: ignore[return-value]
+                conn.execute(
+                    sa.text(
+                        "SELECT (SELECT count(*) FROM property_enrichment), "
+                        "(SELECT count(*) FROM poi), "
+                        "(SELECT count(*) FROM property_enrichment WHERE nearest_stop_m > 0)"
+                    )
+                ).one()
+            )
+
+    before = snapshot()
+    assert before[0] > 0 and before[2] > 0
+
+    def broken_extract(*_: object) -> None:
+        raise OSError("the OSM extract is truncated")
+
+    monkeypatch.setattr(run, "read_osm", broken_extract)
+    with pytest.raises(OSError, match="truncated"):
+        run.enrich(enriched, load_sources(), tmp_path)
+    assert snapshot() == before
+    with enriched.connect() as conn:
+        statuses = (
+            conn.execute(
+                sa.text(
+                    "SELECT DISTINCT status::text FROM ingest_run "
+                    "WHERE kind IN ('gtfs', 'osm', 'pobal') "
+                    "AND stats ->> 'error' LIKE '%truncated%'"
+                )
+            )
+            .scalars()
+            .all()
+        )
+    assert statuses == ["failed"]
+
+    rows = [
+        (p["type"], p["name"], _point_wkb(p["lon"], p["lat"]), p["ref"], p["attrs"]) for p in osm
+    ]
+    monkeypatch.setattr(run, "read_osm", lambda *_: (date(2026, 9, 26), rows))
+    stats = run.enrich(enriched, load_sources(), tmp_path)
+    assert stats["vicinity"]["enriched"] == before[0]
+    assert snapshot() == before

@@ -199,5 +199,12 @@ def test_ingest_runs_and_queueing(db: sa.Engine, monkeypatch: pytest.MonkeyPatch
     assert res.status_code == 202 and res.json()["id"] == "job-1"
     assert queued[0][0] == "aggregate" and queued[0][1] == boss.get("/api/v1/me").json()["id"]
     assert boss.post("/api/v1/admin/ingest-runs", json={"step": "drop"}).status_code == 422
+
+    def busy(step: str, by: str | None) -> Any:
+        raise jobs.PipelineBusy("A pipeline step is already queued or running")
+
+    monkeypatch.setattr(jobs, "enqueue_pipeline", busy)
+    again = boss.post("/api/v1/admin/ingest-runs", json={"step": "aggregate"})
+    assert again.status_code == 409 and "already queued or running" in again.json()["detail"]
     overview = boss.get("/api/v1/admin/overview").json()
     assert overview["users"] == 1 and "ppr" in {r["kind"] for r in overview["lastRuns"]}

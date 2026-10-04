@@ -3,11 +3,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SessionProvider } from "@/components/auth/session";
 import { ReportForm } from "@/components/report/report-form";
 import type { RemovalRequest } from "@/lib/api/client";
-import { ME, mockApi } from "@/test-fixtures/api";
+import { deferred, ME, mockApi } from "@/test-fixtures/api";
 import summary from "@/test-fixtures/summary-south-circular-road.json";
 
 import { RequireAdmin } from "./common";
-import { RemovalRequests } from "./panels";
+import { IngestRuns, RemovalRequests } from "./panels";
 
 const nav = vi.hoisted(() => ({ query: "" }));
 vi.mock("next/navigation", () => ({
@@ -103,5 +103,23 @@ describe("ReportForm", () => {
       requestType: "suppress_display",
       website: null,
     });
+  });
+
+  it("queues one pipeline run however often Queue is clicked", async () => {
+    const answer = deferred<[number, unknown]>();
+    const { calls } = mockApi({
+      "GET /admin/ingest-runs": () => [200, { items: [], total: 0, page: 1, pageSize: 50 }],
+      "GET /admin/jobs": () => [200, []],
+      "POST /admin/ingest-runs": () => answer.promise,
+    });
+    render(<IngestRuns />);
+    const queue = await screen.findByRole("button", { name: "Queue" });
+    fireEvent.click(queue);
+    fireEvent.click(queue);
+    expect(await screen.findByRole("button", { name: "Queueing…" })).toBeDisabled();
+    answer.resolve([409, { detail: "A pipeline step is already queued or running" }]);
+    expect(await screen.findByText(/Could not queue it/)).toHaveTextContent("already queued");
+    expect(calls("POST /admin/ingest-runs")).toBe(1);
+    expect(screen.getByRole("button", { name: "Queue" })).toBeEnabled();
   });
 });

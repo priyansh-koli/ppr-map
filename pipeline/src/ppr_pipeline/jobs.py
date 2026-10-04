@@ -15,7 +15,7 @@ from ppr_pipeline import cli
 from ppr_pipeline.aggregate import aggregate
 from ppr_pipeline.benchmarks import download as benchmark_download
 from ppr_pipeline.benchmarks import load_rppi
-from ppr_pipeline.db import get_engine
+from ppr_pipeline.db import get_engine, pipeline_lock
 from ppr_pipeline.enrich.run import enrich
 from ppr_pipeline.geocode.gazetteer import build_gazetteer
 from ppr_pipeline.geocode.runner import geocode_properties
@@ -78,9 +78,10 @@ def run(step: str, triggered_by: str | None = None) -> dict[str, Any]:
         ).scalar_one()
     results: dict[str, Any] = {}
     try:
-        for name in names:
-            print(f"pipeline step: {name}")
-            results[name] = STEPS[name]()
+        with pipeline_lock(engine):
+            for name in names:
+                print(f"pipeline step: {name}")
+                results[name] = STEPS[name]()
     finally:
         if triggered_by:
             with engine.begin() as conn:

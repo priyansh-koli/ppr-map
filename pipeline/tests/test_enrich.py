@@ -43,6 +43,22 @@ def test_school_levels_only_when_stated() -> None:
     assert school_type("Bishop Foley School", "primary") is P.SCHOOL_PRIMARY
     assert school_type("St Mary's Special School", None) is P.SCHOOL_SPECIAL
     assert school_type("Bishop Foley School", None) is None  # not guessed
+    # P1 #17: Irish names of post-primary schools also say "scoil".
+    for name in (
+        "Scoil Phobail Bhéara",
+        "Pobalscoil Inbhear Scéine",
+        "Pobail Scoil Inbhear Sceine",
+        "Meánscoil Gharman",
+        "Scoil Chuimsitheach Chiaráin",
+        "Gairmscoil Éinde",
+        "Ardscoil Rís",
+    ):
+        assert school_type(name, None) is P.SCHOOL_POST_PRIMARY, name
+    assert school_type("Scoil Mhuire", None) is P.SCHOOL_PRIMARY
+    assert school_type("Bunscoil Chríost Rí", None) is P.SCHOOL_PRIMARY
+    # OSM's tag wins over the name: a "Scoil" tagged secondary is post-primary.
+    assert school_type("Scoil Mhuire", "secondary") is P.SCHOOL_POST_PRIMARY
+    assert school_type("Ardscoil na Mara", "primary") is P.SCHOOL_PRIMARY
 
 
 def test_pobal_ed_ids_ignore_leading_zeros_and_part_order() -> None:
