@@ -2,7 +2,7 @@
 
 The Property Price Register, made usable: every residential sale in Ireland since 2010 on a map, with honest geocoding, sale history and vicinity context.
 
-**Status:** Phase 4 (accounts) is ready for review: registration with email confirmation, sign-in, password reset, account settings, wishlist and compare, history, data export and deletion (D-041). Phase 3 built the map, property pages and API (D-038 to D-040); Phase 2 the data pipeline (D-035 to D-037).
+**Status:** Phase 5 (search, area pages, saved searches and alerts, calculators, admin, estimate and comparables) is complete and awaiting review; the P0 bugs from its review are fixed (D-057). See [progress.md](progress.md) and [task.md](task.md).
 
 **Live preview:** https://ppr-map.vercel.app/ is the frontend as a static site on Vercel, deployed from `main` (D-056; it replaced the GitHub Pages preview of D-034). It has no API or database yet, so it shows the page scaffold only.
 
@@ -44,6 +44,9 @@ make basemap      # the Ireland basemap, terrain, fonts and sprites (~650 MB)
 
 | Doc | What's in it |
 |---|---|
+| [goal.md](goal.md), [requirements.md](requirements.md) | the final goal and the PRD, with each feature's status |
+| [architecture.md](architecture.md), [design.md](design.md) | structure, stack and integrations at a glance; the visual style |
+| [progress.md](progress.md), [task.md](task.md) | where the project stands; what is done and what is next |
 | [docs/research/ppr-data-profile.md](docs/research/ppr-data-profile.md) | what the real PPR file contains, verified 2026-09-26 |
 | [docs/research/competitive-analysis.md](docs/research/competitive-analysis.md) | competitor review, reusable open data, how we beat them |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | system diagram, stack, data flow |
