@@ -48,6 +48,23 @@
 | autocomplete | 120 / min | 300 / min | 600 / min |
 | auth: login | 10 per 15 min per IP+email (a successful sign-in resets it); 100 per 15 min per IP | | |
 | auth: register / forgot-password | 5 / h / IP | | |
+| password re-check (change password, close account, admin role change) | | 5 wrong per 15 min per account (a right one resets it) | |
+| list view (`/properties`) | shares the search limit | | |
+| map tiles (Caddy, per IP) | 1,200 / min; 300 / min for tiles with filters | | |
+
+Map tiles are served by Martin through Caddy, which applies the tile limits (the `rate_limit` plugin, `infra/caddy/Dockerfile`) and refuses any query parameter that is not a map filter or `v`: Martin caches a tile by its whole URL, so a junk parameter would make every request a fresh render. Martin renders at most 8 tiles at once (`pool_size`).
+
+## Database roles (migration 0014)
+
+No service connects as the Postgres superuser. `POSTGRES_USER` owns the account tables and the audit log, and runs migrations (`make migrate`).
+
+| Role | Used by | Can |
+|---|---|---|
+| `ppr_app` | API, scheduler | read every table; write the account tables; only add to `audit_log`; update `property` and `property_summary` and add `geocode_attempt` rows (admin hide and move) |
+| `ppr_pipeline` | worker (pipeline steps, alerts, housekeeping) | everything `ppr_app` can, and own the data tables through `ppr_data` (TRUNCATE, VACUUM, ANALYZE, scratch tables) |
+| `ppr_tiles` | Martin | read the data tables; nothing about accounts |
+
+None of them can run `COPY ... TO PROGRAM`, change or empty the audit log, or alter the account tables. Passwords come from `APP_DB_PASSWORD`, `PIPELINE_DB_PASSWORD` and `TILES_DB_PASSWORD` in `.env`; `make migrate` sets them (`python -m app.cli db-roles`). A test fails if a new table is not given to one side: account tables in `ACCOUNT_TABLES` (`backend/tests/test_migrations.py`), every other table owned by `ppr_data`.
 
 ## Rules outside the matrix
 

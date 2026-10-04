@@ -383,5 +383,9 @@ class Comparables(ApiModel):
     radius_m: int
     months: int
     total: int
-    median_eur: Money | None = Field(None, description="Of the sales filed with VAT included")
+    median_eur: Money | None = Field(
+        None,
+        description="Of the sales filed with VAT included; none when fewer than 5 of them",
+    )
+    median_n: int = Field(0, description="How many sales the median is of (VAT included)")
     items: list[Comparable]

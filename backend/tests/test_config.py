@@ -28,3 +28,16 @@ def test_check_email_points_to_mailpit_only_when_set(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(auth, "get_settings", lambda: dev)
     assert auth.check_email().startswith("Check your email to continue. ")
     assert "Mailpit at http://localhost:8025" in auth.check_email("A reset link is on its way.")
+
+
+def test_caddy_lets_through_exactly_the_tile_filters() -> None:
+    """Caddy refuses unknown tile parameters (P1 #9), so its list must follow SalesFilter."""
+    import re
+
+    from app.schemas.properties import SalesFilter
+
+    caddyfile = (REPO_ROOT / "infra" / "caddy" / "Caddyfile").read_text()
+    found = re.search(r'\{query\}\.matches\("\^\(\(([^)]*)\)=', caddyfile)
+    assert found is not None
+    names = {f.alias or n for n, f in SalesFilter.model_fields.items()}
+    assert set(found.group(1).split("|")) == names | {"v"}

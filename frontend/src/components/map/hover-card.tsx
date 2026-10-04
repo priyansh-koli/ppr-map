@@ -20,8 +20,8 @@ import type { SalePoint } from "./layers";
 export type CardContent =
   | { kind: "property"; id: string; summary: PropertySummary | null; error?: string }
   | { kind: "spot"; sales: SalePoint[]; addresses: Record<string, string> | null }
-  | { kind: "stack"; n: number; median: number; confidence: string }
-  | { kind: "cell"; n: number; median: number };
+  | { kind: "stack"; n: number; median: number | null; confidence: string }
+  | { kind: "cell"; n: number; median: number | null };
 
 function Flags({ sale }: { sale: NonNullable<PropertySummary["latestSale"]> }) {
   const flags = [
@@ -195,7 +195,7 @@ export function HoverCard({
           <p className="font-semibold">
             {content.n} {content.n === 1 ? "sale" : "sales"} at an approximate location
           </p>
-          <p>Median {formatEur(content.median)}</p>
+          <GroupMedian median={content.median} />
           <p className="text-xs text-muted">
             {CONFIDENCE_NOTE[content.confidence]} Each one is in the list of sales in view.
           </p>
@@ -205,10 +205,19 @@ export function HoverCard({
           <p className="font-semibold">
             {content.n} {content.n === 1 ? "sale" : "sales"} here
           </p>
-          <p>Median {formatEur(content.median)}</p>
+          <GroupMedian median={content.median} />
           <p className="text-xs text-muted">Click to zoom in and see each sale.</p>
         </div>
       )}
     </Window>
+  );
+}
+
+/** Fewer than 5 sales have no median (CONVENTIONS.md, data rules). */
+function GroupMedian({ median }: { median: number | null }) {
+  return median === null ? (
+    <p className="text-muted">Fewer than 5 sales: no median</p>
+  ) : (
+    <p>Median {formatEur(median)}</p>
   );
 }

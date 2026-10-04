@@ -39,7 +39,14 @@ services:
     env_file: ../.env
     # .env holds host-side addresses (localhost); inside the network each service has its own name.
     environment: &container-env
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-pprmap}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-pprmap}
+      # Each service signs in as its own role, never as the superuser (migration 0014,
+      # docs/permissions.md). `make migrate` runs migrations as POSTGRES_USER instead.
+      DATABASE_URL: postgresql+psycopg://ppr_app:${APP_DB_PASSWORD:?run make env to add APP_DB_PASSWORD to .env}@db:5432/${POSTGRES_DB:-pprmap}
+      # env_file passes all of .env; the owner's and the other roles' passwords are blanked.
+      POSTGRES_PASSWORD: ""
+      APP_DB_PASSWORD: ""
+      PIPELINE_DB_PASSWORD: ""
+      TILES_DB_PASSWORD: ""
       REDIS_URL: redis://redis:6379/0
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
@@ -62,7 +69,11 @@ services:
     # `default`. The pipeline reads and writes the same data/ folder as the `make` targets.
     build: { context: .., dockerfile: backend/Dockerfile }
     env_file: ../.env
-    environment: *container-env
+    environment:
+      <<: *container-env
+      # Pipeline steps rebuild the data tables (ppr_pipeline owns them through ppr_data);
+      # alerts and housekeeping need only what the API has.
+      DATABASE_URL: postgresql+psycopg://ppr_pipeline:${PIPELINE_DB_PASSWORD:?run make env to add PIPELINE_DB_PASSWORD to .env}@db:5432/${POSTGRES_DB:-pprmap}
     restart: unless-stopped
     # tini as PID 1, so `docker compose stop` does not wait out the 10 s kill timeout.
     init: true
@@ -93,7 +104,8 @@ services:
     image: ghcr.io/maplibre/martin:1.16.1
     command: ["--config", "/config/martin.yaml"]
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-pprmap}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-pprmap}
+      # Read-only on the data tables; it cannot see accounts.
+      DATABASE_URL: postgresql://ppr_tiles:${TILES_DB_PASSWORD:?run make env to add TILES_DB_PASSWORD to .env}@db:5432/${POSTGRES_DB:-pprmap}
     volumes:
       - ./martin:/config:ro
     restart: unless-stopped
@@ -112,7 +124,8 @@ services:
     depends_on: [api]
 
   caddy:
-    image: caddy:2-alpine
+    # Stock Caddy plus the rate_limit handler for map tiles (caddy/Dockerfile).
+    build: { context: ./caddy }
     ports:
       - "127.0.0.1:8080:8080"
     volumes:

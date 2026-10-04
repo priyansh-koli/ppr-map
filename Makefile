@@ -7,15 +7,27 @@ COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-env: ## Create .env from .env.example with random local secrets (never overwrites)
-	@test -f .env && echo ".env exists, leaving it alone" || { \
+DB_ROLE_PASSWORDS := APP_DB_PASSWORD PIPELINE_DB_PASSWORD TILES_DB_PASSWORD
+
+env: ## Create .env from .env.example with random local secrets (never overwrites; adds new ones)
+	@if test -f .env; then \
+	  echo ".env exists, leaving its values alone"; \
+	  for v in $(DB_ROLE_PASSWORDS); do \
+	    grep -q "^$$v=." .env || { grep -v "^$$v=" .env > .env.tmp; mv .env.tmp .env; \
+	      echo "$$v=$$(openssl rand -hex 16)" >> .env; echo "added $$v (run make migrate)"; }; \
+	  done; \
+	else \
 	  pw=$$(openssl rand -hex 16); \
 	  sed -e "s|^SESSION_SECRET=.*|SESSION_SECRET=$$(openssl rand -hex 32)|" \
 	      -e "s|^CSRF_SECRET=.*|CSRF_SECRET=$$(openssl rand -hex 32)|" \
 	      -e "s|^IP_HASH_SALT=.*|IP_HASH_SALT=$$(openssl rand -hex 16)|" \
 	      -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$$pw|" \
+	      -e "s|^APP_DB_PASSWORD=.*|APP_DB_PASSWORD=$$(openssl rand -hex 16)|" \
+	      -e "s|^PIPELINE_DB_PASSWORD=.*|PIPELINE_DB_PASSWORD=$$(openssl rand -hex 16)|" \
+	      -e "s|^TILES_DB_PASSWORD=.*|TILES_DB_PASSWORD=$$(openssl rand -hex 16)|" \
 	      -e "s|CHANGE_ME|$$pw|g" .env.example > .env; \
-	  echo "wrote .env"; }
+	  echo "wrote .env"; \
+	fi
 
 venv: ## Python virtualenv with backend + pipeline (editable) and dev tools
 	python3.12 -m venv .venv
@@ -47,8 +59,15 @@ down: ## Stop the local stack (including the geocoder, if running)
 logs: ## Follow logs
 	$(COMPOSE) logs -f
 
-migrate: ## Apply migrations and sync roles/permissions (inside the api container)
-	$(COMPOSE) exec api alembic upgrade head
+# Migrations and role passwords run as the database owner (POSTGRES_USER); the api container
+# itself signs in as ppr_app and never sees the owner's password (migration 0014).
+migrate: ## Apply migrations, let the service roles sign in, sync roles/permissions (in the api container)
+	@set -a; source .env; set +a; \
+	owner="postgresql+psycopg://$${POSTGRES_USER:-pprmap}:$${POSTGRES_PASSWORD}@db:5432/$${POSTGRES_DB:-pprmap}"; \
+	$(COMPOSE) exec -e DATABASE_URL="$$owner" api alembic upgrade head && \
+	$(COMPOSE) exec -e DATABASE_URL="$$owner" -e APP_DB_PASSWORD="$$APP_DB_PASSWORD" \
+	  -e PIPELINE_DB_PASSWORD="$$PIPELINE_DB_PASSWORD" -e TILES_DB_PASSWORD="$$TILES_DB_PASSWORD" \
+	  api python -m app.cli db-roles
 	$(COMPOSE) exec api python -m app.cli sync-permissions
 
 lint: ## Lint everything

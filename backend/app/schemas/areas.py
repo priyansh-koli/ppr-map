@@ -97,7 +97,10 @@ class AreaStatsOut(ApiModel):
 class Bin(ApiModel):
     from_eur: Money
     to_eur: Money | None
-    n: int | None = Field(description="null when fewer than 5 sales (suppressed)")
+    n: int | None = Field(
+        description="null when hidden: fewer than 5 sales, or hidden with such a band so "
+        "that it cannot be worked out from the total"
+    )
 
 
 class Distribution(ApiModel):

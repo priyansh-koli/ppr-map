@@ -15,10 +15,10 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import jobs
+from app.api.v1.me import confirm_password
 from app.api.v1.properties import _meta, forget_meta
 from app.api.v1.reports import reference_of
 from app.auth.deps import require
-from app.auth.passwords import verify_password
 from app.auth.permissions import Perm, Role
 from app.auth.sessions import CurrentUser, forget_cached_user, revoke_sessions
 from app.db import get_session
@@ -709,13 +709,7 @@ async def change_user(
     if body.roles is not None:
         if not body.password:
             raise HTTPException(403, "Enter your password to change roles")
-        hash_: str = (
-            await db.execute(
-                sa.text("SELECT password_hash FROM app_user WHERE id = :u"), {"u": user.id}
-            )
-        ).scalar_one()
-        if not await verify_password(hash_, body.password):
-            raise HTTPException(403, "The password is wrong")
+        await confirm_password(db, cache, user.id, body.password)
         roles = sorted({*body.roles, Role.USER.value})  # everyone keeps the user role
         if "admin" in before.roles and "admin" not in roles:
             await _keep_an_admin(db, user_id)

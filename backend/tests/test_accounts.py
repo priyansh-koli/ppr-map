@@ -155,6 +155,22 @@ def test_login_is_rate_limited(db: sa.Engine, outbox: Outbox, redis: FakeRedis) 
     assert codes[:10] == [401] * 10 and codes[10] == 429
 
 
+def test_password_rechecks_are_limited(db: sa.Engine, outbox: Outbox, redis: FakeRedis) -> None:
+    """Each re-check is a 64 MiB argon2 verify, so wrong ones are capped per account (#10)."""
+    client = signed_in(outbox, redis, "limit@example.ie")
+    body = {"currentPassword": "wrong", "newPassword": "another long passphrase"}
+    codes = [client.post("/api/v1/me/password", json=body).status_code for _ in range(5)]
+    assert codes == [403] * 5
+    # Closing the account shares the count, and the right password no longer gets through.
+    res = client.request("DELETE", "/api/v1/me", json={"password": PASSWORD})
+    assert res.status_code == 429
+    assert "Retry-After" in res.headers
+    redis.data.clear()  # the window passes
+    ok = {"currentPassword": PASSWORD, "newPassword": "another long passphrase"}
+    assert client.post("/api/v1/me/password", json=ok).status_code == 204
+    assert not any(k.startswith("ratelimit:reauth:") for k in redis.data)  # reset on success
+
+
 def test_wishlist_is_private_to_its_owner(db: sa.Engine, outbox: Outbox, redis: FakeRedis) -> None:
     alice = signed_in(outbox, redis, "alice@example.ie")
     bob = signed_in(outbox, redis, "bob@example.ie")

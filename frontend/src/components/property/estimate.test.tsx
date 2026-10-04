@@ -58,6 +58,23 @@ describe("ComparableSales", () => {
     );
   });
 
+  it("says what the median is of, and gives none for fewer than 5 sales", () => {
+    const c = nearSouthCircular as Comparables;
+    const { rerender } = render(
+      <ComparableSales comparables={{ ...c, medianN: 160 }} searchHref="/search" />,
+    );
+    expect(screen.getByText(/165 market sales/)).toHaveTextContent(
+      "median €585,000 of the 160 filed with VAT",
+    );
+    rerender(
+      <ComparableSales
+        comparables={{ ...c, total: 6, medianN: 4, medianEur: null }}
+        searchHref="/search"
+      />,
+    );
+    expect(screen.getByText(/6 market sales/)).not.toHaveTextContent("median");
+  });
+
   it("does not print 0 m for homes placed at the same street point", () => {
     render(<ComparableSales comparables={nearBallinteer as Comparables} searchHref="/search" />);
     expect(screen.getAllByText("same map point").length).toBeGreaterThan(0);
@@ -71,6 +88,7 @@ describe("ComparableSales", () => {
       radiusM: 500,
       months: 24,
       total: 0,
+      medianN: 0,
       items: [],
     };
     render(<ComparableSales comparables={c} searchHref="/search" />);

@@ -129,6 +129,20 @@ def test_comparables(api: TestClient, db: sa.Engine) -> None:
     )
 
 
+def test_comparables_median_needs_five_sales(api: TestClient, db: sa.Engine) -> None:
+    """The median is of the sales filed with VAT, so it can be of fewer than `total`; under
+    5 of them it is withheld, like every other aggregate (P1 #12)."""
+    pid = property_id(db, POLLERTON)
+    seen = set()
+    for months, radius in ((6, 500), (24, 500), (24, 2000)):
+        params = {"radiusM": radius, "months": months}
+        c = api.get(f"/api/v1/properties/{pid}/comparables", params=params).json()
+        assert c["medianN"] <= c["total"]
+        assert (c["medianEur"] is None) == (c["medianN"] < 5), c
+        seen.add(c["medianN"] >= 5)
+    assert seen == {True, False}  # both sides of the threshold are exercised
+
+
 def test_area_pages_show_their_regions_index(api: TestClient) -> None:
     # test_areas.py may have cached Carlow's page before the index was loaded: the new
     # benchmarks run must replace it.

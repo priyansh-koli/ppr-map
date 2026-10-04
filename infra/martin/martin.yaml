@@ -6,6 +6,9 @@ base_path: /api/v1/tiles
 cache_size_mb: 512
 postgres:
   connection_string: ${DATABASE_URL}
+  # At most this many tile renders at once (default 20), so a burst of uncached tiles cannot
+  # take the connections and CPU the API and the pipeline need. Caddy also caps each client.
+  pool_size: 8
   # Only publish sources we configure explicitly; never auto-publish every table.
   auto_publish: false
   functions:

@@ -64,6 +64,40 @@ def sync_permissions() -> None:
     typer.echo(f"Synced {len(stored_roles)} roles, {len(Perm)} permissions, {len(wanted)} grants.")
 
 
+# Migration 0014's login roles, and the .env variable that holds each one's password.
+DB_ROLES = {
+    "ppr_app": "app_db_password",
+    "ppr_pipeline": "pipeline_db_password",
+    "ppr_tiles": "tiles_db_password",
+}
+
+
+@cli.command("db-roles")
+def db_roles() -> None:
+    """Let the services' database roles sign in, with their passwords from .env (run as the
+    database owner: `make migrate` does). A role without a password stays unable to."""
+    settings = get_settings()
+    engine = sa.create_engine(settings.database_url)
+    with engine.begin() as conn:
+        for role, field in DB_ROLES.items():
+            password = getattr(settings, field)
+            if not password:
+                typer.echo(f"{field.upper()} is empty: {role} cannot sign in.")
+                continue
+            # ALTER ROLE takes no bind parameters; format() quotes the password as a literal.
+            sql: str = conn.execute(
+                sa.text(
+                    "SELECT format('ALTER ROLE %I LOGIN PASSWORD %L', "
+                    "CAST(:r AS text), CAST(:p AS text))"
+                ),
+                {"r": role, "p": password},
+            ).scalar_one()
+            # Straight to the driver with no parameters, so a % in the password stays as is.
+            conn.connection.cursor().execute(sql)
+            typer.echo(f"{role} can sign in.")
+    engine.dispose()
+
+
 @cli.command("grant-role")
 def grant_role(email: str, role: str = typer.Argument("admin", help="user, pro or admin")) -> None:
     """Give an existing account a role, e.g. the first admin (later ones via /admin/users).

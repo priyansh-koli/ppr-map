@@ -18,6 +18,7 @@ from app.api.v1.auth import clear_session_cookie
 from app.auth.deps import User, require
 from app.auth.passwords import hash_password, password_problem, verify_password
 from app.auth.permissions import Perm
+from app.auth.ratelimit import forget, limit
 from app.auth.sessions import CurrentUser, forget_cached_user, revoke_sessions
 from app.db import get_session
 from app.policies import PRIVACY_VERSION
@@ -43,6 +44,9 @@ MAX_COMPARE = 4
 VIEW_DEDUPE = timedelta(minutes=30)
 HISTORY_KEEP = timedelta(days=365)
 NOT_FOUND = HTTPException(404, "Not found")
+# Re-entering the password (change password, close account, admin role change): each try is a
+# 64 MiB argon2 verify on a small shared pool, so wrong guesses are capped per account.
+REAUTH_TRIES = (5, 15 * 60)
 
 
 @router.get("", response_model=Me)
@@ -121,14 +125,20 @@ async def patch_me(body: MePatch, user: User, db: Db, cache: Cache) -> Me:
     return await load_me(db, user.id)
 
 
-async def _check_password(db: AsyncSession, user: CurrentUser, password: str) -> None:
+async def confirm_password(
+    db: AsyncSession, cache: Redis | None, user_id: object, password: str
+) -> None:
+    """403 unless `password` is the account's own; at most REAUTH_TRIES wrong ones (429)."""
+    key = f"reauth:{user_id}"
+    await limit(cache, key, *REAUTH_TRIES)
     hash_: str = (
         await db.execute(
-            sa.text("SELECT password_hash FROM app_user WHERE id = :u"), {"u": user.id}
+            sa.text("SELECT password_hash FROM app_user WHERE id = :u"), {"u": user_id}
         )
     ).scalar_one()
     if not await verify_password(hash_, password):
         raise HTTPException(403, "The password is wrong")
+    await forget(cache, key)
 
 
 @router.post("/password", status_code=204)
@@ -141,7 +151,7 @@ async def change_password(
     background: BackgroundTasks,
 ) -> None:
     """Change the password; every other session is signed out and reset links stop working."""
-    await _check_password(db, user, body.current_password)
+    await confirm_password(db, cache, user.id, body.current_password)
     if problem := password_problem(body.new_password, user.email):
         raise HTTPException(422, problem)
     await db.execute(
@@ -161,7 +171,7 @@ async def change_password(
 @router.delete("", status_code=204)
 async def delete_me(body: PasswordIn, user: User, response: Response, db: Db, cache: Cache) -> None:
     """Close the account now; its data is purged after 30 days (`app.cli purge-deleted`)."""
-    await _check_password(db, user, body.password)
+    await confirm_password(db, cache, user.id, body.password)
     await db.execute(
         sa.text(
             "UPDATE app_user SET deleted_at = now(), is_active = false, updated_at = now() "

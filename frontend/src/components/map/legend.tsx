@@ -24,16 +24,16 @@ export function Legend({ showHexes }: { showHexes: boolean }) {
               {band.label}
             </li>
           ))}
-          {showHexes ? (
-            <li className="flex items-center gap-2">
-              <span
-                aria-hidden
-                className="inline-block h-3 w-5 rounded-sm opacity-60"
-                style={{ background: SUPPRESSED_COLOR }}
-              />
-              Fewer than 5 sales: no median shown
-            </li>
-          ) : null}
+          <li className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="inline-block h-3 w-5 rounded-sm opacity-60"
+              style={{ background: SUPPRESSED_COLOR }}
+            />
+            {showHexes
+              ? "Fewer than 5 sales: no median shown"
+              : "A group of fewer than 5 sales: no median shown"}
+          </li>
         </ul>
       </div>
       {showHexes ? null : (

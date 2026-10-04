@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     session_secret: str = Field(default="", repr=False)
     csrf_secret: str = Field(default="", repr=False)
     ip_hash_salt: str = Field(default="", repr=False)
+    # The services' own database roles (migration 0014). Only `app.cli db-roles` reads these,
+    # run as the database owner by `make migrate`; each service gets its DATABASE_URL.
+    app_db_password: str = Field(default="", repr=False)
+    pipeline_db_password: str = Field(default="", repr=False)
+    tiles_db_password: str = Field(default="", repr=False)
     ppr_config_dir: Path = REPO_CONFIG_DIR
     # The scheduler queues the monthly pipeline only when this is on (it downloads the
     # register and needs the geocoder): off in development, on in production.

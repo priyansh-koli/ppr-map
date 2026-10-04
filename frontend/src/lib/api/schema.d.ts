@@ -806,7 +806,7 @@ export interface paths {
         /**
          * List Properties
          * @description The list view synced with the map: the latest matching sale per property in the box.
-         *     It is /search limited to the box, so it takes the same filters.
+         *     It is /search limited to the box, so it takes the same filters and shares its rate limit.
          */
         get: operations["list_properties_api_v1_properties_get"];
         put?: never;
@@ -1303,7 +1303,7 @@ export interface components {
             fromEur: number;
             /**
              * N
-             * @description null when fewer than 5 sales (suppressed)
+             * @description null when hidden: fewer than 5 sales, or hidden with such a band so that it cannot be worked out from the total
              */
             n: number | null;
             /** Toeur */
@@ -1370,9 +1370,15 @@ export interface components {
             items: components["schemas"]["Comparable"][];
             /**
              * Medianeur
-             * @description Of the sales filed with VAT included
+             * @description Of the sales filed with VAT included; none when fewer than 5 of them
              */
             medianEur?: number | null;
+            /**
+             * Mediann
+             * @description How many sales the median is of (VAT included)
+             * @default 0
+             */
+            medianN: number;
             /** Months */
             months: number;
             /** Radiusm */

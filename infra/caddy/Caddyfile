@@ -2,7 +2,29 @@
 :8080 {
 	encode zstd gzip
 
+	# Map tiles (Martin). Martin caches a tile by its full URL and has no limits of its own, so
+	# an unknown parameter is refused (each new value would be a cache miss: a fresh render)
+	# and every client is capped. The names are SalesFilter's aliases and `v`, the tiles version.
 	handle /api/v1/tiles/* {
+		@unknown_param not expression `{query}.matches("^((v|priceMin|priceMax|dateFrom|dateTo|type|excludeNonMarket|excludeBulk|minConfidence|vat|county|area|routingKey|near|radiusM|maxStopM|maxSchoolM)=[^&]*(&|$))*$")`
+		respond @unknown_param "Unknown tile parameter" 400
+		rate_limit {
+			# A view is about 30 tiles; panning and zooming fetch a few more each time.
+			zone tiles {
+				key {client_ip}
+				events 1200
+				window 1m
+			}
+			# Filtered tiles are rendered for that filter alone, and rarely cached: tighter.
+			zone tiles_filtered {
+				match {
+					expression `{query} != "" && !{query}.matches("^v=[^&]*$")`
+				}
+				key {client_ip}
+				events 300
+				window 1m
+			}
+		}
 		uri strip_prefix /api/v1/tiles
 		reverse_proxy martin:3000
 	}

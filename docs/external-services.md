@@ -49,4 +49,4 @@
 
 ## App secrets (not external, listed for `.env.example`)
 
-`DATABASE_URL`, `REDIS_URL`, `SESSION_SECRET`, `CSRF_SECRET`, `IP_HASH_SALT`, `APP_BASE_URL`, `ENVIRONMENT`.
+`DATABASE_URL`, `APP_DB_PASSWORD`, `PIPELINE_DB_PASSWORD`, `TILES_DB_PASSWORD` (the services' database roles, docs/permissions.md), `REDIS_URL`, `SESSION_SECRET`, `CSRF_SECRET`, `IP_HASH_SALT`, `APP_BASE_URL`, `ENVIRONMENT`.

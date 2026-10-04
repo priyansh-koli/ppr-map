@@ -64,14 +64,14 @@ describe("area charts", () => {
     expect(String(fetch.mock.calls.at(-1)?.[0])).toContain("periodKind=year&segment=all");
   });
 
-  it("hides price bands with fewer than 5 sales", async () => {
+  it("hides price bands the API does not give", async () => {
     const dist: Distribution = {
       area: { kind: "county", name: "Carlow", slug: "carlow" },
       windowStart: "2024-11-01",
       windowEnd: "2025-10-31",
       n: 30,
       bins: [
-        { fromEur: 0, toEur: 100000, n: 0 },
+        { fromEur: 0, toEur: 100000, n: null },
         { fromEur: 100000, toEur: 200000, n: null },
         { fromEur: 200000, toEur: null, n: 27 },
       ],
@@ -79,11 +79,10 @@ describe("area charts", () => {
     };
     mockApi({ "GET /areas/carlow/distribution": () => [200, dist] });
     render(<PriceDistribution slug="carlow" name="Carlow" />);
-    expect(await screen.findByText("<5 sales")).toBeInTheDocument();
+    expect(await screen.findAllByText("not shown")).toHaveLength(2);
     expect(screen.getByText("90.0%")).toBeInTheDocument();
-    expect(
-      screen.getByLabelText(/€100K–€200K: fewer than 5 sales; Ireland 20.0%/),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/€100K–€200K: not shown; Ireland 20.0%/)).toBeInTheDocument();
+    expect(screen.queryByText("0%")).toBeNull(); // a hidden band is never shown as empty
   });
 
   it("outlines a polygon inside its box", () => {

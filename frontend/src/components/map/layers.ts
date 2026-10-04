@@ -14,6 +14,13 @@ export const INTERACTIVE_LAYERS = ["sales", "stacks", "cells"];
 
 const INK = "#16181d";
 const price = (p: string) => bandExpression(p) as ExpressionSpecification;
+/** Groups of fewer than 5 sales carry no median (they keep their count): grey, like hexes. */
+export const GROUP_PRICE: ExpressionSpecification = [
+  "case",
+  ["has", "median"],
+  price("median"),
+  SUPPRESSED_COLOR,
+];
 
 /** Radius by count, on a log scale shared by every zoom so a size means the same thing. */
 const GROUP_RADIUS: ExpressionSpecification = [
@@ -42,11 +49,10 @@ const COMPACT_COUNT: ExpressionSpecification = [
 
 /** Ink on the lightest band, white on the three darker ones: each pair clears 4.5:1. */
 const COUNT_ON_BAND: ExpressionSpecification = [
-  "step",
-  ["get", "median"],
+  "case",
+  ["has", "median"],
+  ["step", ["get", "median"], INK, PRICE_BANDS[0].max, "#ffffff"],
   INK,
-  PRICE_BANDS[0].max,
-  "#ffffff",
 ];
 
 /**
@@ -117,7 +123,7 @@ export function addDataLayers(map: MapLibreMap, salesQuery: URLSearchParams, ver
       "source-layer": "cells",
       maxzoom: POINT_ZOOM,
       paint: {
-        "circle-color": price("median"),
+        "circle-color": GROUP_PRICE,
         "circle-opacity": 0.9,
         "circle-radius": GROUP_RADIUS,
         "circle-stroke-color": "#ffffff",
@@ -158,7 +164,7 @@ export function addDataLayers(map: MapLibreMap, salesQuery: URLSearchParams, ver
       paint: {
         "circle-color": "#ffffff",
         "circle-radius": ["interpolate", ["linear"], ["ln", ["get", "n"]], 0, 8, 6, 18],
-        "circle-stroke-color": price("median"),
+        "circle-stroke-color": GROUP_PRICE,
         "circle-stroke-width": 3,
       },
     },

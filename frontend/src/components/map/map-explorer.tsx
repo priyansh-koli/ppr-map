@@ -94,9 +94,11 @@ const pointOf = (f: MapGeoJSONFeature): [number, number] | undefined =>
 
 function groupCard(f: MapGeoJSONFeature): CardContent {
   const p = f.properties;
+  // Groups of fewer than 5 sales have no median in the tile.
+  const median = p.median == null ? null : Number(p.median);
   return f.layer.id === "stacks"
-    ? { kind: "stack", n: Number(p.n), median: Number(p.median), confidence: String(p.confidence) }
-    : { kind: "cell", n: Number(p.n), median: Number(p.median) };
+    ? { kind: "stack", n: Number(p.n), median, confidence: String(p.confidence) }
+    : { kind: "cell", n: Number(p.n), median };
 }
 
 /** What is under the pointer: sales win over the groups drawn at the same zoom. */

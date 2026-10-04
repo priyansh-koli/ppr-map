@@ -41,6 +41,7 @@ export function ComparableSales({
         {c.medianEur != null ? (
           <>
             , median <strong className="font-semibold text-ink">{formatEur(c.medianEur)}</strong>
+            {c.medianN < c.total ? ` of the ${c.medianN} filed with VAT` : null}
           </>
         ) : null}
         . Same street or estate first, then the nearest.
@@ -97,7 +98,8 @@ export function ComparableSales({
       </div>
       <p className="mt-3 text-xs text-muted">
         Straight-line distances. The register does not record size or bedrooms, so these are sales
-        nearby, not like-for-like homes. The median leaves out prices filed without VAT.{" "}
+        nearby, not like-for-like homes. The median leaves out prices filed without VAT, and needs
+        at least 5 sales.{" "}
         {c.total > c.items.length ? (
           <Link className="text-accent underline" href={searchHref}>
             All sales within {radius}

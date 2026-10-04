@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from app.redis_client import get_redis
 from tests.conftest import CARLOW_BBOX, make_api, property_id
+from tests.mvt import features
 
 pytestmark = pytest.mark.db
 
@@ -163,6 +164,51 @@ def test_hover_cards_survive_redis_being_down(db: sa.Engine) -> None:
         res = client.get(f"/api/v1/properties/{_id(db, '178 Pollerton Road, Carlow')}/summary")
     assert res.status_code == 200
     assert res.json()["latestSale"]["priceEur"] == 240000
+
+
+def test_list_and_hover_are_rate_limited(db: sa.Engine, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both are open to anonymous callers and cost database time (#11)."""
+    from app.api.v1 import properties
+    from tests.conftest import FakeRedis
+
+    monkeypatch.setattr(properties, "SUMMARY_LIMITS", (2, 2))
+    monkeypatch.setattr(properties, "SEARCH_LIMITS", (2, 2))
+    fake = FakeRedis()
+
+    async def cache() -> AsyncIterator[FakeRedis]:
+        yield fake
+
+    url = f"/api/v1/properties/{_id(db, '178 Pollerton Road, Carlow')}/summary"
+    with make_api({get_redis: cache}) as client:
+        assert [client.get(url).status_code for _ in range(3)] == [200, 200, 429]
+        listing = {"bbox": CARLOW_BBOX, "sort": "-change"}
+        codes = [client.get("/api/v1/properties", params=listing).status_code for _ in range(3)]
+        assert codes == [200, 200, 429]
+
+
+def test_groups_of_fewer_than_five_sales_have_no_median(db: sa.Engine) -> None:
+    """Cells and stacks are aggregates: under 5 sales they keep the count only (P1 #13)."""
+    with db.connect() as conn, conn.begin() as tx:
+
+        def layers(z: int, x: int, y: int) -> dict[str, list[dict[str, object]]]:
+            sql = sa.text("SELECT sales_tiles(:z, :x, :y, '{}')")
+            return features(bytes(conn.execute(sql, {"z": z, "x": x, "y": y}).scalar_one()))
+
+        cells = layers(12, 1969, 1337)["cells"] + layers(11, 984, 668)["cells"]
+        # The fixture's only stack (Carlow town centre) has 9 sales: make one of a single sale
+        # by placing a street-level home at its town for the length of this transaction.
+        one = layers(14, 7877, 5349)["sales"][0]["id"]
+        conn.execute(
+            sa.text("UPDATE property SET geocode_confidence = 'locality' WHERE public_id = :p"),
+            {"p": one},
+        )
+        stacks = layers(14, 7877, 5349)["stacks"] + layers(14, 7878, 5348)["stacks"]
+        tx.rollback()
+    for group in cells + stacks:
+        assert ("median" in group) == (int(str(group["n"])) >= 5), group
+    # Both kinds, on both sides of the threshold.
+    assert {int(str(c["n"])) >= 5 for c in cells} == {True, False}
+    assert {int(str(s["n"])) >= 5 for s in stacks} == {True, False}
 
 
 def test_each_sale_is_counted_in_one_cell_of_one_tile(db: sa.Engine) -> None:

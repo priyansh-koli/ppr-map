@@ -175,6 +175,22 @@ async def distribution(
     return counts
 
 
+def suppress_bins(counts: list[int], min_n: int) -> list[int | None]:
+    """Each band's count, or None where it is hidden. Bands under `min_n` sales are hidden;
+    the total is published, so once one is, the hidden bands must not be recoverable by
+    subtraction (P1 #14): empty bands are hidden with them (a shown 0 narrows the gap down),
+    then the smallest shown bands, until the hidden ones hold at least `min_n` sales between
+    at least two bands."""
+    hidden = {i for i, c in enumerate(counts) if 0 < c < min_n}
+    if not hidden:
+        return list(counts)
+    hidden |= {i for i, c in enumerate(counts) if c == 0}
+    shown = sorted((c, i) for i, c in enumerate(counts) if i not in hidden)
+    while shown and (sum(counts[i] for i in hidden) < min_n or len(hidden) < 2):
+        hidden.add(shown.pop(0)[1])
+    return [None if i in hidden else c for i, c in enumerate(counts)]
+
+
 INDEX_CHANGE = """
 SELECT now.period, now.value / before.value - 1
 FROM benchmark_series now

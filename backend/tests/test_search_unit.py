@@ -102,3 +102,22 @@ def test_sort_by_change_ranks_every_match() -> None:
     assert "LEFT JOIN LATERAL" in search_sql("-change").split("page AS")[1].split("SELECT")[1]
     assert "change_pct DESC NULLS LAST" in search_sql("-change")
     assert "ORDER BY sale_date DESC" in search_sql("-date")
+
+
+def test_hidden_price_bands_cannot_be_worked_out_from_the_total() -> None:
+    """P1 #14: with the total published, one hidden band was the total minus the rest."""
+    from app.services.areas import suppress_bins
+
+    assert suppress_bins([7, 12, 0, 30], 5) == [7, 12, 0, 30]  # nothing small: all shown
+    # One small band: the empty one is hidden too, then the smallest shown (7), so the
+    # hidden total (3 + 0 + 7) is at least 5 and spread over three bands.
+    assert suppress_bins([7, 3, 0, 30], 5) == [None, None, None, 30]
+    # Two small bands that already hold 5 between them are enough.
+    assert suppress_bins([2, 3, 9, 30], 5) == [None, None, 9, 30]
+    # A single small band among large ones takes the smallest one with it.
+    assert suppress_bins([40, 4, 9, 30], 5) == [40, None, None, 30]
+    assert suppress_bins([1, 1, 0], 5) == [None, None, None]  # all hidden is allowed
+    for counts in ([7, 3, 0, 30], [2, 3, 9, 30], [40, 4, 9, 30], [6, 1, 8, 5, 0, 2]):
+        out = suppress_bins(counts, 5)
+        hidden = sum(counts) - sum(c for c in out if c is not None)
+        assert hidden == 0 or (hidden >= 5 and out.count(None) >= 2), (counts, out)

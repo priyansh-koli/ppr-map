@@ -50,10 +50,10 @@ Run `make help` for the full list.
 
 | Command | What it does |
 |---|---|
-| `make env` | create `.env` with random local secrets (never overwrites) |
+| `make env` | create `.env` with random local secrets (never overwrites; adds secrets an older `.env` lacks) |
 | `make install` | Python venv (backend + pipeline, editable), npm packages, Playwright Chromium |
 | `make up` / `make down` | local stack on http://localhost:8080 (Mailpit on :8025) |
-| `make migrate` | `alembic upgrade head` + `sync-permissions` inside the api container |
+| `make migrate` | `alembic upgrade head` and `db-roles` as the database owner, then `sync-permissions`, inside the api container |
 | `make lint`, `make typecheck`, `make test` | what CI runs (no database needed) |
 | `make test-db` | backend and pipeline tests including live PostGIS checks (`alembic check`, audit trigger, PPR ingest) |
 | `make e2e` | Playwright smoke test over every route |

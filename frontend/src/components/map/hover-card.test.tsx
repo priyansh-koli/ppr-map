@@ -38,15 +38,22 @@ describe("HoverCard", () => {
   });
 
   it("offers a close button only when pinned", () => {
-    const { rerender } = render(<HoverCard content={{ kind: "cell", n: 3, median: 250000 }} />);
+    const { rerender } = render(<HoverCard content={{ kind: "cell", n: 3, median: null }} />);
     expect(screen.queryByRole("button", { name: "Close details" })).toBeNull();
-    rerender(<HoverCard content={{ kind: "cell", n: 3, median: 250000 }} onClose={() => {}} />);
+    rerender(<HoverCard content={{ kind: "cell", n: 3, median: null }} onClose={() => {}} />);
     expect(screen.getByRole("button", { name: "Close details" })).toBeInTheDocument();
+  });
+
+  it("gives no median for a group of fewer than 5 sales", () => {
+    render(<HoverCard content={{ kind: "stack", n: 3, median: null, confidence: "locality" }} />);
+    expect(screen.getByText("Fewer than 5 sales: no median")).toBeInTheDocument();
+    expect(screen.queryByText(/€/)).toBeNull();
   });
 
   it("says a zoomed-out group zooms in when clicked", () => {
     render(<HoverCard content={{ kind: "cell", n: 24, median: 310000 }} />);
     expect(screen.getByText("24 sales here")).toBeInTheDocument();
+    expect(screen.getByText("Median €310,000")).toBeInTheDocument();
     expect(screen.getByText(/Click to zoom in/)).toBeInTheDocument();
   });
 

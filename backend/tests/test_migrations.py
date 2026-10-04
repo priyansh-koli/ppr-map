@@ -129,3 +129,144 @@ def test_sync_permissions_is_idempotent(migrated_db: sa.Engine) -> None:
             )
         ).scalar_one()
     assert admin_perms == 16
+
+
+# --- database roles (migration 0014) ------------------------------------------------------
+
+# The tables of accounts and their activity. Every other table is the pipeline's: owned by
+# ppr_data, readable by Martin. A new table must be put on one side or the other.
+ACCOUNT_TABLES = {
+    "alembic_version",
+    "alert_delivery",
+    "api_key",
+    "app_user",
+    "audit_log",
+    "consent_record",
+    "email_verification_token",
+    "password_reset_token",
+    "permission",
+    "removal_request",
+    "role",
+    "role_permission",
+    "saved_search",
+    "search_history",
+    "user_profile",
+    "user_role",
+    "user_session",
+    "view_history",
+    "wishlist_item",
+}
+DENIED = "42501"  # insufficient_privilege
+
+
+def _as_role(engine: sa.Engine, role: str, sql: str) -> str | None:
+    """Run `sql` as `role` and roll back; the SQLSTATE it failed with, or None."""
+    with engine.connect() as conn, conn.begin() as tx:
+        conn.execute(sa.text(f"SET LOCAL ROLE {role}"))
+        try:
+            conn.execute(sa.text(sql))
+        except sa.exc.DBAPIError as e:
+            return str(getattr(e.orig, "sqlstate", "?"))
+        finally:
+            tx.rollback()
+    return None
+
+
+@pytest.mark.db
+def test_every_table_belongs_to_a_database_role(migrated_db: sa.Engine) -> None:
+    with migrated_db.connect() as conn:
+        tables = conn.execute(
+            sa.text(
+                "SELECT c.relname, pg_get_userbyid(c.relowner), "
+                "has_table_privilege('ppr_app', c.oid, 'SELECT'), "
+                "has_table_privilege('ppr_tiles', c.oid, 'SELECT') "
+                "FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
+                "WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p') "
+                "AND c.relname <> 'spatial_ref_sys' AND NOT EXISTS (SELECT FROM pg_depend d "
+                "WHERE d.objid = c.oid AND d.classid = 'pg_class'::regclass AND d.deptype = 'e')"
+            )
+        ).all()
+    assert len(tables) > 30
+    for name, owner, app_reads, tiles_read in tables:
+        if name in ACCOUNT_TABLES:
+            assert owner != "ppr_data" and not tiles_read, name
+            assert app_reads or name == "alembic_version", name
+        else:
+            assert owner == "ppr_data" and tiles_read and app_reads, name
+
+
+@pytest.mark.db
+def test_service_roles_cannot_escalate(migrated_db: sa.Engine) -> None:
+    """No service can run programs, wipe the audit log or change the schema (P1 #8)."""
+    for role in ("ppr_app", "ppr_pipeline", "ppr_tiles"):
+        assert _as_role(migrated_db, role, "COPY (SELECT 1) TO PROGRAM 'true'") == DENIED
+        assert _as_role(migrated_db, role, "DELETE FROM audit_log") == DENIED
+        assert _as_role(migrated_db, role, "TRUNCATE audit_log") == DENIED
+        assert _as_role(migrated_db, role, "DROP TABLE app_user") == DENIED
+        assert _as_role(migrated_db, role, "ALTER TABLE audit_log DISABLE TRIGGER ALL") == DENIED
+    assert _as_role(migrated_db, "ppr_app", "TRUNCATE sale") == DENIED
+    assert _as_role(migrated_db, "ppr_app", "DELETE FROM sale") == DENIED
+    assert _as_role(migrated_db, "ppr_tiles", "SELECT * FROM app_user") == DENIED
+    assert _as_role(migrated_db, "ppr_tiles", "SELECT * FROM user_session") == DENIED
+    assert _as_role(migrated_db, "ppr_tiles", "UPDATE property SET is_suppressed = true") == DENIED
+
+
+@pytest.mark.db
+def test_service_roles_can_do_their_work(migrated_db: sa.Engine) -> None:
+    audit = "INSERT INTO audit_log (action, target_kind, target_id) VALUES ('t', 'test', '1')"
+    assert _as_role(migrated_db, "ppr_app", audit) is None
+    assert _as_role(migrated_db, "ppr_app", "UPDATE property SET is_suppressed = false") is None
+    assert _as_role(migrated_db, "ppr_app", "DELETE FROM user_session") is None
+    # The worker also sends alerts and purges closed accounts.
+    assert _as_role(migrated_db, "ppr_pipeline", "DELETE FROM app_user") is None
+    assert _as_role(migrated_db, "ppr_pipeline", "TRUNCATE property_enrichment, sale") is None
+    assert _as_role(migrated_db, "ppr_pipeline", "ANALYZE property") is None
+    assert _as_role(migrated_db, "ppr_pipeline", "CREATE TABLE scratch (g int)") is None
+    tile = "SELECT sales_tiles(14, 7877, 5349, '{}'::json), price_hex_tiles(8, 123, 83, '{}')"
+    assert _as_role(migrated_db, "ppr_tiles", tile) is None
+    assert (
+        _as_role(
+            migrated_db,
+            "ppr_tiles",
+            "SELECT * FROM tile_matching_sales(ST_MakeEnvelope(-7, 52, -6, 53, 4326), '{}')",
+        )
+        is None
+    )
+
+
+@pytest.mark.db
+def test_db_roles_lets_the_services_sign_in(
+    migrated_db: sa.Engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Roles are shared by the whole cluster, so ppr_tiles' password is put back afterwards."""
+    from app.cli import cli
+
+    with migrated_db.connect() as conn:
+        saved = conn.execute(
+            sa.text("SELECT rolcanlogin, rolpassword FROM pg_authid WHERE rolname = 'ppr_tiles'")
+        ).one()
+    monkeypatch.setenv("APP_DB_PASSWORD", "")
+    monkeypatch.setenv("PIPELINE_DB_PASSWORD", "")
+    monkeypatch.setenv("TILES_DB_PASSWORD", "it's 100% a test")
+    get_settings.cache_clear()
+    try:
+        result = CliRunner().invoke(cli, ["db-roles"])
+        assert result.exit_code == 0, result.output
+        assert "APP_DB_PASSWORD is empty: ppr_app cannot sign in." in result.output
+        assert "ppr_tiles can sign in." in result.output
+        url = migrated_db.url.set(username="ppr_tiles", password="it's 100% a test")
+        tiles = sa.create_engine(url)
+        with tiles.connect() as conn:
+            assert conn.execute(sa.text("SELECT current_user")).scalar_one() == "ppr_tiles"
+        tiles.dispose()
+    finally:
+        get_settings.cache_clear()
+        with migrated_db.begin() as conn:
+            restore = conn.execute(
+                sa.text(
+                    "SELECT format('ALTER ROLE ppr_tiles %s PASSWORD %L', "
+                    "CAST(:login AS text), CAST(:p AS text))"
+                ),
+                {"login": "LOGIN" if saved.rolcanlogin else "NOLOGIN", "p": saved.rolpassword},
+            ).scalar_one()
+            conn.connection.cursor().execute(restore)

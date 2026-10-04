@@ -281,12 +281,8 @@ async def distribution(slug: Slug, session: Session) -> Distribution:
         window_end=end - timedelta(days=1),
         n=sum(counts),
         bins=[
-            Bin(
-                from_eur=edges[i],
-                to_eur=edges[i + 1] if i + 1 < len(edges) else None,
-                n=c if c >= MIN_N or c == 0 else None,
-            )
-            for i, c in enumerate(counts)
+            Bin(from_eur=edges[i], to_eur=edges[i + 1] if i + 1 < len(edges) else None, n=c)
+            for i, c in enumerate(q.suppress_bins(counts, MIN_N))
         ],
         national_share=[round(n / total_national, 4) for n in national],
     )

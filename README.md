@@ -14,7 +14,7 @@ Prerequisites: Python 3.12, Node 22 LTS, and Docker (Docker Desktop or OrbStack)
 make env          # .env with random local secrets
 make install      # Python venv + npm packages
 make up           # PostGIS, Redis, API, Martin, Next.js, Caddy, Mailpit
-make migrate      # schema + roles/permissions
+make migrate      # schema, database role passwords, roles/permissions
 open http://localhost:8080
 ```
 

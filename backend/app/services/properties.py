@@ -6,6 +6,9 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 
+# Aggregates with fewer sales are not published (CONVENTIONS.md, data rules).
+MIN_N = 5
+
 META = """
 SELECT r.stats ->> 'data_version', (r.stats ->> 'max_sale_date')::date,
        (r.stats ->> 'provisional_from')::date,
@@ -115,12 +118,14 @@ WITH me AS MATERIALIZED (
       AND s.bulk_group_id IS NULL AND NOT s.is_possible_duplicate
     ORDER BY p.id, s.sale_date DESC, s.id DESC
 ), summary AS MATERIALIZED (
-    SELECT count(*) AS total,
+    SELECT count(*) AS total, count(*) FILTER (WHERE NOT vat_exclusive) AS median_n,
            percentile_cont(0.5) WITHIN GROUP (ORDER BY price_eur)
                FILTER (WHERE NOT vat_exclusive) AS median
     FROM nearby
 )
-SELECT n.*, summary.total, summary.median
+-- The median is of the sales filed with VAT, and like every aggregate it needs 5 of them.
+SELECT n.*, summary.total, summary.median_n,
+       CASE WHEN summary.median_n >= :min_n THEN summary.median END AS median
 FROM nearby n, summary
 ORDER BY n.same_street DESC, n.distance_m, n.sale_date DESC
 LIMIT :limit
@@ -136,5 +141,6 @@ async def comparables(
         "deg": radius_m / 111_000 * 1.8,  # a degree of longitude is ~67 km at 53° N
         "since": since,
         "limit": limit,
+        "min_n": MIN_N,
     }
     return list((await session.execute(sa.text(COMPARABLES), params)).all())

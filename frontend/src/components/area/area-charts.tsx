@@ -580,7 +580,7 @@ export function PriceDistribution({ slug, name }: { slug: string; name: string }
       <figcaption className="text-sm text-muted">
         Market sales from {formatMonth(data.windowStart)} to {formatMonth(data.windowEnd)} by price,
         as a share of all {data.n.toLocaleString("en-IE")} sales. Bands with fewer than 5 sales are
-        not shown.
+        not shown, and nor are enough others that they cannot be worked out from the total.
       </figcaption>
       <ul className="flex flex-wrap gap-x-4 text-xs text-ink-2">
         <li className="flex items-center gap-1.5">
@@ -611,7 +611,7 @@ export function PriceDistribution({ slug, name }: { slug: string; name: string }
               onPointerEnter={() => setHover(i)}
               tabIndex={0}
               onFocus={() => setHover(i)}
-              aria-label={`${band(i)}: ${s != null ? `${b.n} sales, ${pct(s)}` : "fewer than 5 sales"}; Ireland ${pct(nat)}`}
+              aria-label={`${band(i)}: ${s != null ? `${b.n} sales, ${pct(s)}` : "not shown"}; Ireland ${pct(nat)}`}
             >
               <span className="text-right text-muted tabular-nums">{band(i)}</span>
               <span className="relative block h-3.5">
@@ -634,9 +634,7 @@ export function PriceDistribution({ slug, name }: { slug: string; name: string }
                   }}
                 />
               </span>
-              <span className="tabular-nums text-ink-2">
-                {s != null ? pct(s) : b.n === 0 ? "0%" : "<5 sales"}
-              </span>
+              <span className="tabular-nums text-ink-2">{s != null ? pct(s) : "not shown"}</span>
             </li>
           );
         })}
@@ -646,7 +644,7 @@ export function PriceDistribution({ slug, name }: { slug: string; name: string }
           <strong className="text-ink">{band(hover)}</strong>:{" "}
           {data.bins[hover]!.n != null
             ? `${data.bins[hover]!.n} sales in ${name}`
-            : "fewer than 5 sales"}{" "}
+            : "not shown (too few sales, or hidden with such a band)"}{" "}
           · Ireland {pct(data.nationalShare[hover] ?? 0)} of sales
         </p>
       ) : null}

@@ -8,13 +8,15 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import ValidationError
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.filters import sales_filter
-from app.api.v1.search import list_item, parse_bbox
+from app.api.v1.search import SEARCH_LIMITS, list_item, parse_bbox
+from app.auth.deps import OptionalUser
+from app.auth.ratelimit import limit_caller
 from app.db import get_session
 from app.redis_client import REDIS_ERRORS, get_redis
 from app.schemas.properties import (
@@ -46,6 +48,8 @@ router = APIRouter(tags=["properties"])
 # the list asks the user to zoom in rather than sort 800,000 sales.
 MAX_BBOX_DEGREES = (0.6, 0.4)
 SUMMARY_TTL_S = 7 * 24 * 3600
+# Per minute, (anonymous per IP, signed in): docs/permissions.md, "property summary (hover)".
+SUMMARY_LIMITS = (300, 600)
 NOT_FOUND = HTTPException(404, "No such property")
 # Public ids are short and printable; anything else (a NUL byte, say) is refused up front.
 PropertyId = Annotated[str, Path(max_length=64, pattern=r"^[^\x00-\x1f\x7f]+$")]
@@ -95,8 +99,11 @@ async def meta(session: Session) -> Meta:
 
 
 @router.get("/properties/{property_id}/summary", response_model=PropertySummary)
-async def summary(property_id: PropertyId, session: Session, cache: Cache) -> PropertySummary:
+async def summary(
+    property_id: PropertyId, request: Request, session: Session, cache: Cache, user: OptionalUser
+) -> PropertySummary:
     """The hover card: one precomputed row, cached in Redis per data version."""
+    await limit_caller(cache, request, user.id if user else None, "summary", SUMMARY_LIMITS)
     payload: dict[str, Any] | None = None
     key = f"summary:{property_id}:{(await _meta(session)).data_version}"
     if cache is not None:
@@ -121,7 +128,10 @@ async def summary(property_id: PropertyId, session: Session, cache: Cache) -> Pr
     responses={422: {"description": "The box is too large: zoom in"}},
 )
 async def list_properties(
+    request: Request,
     session: Session,
+    cache: Cache,
+    user: OptionalUser,
     filters: Annotated[SalesFilter, Depends(sales_filter)],
     bbox: Annotated[str, Query(description="west,south,east,north in degrees")],
     sort: Literal["-date", "date", "-price", "price", "-change", "change"] = "-date",
@@ -129,7 +139,8 @@ async def list_properties(
     page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 50,
 ) -> PropertyList:
     """The list view synced with the map: the latest matching sale per property in the box.
-    It is /search limited to the box, so it takes the same filters."""
+    It is /search limited to the box, so it takes the same filters and shares its rate limit."""
+    await limit_caller(cache, request, user.id if user else None, "search", SEARCH_LIMITS)
     box = parse_bbox(bbox)
     assert box is not None
     w, s, e, n = box
@@ -332,6 +343,7 @@ async def comparables(
         months=months,
         total=rows[0].total if rows else 0,
         median_eur=rows[0].median if rows else None,
+        median_n=rows[0].median_n if rows else 0,
         items=[
             Comparable(
                 id=r.public_id,

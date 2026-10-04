@@ -689,7 +689,7 @@
                 "type": "null"
               }
             ],
-            "description": "null when fewer than 5 sales (suppressed)",
+            "description": "null when hidden: fewer than 5 sales, or hidden with such a band so that it cannot be worked out from the total",
             "title": "N"
           },
           "toEur": {
@@ -834,8 +834,14 @@
                 "type": "null"
               }
             ],
-            "description": "Of the sales filed with VAT included",
+            "description": "Of the sales filed with VAT included; none when fewer than 5 of them",
             "title": "Medianeur"
+          },
+          "medianN": {
+            "default": 0,
+            "description": "How many sales the median is of (VAT included)",
+            "title": "Mediann",
+            "type": "integer"
           },
           "months": {
             "title": "Months",
@@ -6950,7 +6956,7 @@
     },
     "/api/v1/properties": {
       "get": {
-        "description": "The list view synced with the map: the latest matching sale per property in the box.\nIt is /search limited to the box, so it takes the same filters.",
+        "description": "The list view synced with the map: the latest matching sale per property in the box.\nIt is /search limited to the box, so it takes the same filters and shares its rate limit.",
         "operationId": "list_properties_api_v1_properties_get",
         "parameters": [
           {

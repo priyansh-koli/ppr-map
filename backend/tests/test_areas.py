@@ -87,6 +87,8 @@ def test_distribution_counts_the_headline_sales(api: TestClient) -> None:
     shown = [b["n"] for b in dist["bins"]]
     assert all(n is None or n == 0 or n >= 5 for n in shown)  # small bands are not given
     assert sum(n for n in shown if n) <= dist["n"]
+    hidden = dist["n"] - sum(n for n in shown if n)
+    assert hidden == 0 or (hidden >= 5 and shown.count(None) >= 2)
     assert abs(sum(dist["nationalShare"]) - 1) < 0.001
     assert dist["bins"][-1]["toEur"] is None
 
