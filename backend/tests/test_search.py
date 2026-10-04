@@ -99,6 +99,9 @@ def test_sale_filters(api: TestClient) -> None:
     prices = [i["latestSale"]["priceEur"] for i in cheap["items"]]
     assert prices == sorted(prices) and all(p <= 200000 for p in prices)
     assert cheap["query"] == {"priceMax": "200000", "sort": "price"}
+    # Exponent notation is the same filter, not a silently dropped one.
+    sci = search(api, priceMax="2e5", sort="price")
+    assert sci["total"] == cheap["total"] and sci["query"] == cheap["query"]
 
 
 def test_distance_filters_use_precise_locations_only(api: TestClient) -> None:
@@ -152,6 +155,10 @@ def test_sort_by_change(api: TestClient, db: sa.Engine) -> None:
         assert all(i["change"] is None for i in body["items"][1:])
         by_date = search(api, routingKey="R93")
         assert next(i for i in by_date["items"] if i["id"] == pid)["change"]["changePct"] == 50.0
+        # A date filter that leaves out the earlier sale still counts it and compares with it.
+        recent = search(api, sort="-change", dateFrom="2016-01-01")
+        assert recent["items"][0]["id"] == pid and recent["items"][0]["nSales"] == 2
+        assert recent["items"][0]["change"]["changePct"] == 50.0
     finally:
         with db.begin() as conn:
             conn.execute(sa.text("DELETE FROM sale WHERE source_row_hash = repeat('f', 64)"))

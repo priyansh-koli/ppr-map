@@ -1,5 +1,7 @@
 """The search filter model and the autocomplete helpers, without a database."""
 
+import re
+
 import pytest
 from pydantic import ValidationError
 
@@ -39,6 +41,17 @@ def test_filters_round_trip_through_url_parameters() -> None:
 
 
 @pytest.mark.parametrize(
+    ("given", "sent"),
+    [("1e6", "1000000"), ("1E+6", "1000000"), ("250000.00", "250000"), ("99.5", "99.5")],
+)
+def test_prices_reach_the_tile_functions_in_plain_notation(given: str, sent: str) -> None:
+    # tile_param_number only reads ^\d{1,12}(\.\d{1,2})?$; anything else drops the filter.
+    params = SalesFilter.model_validate({"priceMin": given, "priceMax": given}).to_params()
+    assert params == {"priceMin": sent, "priceMax": sent}
+    assert re.fullmatch(r"\d{1,12}(\.\d{1,2})?", params["priceMin"])
+
+
+@pytest.mark.parametrize(
     "bad",
     [
         {"county": "narnia"},
@@ -49,6 +62,8 @@ def test_filters_round_trip_through_url_parameters() -> None:
         {"near": "53,-7", "radiusM": "30000"},
         {"dateFrom": "2025-02-01", "dateTo": "2025-01-01"},
         {"maxStopM": "5"},
+        {"priceMin": "1.234"},
+        {"priceMax": "1e-7"},
     ],
 )
 def test_filters_refuse_what_cannot_be_right(bad: dict[str, str]) -> None:

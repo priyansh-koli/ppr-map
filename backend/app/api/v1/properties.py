@@ -59,6 +59,12 @@ class _Shared:
     meta: tuple[float, Meta] | None = None
 
 
+def forget_meta() -> None:
+    """After an admin edit that changes the map, so this process serves the new tiles version
+    at once; other processes follow within META_TTL_S."""
+    _Shared.meta = None
+
+
 Session = Annotated[AsyncSession, Depends(get_session)]
 Cache = Annotated[Redis | None, Depends(get_redis)]
 
@@ -70,8 +76,10 @@ async def _meta(session: AsyncSession) -> Meta:
     row = await q.meta(session)
     if row is None:
         raise HTTPException(503, "Data is not loaded yet")
+    edited = f".e{int(row[4].timestamp() * 1_000_000)}" if row[4] else ""
     meta_ = Meta(
         data_version=row[0],
+        tiles_version=row[0] + edited,
         ppr_max_sale_date=row[1],
         provisional_from=row[2],
         last_ingest_at=row[3],
@@ -164,6 +172,9 @@ def _caveats(confidence: str, sales: list[Sale], provisional_from: date) -> list
                 "county": "its county.",
             }.get(confidence, "a rough location.")
             + " Distances to nearby places are not shown."
+            if confidence != "unmatched"
+            else "This address has not been placed on the map, so it has no location and no "
+            "distances to nearby places."
         )
     if any(s.vat_exclusive for s in sales):
         out.append(

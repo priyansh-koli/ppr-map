@@ -116,6 +116,29 @@ def test_pick_rejects_far_and_ambiguous_matches() -> None:
     assert reasons == ["far_from_town"]
 
 
+def test_a_town_query_never_lands_on_a_house_of_the_same_name() -> None:
+    # Recorded case: "Coole West, Athea" put every Athea sale on a house in Limerick city.
+    house = _result(category="building", type="house", name="Athea", lon="-8.6336")
+    village = _result(category="place", type="village", name="Athea", lon="-9.2876")
+    candidate, reasons = pick([house, village], "Athea", None, town_query=True)
+    assert candidate is not None and candidate.confidence is C.LOCALITY
+    assert candidate.lon == -9.2876 and reasons == ["building_named_like_town"]
+    assert pick([house], "Athea", None, town_query=True) == (None, ["building_named_like_town"])
+    # A town part that is a street keeps its street match.
+    road = _result(category="highway", type="tertiary", name="Tullow Road", lon="-6.92")
+    candidate, _ = pick([road], "Tullow Rd", None, town_query=True)
+    assert candidate is not None and candidate.confidence is C.STREET
+    # A house number matched on its street is still exact.
+    numbered = _result(
+        category="building", type="house", address={"house_number": "12", "road": "Main St"}
+    )
+    candidate, _ = pick([numbered], "12 Main St", None, town_query=True)
+    assert candidate is not None and candidate.confidence is C.EXACT
+    # Anywhere else in the address a named house is still a street-level match.
+    candidate, _ = pick([house], "Athea", None)
+    assert candidate is not None and candidate.confidence is C.STREET
+
+
 @pytest.fixture
 def geocoder() -> Geocoder:
     def replay(request: httpx.Request) -> httpx.Response:

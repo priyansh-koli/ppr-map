@@ -26,7 +26,7 @@
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/health` | liveness: DB and Redis ping |
-| GET | `/meta` | **Built (Phase 3).** `{dataVersion, pprMaxSaleDate, provisionalFrom, lastIngestAt}`, used by the status pill in the header |
+| GET | `/meta` | **Built (Phase 3).** `{dataVersion, tilesVersion, pprMaxSaleDate, provisionalFrom, lastIngestAt}`, used by the status pill in the header. `tilesVersion` is the data version plus the time of the latest admin edit that changes the map (a hidden or hand-placed property); map tiles carry it as `v`, because Martin caches by URL (D-057) |
 | GET | `/sources` | **Built (Phase 5,** D-055**).** `{inUse, planned, notUsed}` from `config/sources.yaml`: each source's name, URL, licence, attribution, refresh cadence and licence check date (null until verified); ruled-out ones with the reason. 503 if the file does not load |
 
 ## Stats
@@ -77,14 +77,14 @@
 | GET | `/tiles/environment/{kind}/{z}/{x}/{y}.pbf` | radon, noise and zoning (GZT) overlays |
 | GET | `/tiles/pois/{z}/{x}/{y}.pbf?types=` | layer toggles for schools, transport and amenities |
 
-The `sales` point layer carries: `id`, `price`, `date` (yyyymmdd int), `isNew`, `nfmp`, `vatx`, `bulk`, `confidence`, `nSales`.
+The `sales` point layer carries: `id`, `price`, `date` (yyyymmdd int), `isNew`, `nfmp`, `vatx`, `bulk`, `confidence`, `nSales` (every sale of the property on record that is not withdrawn, whatever the filters; D-057).
 
 ## Properties
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/properties?bbox=w,s,e,n&{SearchFilter}&sort=&page=&pageSize=` | **Built (Phase 3; full filters and `change` in Phase 5).** The list synced with the map: `/search` limited to the box. A box wider than 0.6° or taller than 0.4° is refused (422, "Zoom in to list sales"). Each item has `change` (`previousDate`, `previousPriceEur`, `changePct`) when its latest and previous sales are both plain market sales. |
 | GET | `/properties/{id}/summary` | **Built (Phase 3).** The hover card. Reads only Redis (`summary:{id}:{dataVersion}`) or `property_summary`: 10 ms uncached, 3 ms cached on the dev stack. |
-| GET | `/properties/{id}` | **Built (Phase 3).** Every sale, location precision and method, areas, vicinity, the most local 12-month median series, and caveats. The full Eircode is not returned, only its routing key. |
+| GET | `/properties/{id}` | **Built (Phase 3).** Every sale, location precision and method, areas, vicinity, the most local 12-month median series, and caveats. The full Eircode is not returned, only its routing key. `location.lat` and `lng` are null while the property has no point (before its first geocode, during `geocode --refresh`, or `unmatched`). |
 | GET | `/properties/{id}/comparables?radiusM=500&months=24&limit=20` | **Built (Phase 5, D-053).** Market sales of other homes within `radiusM` (100 to 2,000) in the last `months` (6 to 60) of the register, the latest per home, same street or estate first (`sameStreet`), then nearest (`distanceM`); `total` and `medianEur` (VAT-inclusive prices only) cover all of them. Only between `exact` and `street` points: otherwise `available: false` with a `reason`. |
 | GET | `/properties/{id}/planning?radiusM=250&years=5` | planning at this address plus nearby; no applicant fields exist to return |
 | GET | `/properties/{id}/estimate` | **Built (Phase 5, D-020, D-053).** `{eligible, lowEur, midEur, highEur, basedOn {date, priceEur}, series {key, label, source}, indexMonth, indexChangePct, calibration {yearsBetween, pairs, pooled, lowPct, medianPct, highPct}, method}`; an ineligible home answers 200 with `eligible: false` and a `reason` (404 only for an unknown id). |

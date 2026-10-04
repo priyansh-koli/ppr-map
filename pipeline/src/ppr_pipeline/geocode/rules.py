@@ -269,16 +269,31 @@ def pick(
     results: Sequence[Mapping[str, Any]],
     queried_part: str,
     town: tuple[float, float, bool] | None,
+    *,
+    town_query: bool = False,
 ) -> tuple[Candidate | None, list[str]]:
     """The best acceptable result of one query, and the reasons others were rejected.
 
-    `town` is None when the query is the town itself or the town did not geocode."""
+    `town` is None when the query is the town itself or the town did not geocode.
+    `town_query` is true when the query is one of the address's town parts alone."""
     rejected: list[str] = []
     accepted: list[Candidate] = []
     for r in results:
         confidence, why = classify(r, queried_part)
         if confidence is None:
             rejected.append(why)
+            continue
+        # A town part may be a street ("..., Tullow Rd, Carlow") but never one building
+        # matched by name. A house named "Athea" is not the village of Athea, and as the
+        # town's own query there is no town to check its distance against: every Athea sale
+        # landed on one house in Limerick city. The village or townland in the same answer
+        # is taken instead. A house number matched on its street is still exact.
+        if (
+            town_query
+            and confidence is GeocodeConfidence.STREET
+            and r.get("category") == "building"
+        ):
+            rejected.append("building_named_like_town")
             continue
         lon, lat = float(r["lon"]), float(r["lat"])
         if too_far_from_town(confidence, lon, lat, town):

@@ -15,7 +15,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import jobs
-from app.api.v1.properties import _meta
+from app.api.v1.properties import _meta, forget_meta
 from app.api.v1.reports import reference_of
 from app.auth.deps import require
 from app.auth.passwords import verify_password
@@ -430,6 +430,7 @@ async def fix_geocode(
         after={"lat": body.lat, "lng": body.lng, "confidence": body.confidence, "note": body.note},
     )
     await db.commit()
+    forget_meta()
     await _forget_summary(db, cache, property_id)
     return GeocodeFixed(
         id=property_id, confidence=body.confidence, in_reported_county=row[1], areas=row[2] or []
@@ -596,6 +597,7 @@ async def decide_removal(
     )
     await db.commit()
     if suppressed:
+        forget_meta()
         await _forget_summary(db, cache, public_id)
     if closing and email:
         background.add_task(

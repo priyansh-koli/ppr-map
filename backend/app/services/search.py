@@ -88,6 +88,7 @@ async def envelope(session: AsyncSession, f: SalesFilter, bbox: Box | None) -> B
 # A price change is shown only between two plain market sales (as on the property page):
 # not "not full market price", not VAT-exclusive, not bulk and not a possible repeat filing.
 # Only constant SQL fragments are formatted into these statements; values are bound.
+# A property with one sale has no earlier one, so the lookup finds nothing for it.
 def _previous(alias: str) -> str:
     return f"""
 LEFT JOIN LATERAL (
@@ -96,7 +97,7 @@ LEFT JOIN LATERAL (
       AND s2.withdrawn_at IS NULL AND NOT s2.not_full_market_price AND NOT s2.vat_exclusive
       AND s2.bulk_group_id IS NULL AND NOT s2.is_possible_duplicate
     ORDER BY s2.sale_date DESC, s2.id DESC LIMIT 1
-) prev ON {alias}.n_sales > 1 AND NOT ({alias}.nfmp OR {alias}.vatx OR {alias}.bulk)
+) prev ON NOT ({alias}.nfmp OR {alias}.vatx OR {alias}.bulk)
 """  # noqa: S608
 
 
@@ -104,16 +105,20 @@ def _change(alias: str) -> str:
     return f"round(({alias}.price_eur / nullif(prev.price_eur, 0) - 1) * 100, 1)"
 
 
+# Every match is materialised, so `n_sales` (a lookup per property) is left out here and
+# counted for the page only, as `tile_matching_sales` counts it (migration 0012).
 MATCHES = """
 WITH m AS MATERIALIZED (
-    SELECT * FROM tile_matching_sales(ST_MakeEnvelope(:w, :s, :e, :n, 4326),
-                                      CAST(:params AS json))
+    SELECT property_id, public_id, geom, confidence, sale_date, price_eur, is_new, nfmp, vatx,
+           bulk
+    FROM tile_matching_sales(ST_MakeEnvelope(:w, :s, :e, :n, 4326), CAST(:params AS json))
 ), agg AS (
     SELECT count(*) AS total, ST_Extent(geom) AS box FROM m
 )"""
 COLUMNS = """page.public_id, p.address_display, page.confidence::text, ST_Y(page.geom),
        ST_X(page.geom), page.sale_date, page.price_eur, page.is_new, page.nfmp, page.vatx,
-       page.bulk, page.n_sales"""
+       page.bulk, (SELECT count(*) FROM sale a
+                   WHERE a.property_id = page.property_id AND a.withdrawn_at IS NULL)"""
 TOTALS = "agg.total, ST_XMin(agg.box), ST_YMin(agg.box), ST_XMax(agg.box), ST_YMax(agg.box)"
 
 # Sorting by date or price: the previous sale is looked up for the page only.

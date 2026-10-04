@@ -307,7 +307,7 @@ export function MapExplorer() {
           .then((r) => r.ok)
           .catch(() => false),
       ]);
-      version.current = meta?.dataVersion ?? "";
+      version.current = meta?.tilesVersion ?? "";
       if (cancelled || !container.current) return;
       const view = readView();
       map = new maplibregl.Map({

@@ -1576,12 +1576,27 @@
             "$ref": "#/components/schemas/GeocodeConfidence"
           },
           "lat": {
-            "title": "Lat",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null while the property has no point: before its first geocode, during a full re-geocode, or when it could not be located",
+            "title": "Lat"
           },
           "lng": {
-            "title": "Lng",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
           },
           "method": {
             "anyOf": [
@@ -1781,10 +1796,16 @@
             "format": "date",
             "title": "Provisionalfrom",
             "type": "string"
+          },
+          "tilesVersion": {
+            "description": "Changes with the data version and whenever an administrator hides or moves a property. The tile server caches by URL, so map tiles carry it as `v`.",
+            "title": "Tilesversion",
+            "type": "string"
           }
         },
         "required": [
           "dataVersion",
+          "tilesVersion",
           "pprMaxSaleDate",
           "provisionalFrom",
           "lastIngestAt"

@@ -177,7 +177,7 @@ export function SearchPage() {
     if (STATIC_PREVIEW) return;
     api
       .meta()
-      .then((m) => setVersion(m.dataVersion))
+      .then((m) => setVersion(m.tilesVersion))
       .catch(() => {});
   }, []);
 

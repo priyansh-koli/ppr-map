@@ -57,7 +57,8 @@ export function firstLabelLayer(map: MapLibreMap): string | undefined {
   return map.getStyle().layers.find((l) => l.type === "symbol")?.id;
 }
 
-/** `v` is the data version: Martin caches tiles by URL, so a new monthly run gets new URLs. */
+/** `v` is the tiles version (/meta): Martin caches tiles by URL, so a monthly run, or an admin
+ * hiding or moving a property, gets new URLs. */
 export function tileUrl(
   source: "sales" | "price-hex",
   query: URLSearchParams,

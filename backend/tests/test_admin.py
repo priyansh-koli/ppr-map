@@ -93,10 +93,15 @@ def test_approving_a_removal_hides_the_property(db: sa.Engine) -> None:
     assert item["propertyId"] == pid and item["status"] == "new"
     url = f"/api/v1/admin/removal-requests/{item['id']}"
     assert boss.patch(url, json={"status": "in_review"}).json()["status"] == "in_review"
+    tiles_before = boss.get("/api/v1/meta").json()["tilesVersion"]
     done = boss.patch(url, json={"status": "approved", "decisionNote": "Hidden."}).json()
     assert done["status"] == "approved" and done["propertySuppressed"] is True
     assert done["decidedBy"] == "admin@example.ie"
     assert boss.get(f"/api/v1/properties/{pid}").status_code == 404
+    # Martin caches tiles by URL: the map's `v` must change so the point leaves the map now.
+    meta = boss.get("/api/v1/meta").json()
+    assert meta["tilesVersion"] != tiles_before
+    assert meta["tilesVersion"].startswith(meta["dataVersion"] + ".e")
     assert boss.get("/api/v1/search", params={"county": "carlow"}).json()["total"] == 29
     assert outbox.sent[-1].to == "occupant@example.ie" and "approved" in outbox.sent[-1].subject
     assert boss.patch(url, json={"status": "rejected"}).status_code == 409
@@ -124,8 +129,10 @@ def test_correcting_a_location(db: sa.Engine) -> None:
         "confidence": "exact",
         "note": "Checked on site plan",
     }
+    tiles_before = boss.get("/api/v1/meta").json()["tilesVersion"]
     res = boss.put(f"/api/v1/admin/properties/{target}/geocode", json=fix)
     assert res.status_code == 200, res.text
+    assert boss.get("/api/v1/meta").json()["tilesVersion"] != tiles_before
     assert res.json()["inReportedCounty"] is True
     assert any("small_area" in a for a in res.json()["areas"])
     page = boss.get(f"/api/v1/properties/{target}").json()

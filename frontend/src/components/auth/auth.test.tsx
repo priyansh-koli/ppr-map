@@ -40,6 +40,13 @@ describe("sign-in helpers", () => {
     expect(safeNext("/%09/evil.example")).toBe("/%09/evil.example");
   });
 
+  it("refuses dot segments that resolve to another site", () => {
+    expect(safeNext("/..//evil.example")).toBe("/");
+    expect(safeNext("/./..//evil.example/x?y=1")).toBe("/");
+    expect(safeNext("/%2e%2e//evil.example")).toBe("/");
+    expect(safeNext("/account/../wishlist")).toBe("/wishlist");
+  });
+
   it("asks signed-out users to sign in before saving, and comes back", () => {
     render(<SaveButton propertyId="abc" />);
     expect(screen.getByRole("link", { name: "Sign in to save" })).toHaveAttribute(

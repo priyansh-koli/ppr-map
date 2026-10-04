@@ -133,7 +133,10 @@ export function safeNext(next: string | null): string {
   const origin = typeof window === "undefined" ? "http://localhost" : window.location.origin;
   try {
     const url = new URL(next, origin);
-    return url.origin === origin ? url.pathname + url.search + url.hash : "/";
+    // The parser resolves dot segments, so "/..//evil" comes out as the path "//evil",
+    // which the router would follow to another site. Check the result, not only the input.
+    const path = url.pathname + url.search + url.hash;
+    return url.origin === origin && !path.startsWith("//") ? path : "/";
   } catch {
     return "/";
   }

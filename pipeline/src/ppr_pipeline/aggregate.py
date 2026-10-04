@@ -140,7 +140,7 @@ def area_stats(conn: sa.Connection, provisional_from: date, last_month: date) ->
     conn.execute(sa.text(CREATE_MARKET))
     conn.execute(sa.text(CREATE_SALE_AREA))
     conn.execute(sa.text(CREATE_ROLLING), {"last_month": last_month})
-    conn.execute(sa.text("TRUNCATE area_stats"))
+    conn.execute(sa.text("DELETE FROM area_stats"))
     for kind, (start, span, source) in PERIODS.items():
         # Only constant SQL fragments from PERIODS are formatted in; values are bound.
         sql = INSERT_STATS.format(start=start, source=source, stats=STATS_COLUMNS)
@@ -210,7 +210,7 @@ def price_hexes(conn: sa.Connection, max_date: date) -> int:
     _copy(conn, "hex_sale", "h3, resolution, segment, price_eur, sale_date", rows())
     conn.execute(sa.text("CREATE TEMP TABLE hex_geom (h3 bigint, wkt text) ON COMMIT DROP"))
     _copy(conn, "hex_geom", "h3, wkt", ((c, _hex_wkt(c)) for c in cells))
-    conn.execute(sa.text("TRUNCATE price_hex"))
+    conn.execute(sa.text("DELETE FROM price_hex"))
     for window, since in (("rolling_12m", since_12), ("rolling_36m", since_36)):
         conn.execute(sa.text(INSERT_HEX), {"window": window, "since": since, "min_n": MIN_N})
     return int(conn.execute(sa.text("SELECT count(*) FROM price_hex")).scalar_one())
@@ -298,26 +298,32 @@ WHERE NOT p.is_suppressed AND p.id >= :lo AND p.id < :hi
 SUMMARY_BATCH = 50_000
 
 
-def summaries(engine: sa.Engine, last_month: date, data_version: str, progress: Progress) -> int:
+def summaries(conn: sa.Connection, last_month: date, data_version: str, progress: Progress) -> int:
     year_before = date(last_month.year - 1, last_month.month, 1)
-    with engine.begin() as conn:
-        conn.execute(sa.text("TRUNCATE property_summary"))
-        lo, hi = conn.execute(sa.text("SELECT min(id), max(id) FROM property")).one()
+    conn.execute(sa.text("DELETE FROM property_summary"))
+    lo, hi = conn.execute(sa.text("SELECT min(id), max(id) FROM property")).one()
     if lo is None:
         return 0
     done = 0
     params = {"last_month": last_month, "year_before": year_before, "data_version": data_version}
     for start in range(lo, hi + 1, SUMMARY_BATCH):
-        with engine.begin() as conn:
-            done += conn.execute(
-                sa.text(SUMMARIES), {**params, "lo": start, "hi": start + SUMMARY_BATCH}
-            ).rowcount
+        done += conn.execute(
+            sa.text(SUMMARIES), {**params, "lo": start, "hi": start + SUMMARY_BATCH}
+        ).rowcount
         progress(f"  summaries: {done:,}")
     return done
 
 
+REBUILT = ("area_stats", "price_hex", "property_summary")
+
+
 def aggregate(engine: sa.Engine, progress: Progress = lambda _: None) -> dict[str, Any]:
-    """Rebuild all three tables and record an `ingest_run` of kind `aggregate`."""
+    """Rebuild all three tables and record an `ingest_run` of kind `aggregate`.
+
+    One transaction, with DELETE rather than TRUNCATE: area pages, hex tiles and hover cards
+    keep reading the previous run's rows (no lock, no empty table) until the new rows and the
+    succeeded run, which carries the data version /meta reports, commit together. A failed
+    run leaves the previous run's tables whole."""
     with engine.begin() as conn:
         run_id: int = conn.execute(
             sa.insert(IngestRun)
@@ -333,22 +339,26 @@ def aggregate(engine: sa.Engine, progress: Progress = lambda _: None) -> dict[st
             n_stats = area_stats(conn, provisional_from, last_month)
             progress("  price hexes")
             n_hex = price_hexes(conn, max_date)
-        n_summaries = summaries(engine, last_month, data_version, progress)
-        stats: dict[str, Any] = {
-            "data_version": data_version,
-            "max_sale_date": max_date.isoformat(),
-            "provisional_from": provisional_from.isoformat(),
-            "area_stats": n_stats,
-            "price_hex": n_hex,
-            "summaries": n_summaries,
-            "seconds": round(time.monotonic() - started, 1),
-        }
-        with engine.begin() as conn:
+            n_summaries = summaries(conn, last_month, data_version, progress)
+            stats: dict[str, Any] = {
+                "data_version": data_version,
+                "max_sale_date": max_date.isoformat(),
+                "provisional_from": provisional_from.isoformat(),
+                "area_stats": n_stats,
+                "price_hex": n_hex,
+                "summaries": n_summaries,
+                "seconds": round(time.monotonic() - started, 1),
+            }
             _finish(conn, run_id, status=IngestStatus.SUCCEEDED, rows_read=n_summaries, stats=stats)
     except BaseException as exc:
         with engine.begin() as conn:
             _finish(conn, run_id, status=IngestStatus.FAILED, stats={"error": repr(exc)})
         raise
+    # Every row was replaced: reclaim the old ones and refresh the planner's statistics.
+    progress("  vacuum")
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        for table in REBUILT:
+            conn.execute(sa.text(f"VACUUM (ANALYZE) {table}"))
     return {"run_id": run_id, **stats}
 
 

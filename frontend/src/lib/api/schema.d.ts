@@ -1650,10 +1650,13 @@ export interface components {
         /** Location */
         Location: {
             confidence: components["schemas"]["GeocodeConfidence"];
-            /** Lat */
-            lat: number;
+            /**
+             * Lat
+             * @description Null while the property has no point: before its first geocode, during a full re-geocode, or when it could not be located
+             */
+            lat: number | null;
             /** Lng */
-            lng: number;
+            lng: number | null;
             /** Method */
             method: string | null;
             /** Source */
@@ -1724,6 +1727,11 @@ export interface components {
              * @description Sales on or after this date are provisional.
              */
             provisionalFrom: string;
+            /**
+             * Tilesversion
+             * @description Changes with the data version and whenever an administrator hides or moves a property. The tile server caches by URL, so map tiles carry it as `v`.
+             */
+            tilesVersion: string;
         };
         /** MonthCount */
         MonthCount: {

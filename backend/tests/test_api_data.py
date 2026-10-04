@@ -40,6 +40,7 @@ def test_meta(api: TestClient) -> None:
     assert body["pprMaxSaleDate"] == "2025-12-17"
     assert body["provisionalFrom"] == "2025-11-01"
     assert body["dataVersion"].startswith("2025-12-17.r")
+    assert body["tilesVersion"].startswith(body["dataVersion"])
 
 
 def test_list_matches_the_map_filters(api: TestClient) -> None:
@@ -87,6 +88,44 @@ def test_property_page(api: TestClient, db: sa.Engine) -> None:
     assert approx["vicinity"]["nearestStop"] is None  # no distances from a town centre
     vat = api.get(f"/api/v1/properties/{_id(db, '143 Cois Dara, Chapelstown, Carlow')}").json()
     assert any("without VAT" in c for c in vat["caveats"])
+
+
+def test_property_page_without_a_location(api: TestClient, db: sa.Engine) -> None:
+    # New properties have no point until they are geocoded, and `geocode --refresh` clears
+    # every point before it starts: the page must still load.
+    pid = _id(db, "178 Pollerton Road, Carlow")
+    with db.begin() as conn:
+        saved = conn.execute(
+            sa.text(
+                "SELECT geom, geocode_confidence FROM property WHERE public_id = :id FOR UPDATE"
+            ),
+            {"id": pid},
+        ).one()
+        conn.execute(
+            sa.text(
+                "UPDATE property SET geom = NULL, geocode_confidence = 'unmatched' "
+                "WHERE public_id = :id"
+            ),
+            {"id": pid},
+        )
+    try:
+        res = api.get(f"/api/v1/properties/{pid}")
+        assert res.status_code == 200, res.text
+        body = res.json()
+        assert body["location"]["lat"] is None and body["location"]["lng"] is None
+        assert body["location"]["confidence"] == "unmatched"
+        assert any("not been placed on the map" in c for c in body["caveats"])
+        assert api.get(f"/api/v1/properties/{pid}/comparables").json()["available"] is False
+        assert api.get(f"/api/v1/properties/{pid}/estimate").status_code == 200
+    finally:
+        with db.begin() as conn:
+            conn.execute(
+                sa.text(
+                    "UPDATE property SET geom = :geom, geocode_confidence = :conf "
+                    "WHERE public_id = :id"
+                ),
+                {"geom": saved[0], "conf": saved[1], "id": pid},
+            )
 
 
 def test_tile_functions(db: sa.Engine) -> None:

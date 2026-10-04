@@ -176,6 +176,12 @@ class Property(Base, TimestampMixin):
         sa.Index("ix_property_eircode_routing_key", "eircode_routing_key"),
         sa.Index("ix_property_small_area_id", "small_area_id"),
         sa.Index("ix_property_h3_r8", "h3_r8"),
+        # The tiles version (/meta): the latest admin edit that changes the map.
+        sa.Index(
+            "ix_property_admin_edited",
+            "updated_at",
+            postgresql_where=sa.text("is_suppressed OR geocode_locked"),
+        ),
         sa.Index(
             "ix_property_geom_precise_gist",
             "geom",

@@ -82,7 +82,7 @@ describe("SearchPage", () => {
   it("lists the matches with their price change and the places searched", async () => {
     nav.query = "area=carlow-1f4955&sort=-change";
     const { fetch } = mockApi({
-      "GET /meta": () => [200, { dataVersion: "v1" }],
+      "GET /meta": () => [200, { dataVersion: "v1", tilesVersion: "v1" }],
       "GET /search": () => [200, RESULTS],
     });
     render(<SearchPage />);
@@ -106,7 +106,7 @@ describe("SearchPage", () => {
   it("changes the sort through the URL", async () => {
     nav.query = "";
     mockApi({
-      "GET /meta": () => [200, { dataVersion: "v1" }],
+      "GET /meta": () => [200, { dataVersion: "v1", tilesVersion: "v1" }],
       "GET /search": () => [200, { ...RESULTS, places: [] }],
     });
     render(<SearchPage />);
@@ -120,7 +120,7 @@ describe("SearchPage", () => {
   it("says when the filters cannot be used", async () => {
     nav.query = "county=cork";
     mockApi({
-      "GET /meta": () => [200, { dataVersion: "v1" }],
+      "GET /meta": () => [200, { dataVersion: "v1", tilesVersion: "v1" }],
       "GET /search": () => [429, { title: "Too Many Requests" }],
     });
     render(<SearchPage />);
@@ -130,7 +130,7 @@ describe("SearchPage", () => {
   it("asks for the location only after the button is pressed", async () => {
     nav.query = "";
     mockApi({
-      "GET /meta": () => [200, { dataVersion: "v1" }],
+      "GET /meta": () => [200, { dataVersion: "v1", tilesVersion: "v1" }],
       "GET /search": () => [200, RESULTS],
     });
     const getCurrentPosition = vi.fn((ok: PositionCallback) =>

@@ -152,7 +152,9 @@ class Geocoder:
     def __init__(self, nominatim: Nominatim) -> None:
         self.nominatim = nominatim
         self.towns: dict[tuple[str, str], Town | None] = {}
-        self.picks: dict[tuple[str, str, Town | None], tuple[Candidate | None, list[str]]] = {}
+        self.picks: dict[
+            tuple[str, str, Town | None, bool], tuple[Candidate | None, list[str]]
+        ] = {}
 
     def town(self, parts: Sequence[str], county: str) -> Town | None:
         for part in town_parts(parts, county):
@@ -172,11 +174,13 @@ class Geocoder:
         towns = set(town_parts(parts, county))
         for step, (query, i) in enumerate(ladder(parts, county), start=1):
             # The town itself is not checked against itself.
-            anchor = None if query in towns else town
-            key = (query, county, anchor)
+            town_query = query in towns
+            anchor = None if town_query else town
+            key = (query, county, anchor, town_query)
             cached = self.picks.get(key) if i > 0 else None
             if cached is None:
-                cached = pick(self.nominatim.search(query, county), parts[i], anchor)
+                results = self.nominatim.search(query, county)
+                cached = pick(results, parts[i], anchor, town_query=town_query)
                 if i > 0:
                     self.picks[key] = cached
             candidate, reasons = cached

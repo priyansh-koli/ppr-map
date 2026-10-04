@@ -9,7 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 META = """
 SELECT r.stats ->> 'data_version', (r.stats ->> 'max_sale_date')::date,
        (r.stats ->> 'provisional_from')::date,
-       (SELECT max(finished_at) FROM ingest_run WHERE kind = 'ppr' AND status = 'succeeded')
+       (SELECT max(finished_at) FROM ingest_run WHERE kind = 'ppr' AND status = 'succeeded'),
+       -- Admin edits between monthly runs (ix_property_admin_edited keeps this cheap).
+       (SELECT max(updated_at) FROM property WHERE is_suppressed OR geocode_locked)
 FROM ingest_run r
 WHERE r.kind = 'aggregate' AND r.status = 'succeeded'
 ORDER BY r.id DESC LIMIT 1

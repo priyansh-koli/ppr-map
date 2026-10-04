@@ -13,6 +13,10 @@ from app.schemas.base import ApiModel, Money
 
 class Meta(ApiModel):
     data_version: str
+    tiles_version: str = Field(
+        description="Changes with the data version and whenever an administrator hides or "
+        "moves a property. The tile server caches by URL, so map tiles carry it as `v`."
+    )
     ppr_max_sale_date: date
     provisional_from: date = Field(description="Sales on or after this date are provisional.")
     last_ingest_at: datetime | None
@@ -40,8 +44,8 @@ class SalesFilter(ApiModel):
     """What a search matches: the map tiles, the synced list, /search, saved searches and
     alerts all use these filters with these defaults (`tile_matching_sales`, D-047)."""
 
-    price_min: Money | None = Field(None, ge=0, le=Decimal("9999999999.99"))
-    price_max: Money | None = Field(None, ge=0, le=Decimal("9999999999.99"))
+    price_min: Money | None = Field(None, ge=0, le=Decimal("9999999999.99"), decimal_places=2)
+    price_max: Money | None = Field(None, ge=0, le=Decimal("9999999999.99"), decimal_places=2)
     date_from: date | None = None
     date_to: date | None = None
     type: Literal["new", "second_hand", "any"] = "any"
@@ -58,6 +62,14 @@ class SalesFilter(ApiModel):
     max_school_m: int | None = Field(None, ge=50, le=10_000, alias="maxSchoolM")
 
     _split_lists = field_validator("county", "area", "routing_key", mode="before")(_split)
+
+    @field_validator("price_min", "price_max")
+    @classmethod
+    def _plain_price(cls, value: Decimal | None) -> Decimal | None:
+        # "1e6" is a valid Decimal, but its str() is "1E+6", which tile_param_number does
+        # not read: the filter would be dropped while echoed back as applied. Keep the
+        # plain form ("1000000") so every consumer of to_params() sees the same number.
+        return None if value is None else Decimal(format(value.normalize(), "f"))
 
     @field_validator("county", mode="before")
     @classmethod
@@ -247,8 +259,11 @@ class SearchResults(PropertyList):
 
 
 class Location(ApiModel):
-    lat: float
-    lng: float
+    lat: float | None = Field(
+        description="Null while the property has no point: before its first geocode, during "
+        "a full re-geocode, or when it could not be located"
+    )
+    lng: float | None
     confidence: GeocodeConfidence
     method: str | None
     source: str | None

@@ -16,6 +16,7 @@ import httpx
 import pytest
 import sqlalchemy as sa
 
+from ppr_pipeline import aggregate as aggregate_module
 from ppr_pipeline.aggregate import aggregate
 from ppr_pipeline.boundaries import LAYERS, load_boundaries
 from ppr_pipeline.geocode.runner import geocode_properties
@@ -128,3 +129,31 @@ def test_hover_summaries(loaded: sa.Engine) -> None:
     assert (payload["area"]["kind"], payload["area"]["name"]) == ("settlement", "Carlow")
     assert payload["area"]["n"] == 28
     assert payload["dataVersion"].startswith("2025-12-17.r")
+
+
+def test_a_failed_run_leaves_the_previous_tables_whole(
+    loaded: sa.Engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    aggregate(loaded)
+    count = (
+        "SELECT (SELECT count(*) FROM area_stats), (SELECT count(*) FROM price_hex), "
+        "(SELECT count(*) FROM property_summary)"
+    )
+    with loaded.connect() as conn:
+        before = conn.execute(sa.text(count)).one()
+    assert all(before)
+
+    def fail_halfway(conn: sa.Connection, *args: object) -> int:
+        # By now area stats and hexes are rebuilt and the summaries are deleted.
+        conn.execute(sa.text("DELETE FROM property_summary"))
+        raise RuntimeError("disk full")
+
+    monkeypatch.setattr(aggregate_module, "summaries", fail_halfway)
+    with pytest.raises(RuntimeError):
+        aggregate(loaded)
+    with loaded.connect() as conn:
+        assert conn.execute(sa.text(count)).one() == before
+        runs = conn.execute(
+            sa.text("SELECT status::text FROM ingest_run WHERE kind = 'aggregate' ORDER BY id")
+        ).scalars()
+        assert list(runs) == ["succeeded", "failed"]

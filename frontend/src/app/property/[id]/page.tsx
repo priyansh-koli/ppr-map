@@ -156,6 +156,9 @@ export default async function Page({ params }: Props) {
   }
   const v = data.vicinity;
   const loc = data.location;
+  // No point before the first geocode, or while `geocode --refresh` runs.
+  const point =
+    loc.lat !== null && loc.lng !== null ? `${loc.lat.toFixed(5)},${loc.lng.toFixed(5)}` : null;
   const county = data.county.charAt(0).toUpperCase() + data.county.slice(1);
   const latest = data.sales[0];
   const hasNearby = Boolean(
@@ -174,12 +177,14 @@ export default async function Page({ params }: Props) {
         <RecordView propertyId={data.id} />
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <ConfidenceChip confidence={loc.confidence} />
-          <Link
-            className="btn btn-secondary btn-sm"
-            href={`${ROUTES.map.path}?lat=${loc.lat.toFixed(5)}&lng=${loc.lng.toFixed(5)}&z=${loc.confidence === "exact" || loc.confidence === "street" ? 17 : 14}`}
-          >
-            Show on the map
-          </Link>
+          {loc.lat !== null && loc.lng !== null ? (
+            <Link
+              className="btn btn-secondary btn-sm"
+              href={`${ROUTES.map.path}?lat=${loc.lat.toFixed(5)}&lng=${loc.lng.toFixed(5)}&z=${loc.confidence === "exact" || loc.confidence === "street" ? 17 : 14}`}
+            >
+              Show on the map
+            </Link>
+          ) : null}
           <SaveButton propertyId={data.id} />
         </div>
         <p className="mt-3 text-sm">
@@ -300,7 +305,11 @@ export default async function Page({ params }: Props) {
           </h2>
           <ComparableSales
             comparables={comparables}
-            searchHref={`${ROUTES.search.path}?near=${loc.lat.toFixed(5)},${loc.lng.toFixed(5)}&radiusM=${comparables.radiusM}`}
+            searchHref={
+              point
+                ? `${ROUTES.search.path}?near=${point}&radiusM=${comparables.radiusM}`
+                : ROUTES.search.path
+            }
           />
         </Window>
       ) : null}
