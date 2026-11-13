@@ -1,10 +1,41 @@
-# PPR Map (working name)
+# PPR Map
 
 The Property Price Register, made usable: every residential sale in Ireland since 2010 on a map, with honest geocoding, sale history and vicinity context.
 
-**Status:** Phase 5 (search, area pages, saved searches and alerts, calculators, admin, estimate and comparables) is complete and awaiting review; the P0 bugs from its review are fixed (D-057). See [progress.md](progress.md) and [task.md](task.md).
+![The map explorer: 807,724 sales across Ireland, clustered and coloured by price, with filters for price, date, type, VAT, location precision and distance to transport and schools](docs/images/map.jpg)
 
-**Live preview:** https://ppr-map.vercel.app/ is the frontend as a static site on Vercel, deployed from `main` (D-056; it replaced the GitHub Pages preview of D-034). It has no API or database yet, so it shows the page scaffold only.
+## In numbers
+
+| | |
+|---|---|
+| Sales | **807,724** (2010-01-01 to 2026-09-18) on 728,386 properties |
+| Geocoded | **57%** to the exact address or street, **91%** to town, village or townland or better; every point says which |
+| Context | 73,808 areas, 65,800 points of interest, a 638,778-feature local street gazetteer |
+| Tests | 461 unit tests (backend, pipeline, frontend), 60 Playwright route checks; mypy strict and TypeScript strict |
+
+Figures are from the local data version `2026-09-18.r40.a50` ([progress.md](progress.md)).
+
+## What makes it different
+
+- **Honest locations.** The register has no coordinates, and 21% of its addresses contain no number at all. Each sale is geocoded by a cascade (self-hosted Nominatim, a local street gazetteer, then official places), and the map shows the precision of every point instead of pretending it is exact.
+- **The raw file, read properly.** The CSV is Windows-1252, not UTF-8. Fadas, the euro sign and Irish-language descriptions survive, and the raw value is kept beside every parsed one.
+- **Market prices by default.** Sales not at full market price and bulk or portfolio sales are left out of the map and statistics unless you include them, and VAT-exclusive new-build prices are labelled as filed.
+- **Statistics that hold up.** Medians of fewer than 5 sales are suppressed, and the latest two months are marked provisional.
+- **No owner data.** Nothing that could identify owners or occupants is joined, and anyone can ask for a home to be hidden.
+
+## Features
+
+Map explorer with a synced list view, search, property pages with sale history and nearby transport and schools, area pages, a stamp duty and an affordability calculator, an index-based price estimate with comparables, accounts with wishlists, saved searches and email alerts, and an admin area.
+
+## Stack
+
+PostgreSQL 16 + PostGIS, FastAPI (Python 3.12, SQLAlchemy 2, Pydantic v2), a Typer pipeline run by RQ workers, Martin vector tiles and PMTiles, Next.js 16 with React 19, Tailwind CSS v4 and MapLibre GL JS, self-hosted Nominatim, Redis and Caddy, all in Docker Compose. See [architecture.md](architecture.md).
+
+## Status
+
+Phase 5 (search, area pages, saved searches and alerts, calculators, admin, estimate and comparables) is complete and awaiting review, with the P0 to P2 bugs from its review fixed. See [progress.md](progress.md) and [task.md](task.md).
+
+**Live preview:** https://ppr-map.vercel.app/ is the frontend as a static site on Vercel, deployed from `main`. It has no data yet, so it shows the page layout only; a static site with the full data is being built. The screenshot above is the full app running locally.
 
 ## Quick start
 
