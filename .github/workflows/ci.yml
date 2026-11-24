@@ -38,9 +38,10 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: |
+            constraints.txt
             backend/pyproject.toml
             pipeline/pyproject.toml
-      - run: pip install -e "backend[dev]" -e "pipeline[dev]"
+      - run: pip install -c constraints.txt -e "backend[dev]" -e "pipeline[dev]"
       - name: Lint
         run: |
           (cd backend && ruff check . && ruff format --check .)
