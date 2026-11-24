@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
-.PHONY: help check-tools check-dev check-docker env venv install up down logs migrate ingest-ppr gazetteer geocode enrich benchmarks aggregate pipeline osm-extract basemap terrain geocoder test test-db lint format typecheck api-types e2e e2e-stack e2e-static ci
+.PHONY: help check-tools check-dev check-docker env venv constraints install up down logs migrate ingest-ppr gazetteer geocode enrich benchmarks aggregate pipeline osm-extract basemap terrain geocoder test test-db lint format typecheck api-types e2e e2e-stack e2e-static ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -32,7 +32,10 @@ env: ## Create .env from .env.example with random local secrets (never overwrite
 venv: ## Python virtualenv with backend + pipeline (editable) and dev tools
 	python3.12 -m venv .venv
 	$(PY) -m pip install -q --upgrade pip
-	$(PY) -m pip install -q -e "backend[dev]" -e "pipeline[dev]"
+	$(PY) -m pip install -q -c constraints.txt -e "backend[dev]" -e "pipeline[dev]"
+
+constraints: ## Re-pin constraints.txt to the venv after a deliberate upgrade (D-061)
+	{ sed -n '/^#/p' constraints.txt; $(PY) -m pip freeze --exclude-editable; } > constraints.tmp && mv constraints.tmp constraints.txt
 
 check-tools: check-dev check-docker ## Check that Python 3.12, Node 22+ and Docker are installed
 

@@ -15,8 +15,9 @@ COPY backend/alembic.ini backend/
 COPY pipeline/pyproject.toml pipeline/
 COPY pipeline/src pipeline/src
 COPY config config
+COPY constraints.txt .
 
-RUN pip install ./backend ./pipeline \
+RUN pip install -c constraints.txt ./backend ./pipeline \
     && useradd --system --uid 10001 app \
     && mkdir /srv/data && chown app /srv/data
 

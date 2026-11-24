@@ -99,7 +99,8 @@ describe("RegisterForm", () => {
     fill();
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
     const done = await screen.findByText(/Check your email to continue/);
-    expect(done.parentElement).toHaveFocus();
+    // Focus moves to the message after it renders; on a slow CI runner that is a later tick.
+    await waitFor(() => expect(done.parentElement).toHaveFocus());
   });
 
   it("marks the field a validation error is about", async () => {
@@ -163,6 +164,6 @@ describe("ResetPasswordForm", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Set password" }));
     const done = await screen.findByText("Your password is changed.");
-    expect(done.parentElement).toHaveFocus();
+    await waitFor(() => expect(done.parentElement).toHaveFocus());
   });
 });
